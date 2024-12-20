@@ -45,13 +45,21 @@ impl TestCase {
     }
 }
 
+fn create_default_sep() -> String {
+    return "\n".to_string();
+}
+
 #[derive(Serialize, Deserialize)]
 pub enum ResultDisplay {
     Empty,
     Text(String),
     Diff {
+        #[serde(default)]
+        input: Option<String>,
         output: String,
         expected: String,
+        #[serde(default = "create_default_sep")]
+        sep: String,
     },
     Run {
         #[serde(default)]
@@ -66,9 +74,16 @@ impl ResultDisplay {
         match self {
             ResultDisplay::Empty => {}
             ResultDisplay::Text(e) => e.truncate(length),
-            ResultDisplay::Diff { output, expected } => {
+            ResultDisplay::Diff {
+                output,
+                expected,
+                sep,
+                input,
+            } => {
                 output.truncate(length);
                 expected.truncate(length);
+                input.as_mut().map(|d| d.truncate(length));
+                sep.truncate(5);
             }
             ResultDisplay::Run {
                 input,

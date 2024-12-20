@@ -13,8 +13,13 @@ type Test = {
   title: string | null;
 };
 
-type Column = {
+type DiffCell = {
+  tag: "delete" | "insert" | "equal";
   content: string;
+};
+
+type Column = {
+  content: DiffCell[];
   title: string | null;
 };
 
@@ -88,8 +93,15 @@ function renderColumn(column: Column): HTMLDivElement {
 
   const pre = document.createElement("pre");
   pre.classList.add("code-pre");
-  pre.textContent = column.content;
+  pre.replaceChildren(...column.content.map(renderDiffCell));
   columnDiv.appendChild(pre);
 
   return columnDiv;
+}
+
+function renderDiffCell(cell: DiffCell): HTMLSpanElement {
+  let span = document.createElement("span");
+  span.classList.add(`diff-tag-${cell.tag}`);
+  span.textContent = cell.content;
+  return span;
 }

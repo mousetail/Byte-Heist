@@ -355,3 +355,11 @@ button {
 .lang-icon {
   vertical-align: middle;
 }
+
+.diff-tag-insert {
+  color: green;
+}
+
+.diff-tag-delete {
+  color: red;
+}

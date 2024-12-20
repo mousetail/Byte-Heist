@@ -30,3 +30,4 @@ markdown-it = "0.6.1"
 tower-sessions-file-store = "0.1.2"
 slug = "0.1.6"
 discord-bot = { path = "../discord-bot" }
+similar = { version = "2.6.0", features = ["serde"] }

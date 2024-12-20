@@ -1,6 +1,13 @@
 export type PassState = "Pass" | "Fail" | "Warning" | "Info";
 export type ResultDisplay =
-  | { Diff: { expected: string; output: string } }
+  | {
+      Diff: {
+        expected: string;
+        output: string;
+        input?: string | undefined;
+        sep?: string | undefined;
+      };
+    }
   | { Text: string }
   | { Run: { input?: string | undefined; output: string; error: string } };
 export type Challenge = AsyncGenerator<TestCase, FinalVerdict, undefined>;
@@ -54,18 +61,26 @@ export interface RunCompiledCodeResult extends RunCodeResult {
 export class StringResult {
   protected context: Context;
   public text: string;
+  protected input: string;
 
-  public constructor(context: Context, text: string) {
+  public constructor(
+    context: Context,
+    text: string,
+    input: string | undefined = undefined
+  ) {
     this.context = context;
     this.text = text;
+    this.input = input;
   }
 
-  public assertEquals(value: string): TestCase {
+  public assertEquals(value: string, sep: string = "\n"): TestCase {
     const valid = eqIgnoreTrailingWhitespace(this.text, value);
     const testCase = new TestCase(undefined, valid ? "Pass" : "Fail", {
       Diff: {
         expected: value,
         output: this.text,
+        sep,
+        input: this.input,
       },
     });
     this.context.testCases.push(testCase);
@@ -82,13 +97,17 @@ export class StringResult {
 export class RunResult extends StringResult {
   private stderr: string;
 
-  public constructor(context: Context, result: RunCodeResult) {
-    super(context, result.stdout);
+  public constructor(
+    context: Context,
+    result: RunCodeResult,
+    input: string | undefined
+  ) {
+    super(context, result.stdout, input);
     this.stderr = result.stderr;
   }
 
   public error() {
-    return new StringResult(this.context, this.stderr);
+    return new StringResult(this.context, this.stderr, this.input);
   }
 }
 
@@ -103,12 +122,9 @@ function shuffleAndDeal<T>(
   // Ensure the runs are uneven
   // This is mostly to prevent people from hardcoding the length of the input
   const cardsPerHand = testCases.length / (options.numberOfRuns + 1);
-  const hands = [testCases.slice(0, Math.floor(cardsPerHand * 2))];
+  const hands = [testCases.slice(0, Math.ceil(cardsPerHand * 2))];
   for (let i = cardsPerHand * 2; i < testCases.length; i += cardsPerHand) {
-    const hand = testCases.slice(
-      Math.floor(i),
-      Math.floor(i + cardsPerHand) + 1
-    );
+    const hand = testCases.slice(Math.ceil(i), Math.ceil(i + cardsPerHand) + 1);
     if (hand.length != 0) {
       hands.push(hand);
     }
@@ -230,7 +246,7 @@ export class Context {
       }
     );
     console.log(JSON.stringify(runDisplay));
-    return new RunResult(this, result);
+    return new RunResult(this, result, input);
   }
 
   registerTestCase(testCase: TestCase): TestCase {

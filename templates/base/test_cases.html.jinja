@@ -43,8 +43,12 @@
                   <div class="test-case-column">
                     {% if column.title %}<h3>{{ column.title }}</h3>{% endif %}
                     <pre class="code-pre">
-                  {{- column.content -}}
-                </pre>
+                      {%- for value in column.content -%}
+                        <span class="diff-tag-{{ value.tag }}">
+                          {{- value.content -}}
+                        </span>
+                      {%- endfor -%}
+                    </pre>
                   </div>
                 {% endfor %}
               </div>
