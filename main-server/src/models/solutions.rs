@@ -65,16 +65,13 @@ pub struct LeaderboardEntry {
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum RankingMode {
+    #[default]
     Top,
     Me,
 }
 
-impl Default for RankingMode {
-    fn default() -> Self {
-        RankingMode::Top
-    }
-}
 
 impl LeaderboardEntry {
     pub async fn get_leaderboard_near(
@@ -90,7 +87,7 @@ impl LeaderboardEntry {
         match mode {
             RankingMode::Top => {
                 leaderboard.truncate(10);
-                return Ok(leaderboard);
+                Ok(leaderboard)
             }
             RankingMode::Me => {
                 let index = leaderboard
@@ -104,7 +101,7 @@ impl LeaderboardEntry {
                     start -= diff;
                     end = (end - diff).min(leaderboard.len());
                 }
-                return Ok(leaderboard[start..end].to_vec());
+                Ok(leaderboard[start..end].to_vec())
             }
         }
     }

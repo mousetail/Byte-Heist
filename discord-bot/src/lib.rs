@@ -10,7 +10,7 @@ use queries::{
 use serenity::all::{
     ChannelId, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
 };
-use sqlx::{pool, query_scalar, PgPool};
+use sqlx::PgPool;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct ScoreImproved {
@@ -37,7 +37,6 @@ struct LastMessage {
 }
 
 fn format_message(
-    previous_message: &Option<LastMessage>,
     new_message: &ScoreImproved,
     challenge_name: &str,
     author: &BasicAccontInfo,
@@ -45,7 +44,7 @@ fn format_message(
 ) -> CreateEmbed {
     let public_url = std::env::var("YQ_PUBLIC_URL").unwrap();
 
-    let embed = CreateEmbed::new()
+    CreateEmbed::new()
         .title(format!(
             "Improved score for {challenge_name} in {}",
             LANGS
@@ -70,9 +69,7 @@ fn format_message(
             format!("{}", last_best_score.score),
             true,
         )
-        .field(&author.username, format!("{}", new_message.score), true);
-
-    embed
+        .field(&author.username, format!("{}", new_message.score), true)
 }
 
 #[derive(Debug)]
@@ -83,13 +80,13 @@ enum HandleMessageError {
 
 impl From<sqlx::Error> for HandleMessageError {
     fn from(value: sqlx::Error) -> Self {
-        return HandleMessageError::Sql(value);
+        HandleMessageError::Sql(value)
     }
 }
 
 impl From<serenity::Error> for HandleMessageError {
     fn from(value: serenity::Error) -> Self {
-        return HandleMessageError::Disocrd(value);
+        HandleMessageError::Disocrd(value)
     }
 }
 
@@ -120,13 +117,13 @@ async fn handle_message(
     channel_id: ChannelId,
 ) -> Result<(), HandleMessageError> {
     let last_message = get_last_message(
-        &pool,
+        pool,
         score_improved_event.challenge_id,
         &score_improved_event.language,
     )
     .await?;
-    let challenge_name = get_challenge_name_by_id(&pool, score_improved_event.challenge_id).await?;
-    let user_info = get_user_info_by_id(&pool, score_improved_event.author).await?;
+    let challenge_name = get_challenge_name_by_id(pool, score_improved_event.challenge_id).await?;
+    let user_info = get_user_info_by_id(pool, score_improved_event.author).await?;
 
     let last_best_score = get_last_best_score_fields(
         &last_message,
@@ -138,7 +135,6 @@ async fn handle_message(
     );
 
     let formatted_message = format_message(
-        &last_message,
         &score_improved_event,
         &challenge_name,
         &user_info,
@@ -146,11 +142,19 @@ async fn handle_message(
     );
     let message_id =
         should_post_new_message(get_last_posted_message_id(pool).await?, &last_message);
-    let posted_message =
-        post_or_edit_message(message_id, channel_id, formatted_message, http_client).await?;
+    let posted_message = post_or_edit_message(
+        message_id,
+        last_message
+            .as_ref()
+            .map(|k| channel_id_from_i64(k.channel_id))
+            .unwrap_or(channel_id),
+        formatted_message,
+        http_client,
+    )
+    .await?;
 
     save_new_message_info(
-        &pool,
+        pool,
         last_message,
         score_improved_event,
         posted_message.id,
@@ -181,7 +185,7 @@ async fn handle_bot_queue(
 
     while let Some(message) = receiver.recv().await {
         match handle_message(message, &pool, &http_client, channel_id).await {
-            Ok(ok) => (),
+            Ok(_) => (),
             Err(e) => {
                 eprintln!("(Partially) Failed to send discord update: {e:?}")
             }
@@ -216,13 +220,17 @@ impl Bot {
 }
 
 fn message_id_from_i64(value: i64) -> MessageId {
-    return MessageId::new(u64::from_be_bytes(value.to_be_bytes()));
+    MessageId::new(u64::from_be_bytes(value.to_be_bytes()))
+}
+
+fn channel_id_from_i64(value: i64) -> ChannelId {
+    ChannelId::new(u64::from_be_bytes(value.to_be_bytes()))
 }
 
 fn message_id_to_i64(value: MessageId) -> i64 {
-    return i64::from_be_bytes(value.get().to_be_bytes());
+    i64::from_be_bytes(value.get().to_be_bytes())
 }
 
 fn channel_id_to_i64(value: ChannelId) -> i64 {
-    return i64::from_be_bytes(value.get().to_be_bytes());
+    i64::from_be_bytes(value.get().to_be_bytes())
 }

@@ -2,8 +2,8 @@ use serenity::all::MessageId;
 
 use crate::{
     message_id_from_i64,
-    queries::{BasicAccontInfo, NewScore},
-    LastMessage, ScoreImproved,
+    queries::NewScore,
+    LastMessage,
 };
 
 pub(crate) fn should_post_new_message(
@@ -24,7 +24,7 @@ pub(crate) fn get_last_best_score_fields(
     match previous_message_for_challenge {
         Some(previous_message) => {
             if previous_message.author_id == curent_score.user_id {
-                return NewScore {
+                NewScore {
                     username: previous_message
                         .previous_author_name
                         .clone()
@@ -35,15 +35,15 @@ pub(crate) fn get_last_best_score_fields(
                     user_id: previous_message
                         .previous_author_id
                         .unwrap_or(curent_score.user_id),
-                };
+                }
             } else {
-                return NewScore {
+                NewScore {
                     user_id: previous_message.author_id,
                     score: previous_message.score,
                     username: previous_message.author_name.clone(),
-                };
+                }
             }
         }
-        None => return curent_score,
+        None => curent_score,
     }
 }

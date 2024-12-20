@@ -281,9 +281,9 @@ pub async fn get_leaderboard(
     .await
     .map_err(Error::Database)?;
 
-    return Ok(AutoOutputFormat::new(
+    Ok(AutoOutputFormat::new(
         leaderbaord,
         "leaderboard.html.jinja",
         format,
-    ));
+    ))
 }
