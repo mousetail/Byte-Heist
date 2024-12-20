@@ -1,8 +1,12 @@
 mod checks;
 mod queries;
 
+use checks::{get_last_best_score_fields, should_post_new_message};
 use common::langs::LANGS;
-use queries::{get_challenge_name_by_id, get_last_message, get_user_info_by_id, BasicAccontInfo};
+use queries::{
+    get_challenge_name_by_id, get_last_message, get_last_posted_message_id, get_user_info_by_id,
+    save_new_message_info, BasicAccontInfo, NewScore,
+};
 use serenity::all::{
     ChannelId, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
 };
@@ -37,10 +41,11 @@ fn format_message(
     new_message: &ScoreImproved,
     challenge_name: &str,
     author: &BasicAccontInfo,
+    last_best_score: &NewScore,
 ) -> CreateEmbed {
     let public_url = std::env::var("YQ_PUBLIC_URL").unwrap();
 
-    let mut embed = CreateEmbed::new()
+    let embed = CreateEmbed::new()
         .title(format!(
             "Improved score for {challenge_name} in {}",
             LANGS
@@ -59,94 +64,15 @@ fn format_message(
             new_message.challenge_id,
             slug::slugify(challenge_name),
             new_message.language
-        ));
-    if let Some(previous) = previous_message {
-        let (previous_author, previous_score) = if previous.author_id == new_message.author {
-            if let (Some(previous_author_name), Some(previous_author_score)) = (
-                &previous.previous_author_name,
-                &previous.previous_author_score,
-            ) {
-                (previous_author_name.clone(), *previous_author_score)
-            } else {
-                (previous.author_name.clone(), previous.score)
-            }
-        } else {
-            (previous.author_name.clone(), previous.score)
-        };
-        embed = embed.field(previous_author, format!("{}", previous_score), true);
-    }
-    embed = embed.field(&author.username, format!("{}", new_message.score), true);
+        ))
+        .field(
+            &last_best_score.username,
+            format!("{}", last_best_score.score),
+            true,
+        )
+        .field(&author.username, format!("{}", new_message.score), true);
 
     embed
-}
-
-async fn save_new_message_info(
-    pool: &PgPool,
-    last_message: Option<LastMessage>,
-    message: ScoreImproved,
-    message_id: i64,
-    last_author_id: Option<i32>,
-    last_score: Option<i32>,
-    final_channel_id: i64,
-) -> Result<(), sqlx::Error> {
-    match &last_message {
-        Some(e) => {
-            sqlx::query!(
-                "UPDATE discord_messages
-                SET author=$1,
-                score=$2,
-                previous_author=$3,
-                previous_author_score=$4,
-                message_id=$5,
-                channel_id=$6
-                WHERE id=$7",
-                message.author,
-                message.score,
-                last_author_id,
-                last_score,
-                message_id,
-                final_channel_id,
-                e.id
-            )
-            .execute(pool)
-            .await
-        }
-        None => {
-            sqlx::query!(
-                r#"INSERT INTO discord_messages
-                (
-                    language,
-                    challenge,
-                    author,
-                    previous_author,
-                    previous_author_score,
-                    score,
-                    message_id,
-                    channel_id
-                ) VALUES (
-                    $1,
-                    $2,
-                    $3,
-                    $4,
-                    $5,
-                    $6,
-                    $7,
-                    $8 
-                )"#,
-                message.language,
-                message.challenge_id,
-                message.author,
-                last_author_id,
-                last_score,
-                message.score,
-                message_id,
-                final_channel_id
-            )
-            .execute(pool)
-            .await
-        }
-    }?;
-    Ok(())
 }
 
 #[derive(Debug)]
@@ -167,59 +93,70 @@ impl From<serenity::Error> for HandleMessageError {
     }
 }
 
+async fn post_or_edit_message(
+    message_id: Option<MessageId>,
+    channel_id: ChannelId,
+    embed: CreateEmbed,
+    http_client: &serenity::http::Http,
+) -> Result<serenity::all::Message, serenity::Error> {
+    match message_id {
+        Some(e) => {
+            channel_id
+                .edit_message(http_client, e, EditMessage::new().add_embed(embed))
+                .await
+        }
+        None => {
+            channel_id
+                .send_message(http_client, CreateMessage::new().add_embed(embed))
+                .await
+        }
+    }
+}
+
 async fn handle_message(
-    message: ScoreImproved,
+    score_improved_event: ScoreImproved,
     pool: &PgPool,
     http_client: &serenity::http::Http,
     channel_id: ChannelId,
 ) -> Result<(), HandleMessageError> {
-    let last_message = get_last_message(&pool, message.challenge_id, &message.language).await?;
-    let challenge_name = get_challenge_name_by_id(&pool, message.challenge_id).await?;
-    let user_info = get_user_info_by_id(&pool, message.author).await?;
+    let last_message = get_last_message(
+        &pool,
+        score_improved_event.challenge_id,
+        &score_improved_event.language,
+    )
+    .await?;
+    let challenge_name = get_challenge_name_by_id(&pool, score_improved_event.challenge_id).await?;
+    let user_info = get_user_info_by_id(&pool, score_improved_event.author).await?;
 
-    let formatted_message = format_message(&last_message, &message, &challenge_name, &user_info);
-    let (message_id, last_author_id, last_score, final_channel_id) = if let Some(k) = last_message
-        .as_ref()
-        .filter(|e| e.author_id == message.author)
-    {
-        ChannelId::new(u64::from_be_bytes(k.channel_id.to_be_bytes()))
-            .edit_message(
-                &http_client,
-                MessageId::new(u64::from_be_bytes(k.message_id.to_be_bytes())),
-                EditMessage::new().embed(formatted_message),
-            )
-            .await?;
-        (
-            k.message_id,
-            k.previous_author_id,
-            k.previous_author_score,
-            k.channel_id,
-        )
-    } else {
-        let response = channel_id
-            .send_message(&http_client, CreateMessage::new().embed(formatted_message))
-            .await?;
+    let last_best_score = get_last_best_score_fields(
+        &last_message,
+        NewScore {
+            username: user_info.username.clone(),
+            user_id: score_improved_event.author,
+            score: score_improved_event.score,
+        },
+    );
 
-        let (last_author_id, last_author_score) = match &last_message {
-            Some(e) => (Some(e.author_id), Some(e.score)),
-            None => (None, None),
-        };
-        (
-            i64::from_be_bytes(response.id.get().to_be_bytes()),
-            last_author_id,
-            last_author_score,
-            i64::from_be_bytes(channel_id.get().to_be_bytes()),
-        )
-    };
+    let formatted_message = format_message(
+        &last_message,
+        &score_improved_event,
+        &challenge_name,
+        &user_info,
+        &last_best_score,
+    );
+    let message_id =
+        should_post_new_message(get_last_posted_message_id(pool).await?, &last_message);
+    let posted_message =
+        post_or_edit_message(message_id, channel_id, formatted_message, http_client).await?;
 
     save_new_message_info(
         &pool,
         last_message,
-        message,
-        message_id,
-        last_author_id,
-        last_score,
-        final_channel_id,
+        score_improved_event,
+        posted_message.id,
+        Some(last_best_score.user_id),
+        Some(last_best_score.score),
+        channel_id,
     )
     .await?;
 
@@ -276,4 +213,16 @@ impl Bot {
             }
         }
     }
+}
+
+fn message_id_from_i64(value: i64) -> MessageId {
+    return MessageId::new(u64::from_be_bytes(value.to_be_bytes()));
+}
+
+fn message_id_to_i64(value: MessageId) -> i64 {
+    return i64::from_be_bytes(value.get().to_be_bytes());
+}
+
+fn channel_id_to_i64(value: ChannelId) -> i64 {
+    return i64::from_be_bytes(value.get().to_be_bytes());
 }
