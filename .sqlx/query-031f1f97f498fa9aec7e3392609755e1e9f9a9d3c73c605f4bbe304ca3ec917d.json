@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT username, avatar\n            FROM accounts\n            WHERE id=$1\n            ",
+  "query": "SELECT username, avatar\n        FROM accounts\n        WHERE id=$1\n        ",
   "describe": {
     "columns": [
       {
@@ -24,5 +24,5 @@
       false
     ]
   },
-  "hash": "a8337d9f8420dc3fc9ea43fbfc4e1c5fd7efd026fe6351f6dcadda9aaffb11f3"
+  "hash": "031f1f97f498fa9aec7e3392609755e1e9f9a9d3c73c605f4bbe304ca3ec917d"
 }

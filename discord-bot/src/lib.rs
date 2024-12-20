@@ -1,8 +1,12 @@
+mod checks;
+mod queries;
+
 use common::langs::LANGS;
+use queries::{get_challenge_name_by_id, get_last_message, get_user_info_by_id, BasicAccontInfo};
 use serenity::all::{
     ChannelId, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
 };
-use sqlx::PgPool;
+use sqlx::{pool, query_scalar, PgPool};
 use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct ScoreImproved {
@@ -26,11 +30,6 @@ struct LastMessage {
     previous_author_score: Option<i32>,
     message_id: i64,
     channel_id: i64,
-}
-
-struct BasicAccontInfo {
-    username: String,
-    avatar: String,
 }
 
 fn format_message(
@@ -150,33 +149,81 @@ async fn save_new_message_info(
     Ok(())
 }
 
-async fn get_last_message(
+#[derive(Debug)]
+enum HandleMessageError {
+    Sql(#[allow(unused)] sqlx::Error),
+    Disocrd(#[allow(unused)] serenity::Error),
+}
+
+impl From<sqlx::Error> for HandleMessageError {
+    fn from(value: sqlx::Error) -> Self {
+        return HandleMessageError::Sql(value);
+    }
+}
+
+impl From<serenity::Error> for HandleMessageError {
+    fn from(value: serenity::Error) -> Self {
+        return HandleMessageError::Disocrd(value);
+    }
+}
+
+async fn handle_message(
+    message: ScoreImproved,
     pool: &PgPool,
-    challenge: i32,
-    language: &str,
-) -> Result<Option<LastMessage>, sqlx::Error> {
-    sqlx::query_as!(
-        LastMessage,
-        r#"
-        SELECT discord_messages.id,
-            discord_messages.language,
-            discord_messages.author as author_id,
-            discord_messages.challenge as challenge_id,
-            accounts.username as author_name,
-            discord_messages.previous_author as previous_author_id,
-            discord_messages.score as score,
-            previous_account.username as "previous_author_name?",
-            discord_messages.previous_author_score,
-            discord_messages.message_id,
-            discord_messages.channel_id
-        FROM discord_messages
-        INNER JOIN accounts ON discord_messages.author = accounts.id
-        LEFT JOIN accounts as previous_account ON discord_messages.previous_author = previous_account.id
-        WHERE discord_messages.language=$1 AND discord_messages.challenge=$2
-        "#,
-        language,
-        challenge,
-    ).fetch_optional(pool).await
+    http_client: &serenity::http::Http,
+    channel_id: ChannelId,
+) -> Result<(), HandleMessageError> {
+    let last_message = get_last_message(&pool, message.challenge_id, &message.language).await?;
+    let challenge_name = get_challenge_name_by_id(&pool, message.challenge_id).await?;
+    let user_info = get_user_info_by_id(&pool, message.author).await?;
+
+    let formatted_message = format_message(&last_message, &message, &challenge_name, &user_info);
+    let (message_id, last_author_id, last_score, final_channel_id) = if let Some(k) = last_message
+        .as_ref()
+        .filter(|e| e.author_id == message.author)
+    {
+        ChannelId::new(u64::from_be_bytes(k.channel_id.to_be_bytes()))
+            .edit_message(
+                &http_client,
+                MessageId::new(u64::from_be_bytes(k.message_id.to_be_bytes())),
+                EditMessage::new().embed(formatted_message),
+            )
+            .await?;
+        (
+            k.message_id,
+            k.previous_author_id,
+            k.previous_author_score,
+            k.channel_id,
+        )
+    } else {
+        let response = channel_id
+            .send_message(&http_client, CreateMessage::new().embed(formatted_message))
+            .await?;
+
+        let (last_author_id, last_author_score) = match &last_message {
+            Some(e) => (Some(e.author_id), Some(e.score)),
+            None => (None, None),
+        };
+        (
+            i64::from_be_bytes(response.id.get().to_be_bytes()),
+            last_author_id,
+            last_author_score,
+            i64::from_be_bytes(channel_id.get().to_be_bytes()),
+        )
+    };
+
+    save_new_message_info(
+        &pool,
+        last_message,
+        message,
+        message_id,
+        last_author_id,
+        last_score,
+        final_channel_id,
+    )
+    .await?;
+
+    Ok(())
 }
 
 async fn handle_bot_queue(
@@ -196,115 +243,12 @@ async fn handle_bot_queue(
     }
 
     while let Some(message) = receiver.recv().await {
-        let last_message =
-            match get_last_message(&pool, message.challenge_id, &message.language).await {
-                Ok(e) => e,
-                Err(err) => {
-                    eprintln!("Faied to fetch previous message: {err:?}");
-                    continue;
-                }
-            };
-
-        let challenge_name = match sqlx::query_scalar!(
-            "
-            SELECT name
-            FROM challenges
-            WHERE id=$1
-            ",
-            message.challenge_id
-        )
-        .fetch_one(&pool)
-        .await
-        {
-            Ok(e) => e,
-            Err(err) => {
-                eprintln!("Failed to fetch challenge id: {err:?}");
-                continue;
+        match handle_message(message, &pool, &http_client, channel_id).await {
+            Ok(ok) => (),
+            Err(e) => {
+                eprintln!("(Partially) Failed to send discord update: {e:?}")
             }
         };
-        let author_name = match sqlx::query_as!(
-            BasicAccontInfo,
-            "SELECT username, avatar
-            FROM accounts
-            WHERE id=$1
-            ",
-            message.author
-        )
-        .fetch_one(&pool)
-        .await
-        {
-            Ok(e) => e,
-            Err(err) => {
-                eprintln!("Failed to fetch challenge id: {err:?}");
-                continue;
-            }
-        };
-
-        let formatted_message =
-            format_message(&last_message, &message, &challenge_name, &author_name);
-        let (message_id, last_author_id, last_score, final_channel_id) = if let Some(k) =
-            last_message
-                .as_ref()
-                .filter(|e| e.author_id == message.author)
-        {
-            match ChannelId::new(u64::from_be_bytes(k.channel_id.to_be_bytes()))
-                .edit_message(
-                    &http_client,
-                    MessageId::new(u64::from_be_bytes(k.message_id.to_be_bytes())),
-                    EditMessage::new().embed(formatted_message),
-                )
-                .await
-            {
-                Ok(e) => e,
-                Err(err) => {
-                    eprintln!("Failed to update message: {err:?}");
-                    continue;
-                }
-            };
-            (
-                k.message_id,
-                k.previous_author_id,
-                k.previous_author_score,
-                k.channel_id,
-            )
-        } else {
-            let response = match channel_id
-                .send_message(&http_client, CreateMessage::new().embed(formatted_message))
-                .await
-            {
-                Ok(e) => e,
-                Err(err) => {
-                    eprintln!("Failed to update message: {err:?}");
-                    continue;
-                }
-            };
-
-            let (last_author_id, last_author_score) = match &last_message {
-                Some(e) => (Some(e.author_id), Some(e.score)),
-                None => (None, None),
-            };
-            (
-                i64::from_be_bytes(response.id.get().to_be_bytes()),
-                last_author_id,
-                last_author_score,
-                i64::from_be_bytes(channel_id.get().to_be_bytes()),
-            )
-        };
-
-        if let Err(e) = save_new_message_info(
-            &pool,
-            last_message,
-            message,
-            message_id,
-            last_author_id,
-            last_score,
-            final_channel_id,
-        )
-        .await
-        {
-            eprint!("Failed to update database entry {e:?}");
-            continue;
-        }
     }
 }
 
