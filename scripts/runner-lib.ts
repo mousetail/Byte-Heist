@@ -133,11 +133,12 @@ function shuffleAndDeal<T>(
   return hands;
 }
 
-export type TestCasesOptions = {
+export type TestCasesOptions<T> = {
   inputSeperator: string;
   outputSeperator: string;
   numberOfRuns: number;
   shuffle: boolean;
+  compareFunction: (a: string, b: T) => boolean;
 };
 
 export type FilterCasesOptions = {
@@ -174,15 +175,16 @@ export class Context {
    * @param testCases A mapping of input -> expected output
    * @param overrideOptions Special options (optional)
    */
-  async *runTestCases(
-    testCases: [string, string][],
-    overrideOptions: Partial<TestCasesOptions> = {}
+  async *runTestCases<T = string>(
+    testCases: [string, T][],
+    overrideOptions: Partial<TestCasesOptions<T>> = {}
   ): AsyncIterableIterator<TestCase> {
-    const options: TestCasesOptions = {
+    const options: TestCasesOptions<T> = {
       inputSeperator: "\n",
       outputSeperator: "\n",
       numberOfRuns: 2,
       shuffle: true,
+      compareFunction: (a, b) => eqIgnoreTrailingWhitespace(a, "" + b),
       ...overrideOptions,
     };
 
@@ -190,9 +192,33 @@ export class Context {
 
     // TODO: When running code becomes thread safe, this should run in paralel
     for (const hand of hands) {
-      yield (
-        await this.run(hand.map((i) => i[0]).join(options.inputSeperator))
-      ).assertEquals(hand.map((i) => i[1]).join(options.outputSeperator));
+      const input = hand.map((i) => i[0]).join(options.inputSeperator);
+      yield (await this.run(input)).assert((d) => {
+        const cases = [
+          ...zipLongest(
+            d.trimEnd().split(options.outputSeperator),
+            hand.map((i) => i[1])
+          ),
+        ].map(([a, b]) => ({
+          output: a,
+          expected: b,
+          equal: a != undefined && options.compareFunction(a, b),
+        }));
+
+        return new TestCase(
+          undefined,
+          cases.every((i) => i.equal) ? "Pass" : "Fail",
+          {
+            Diff: {
+              input: input,
+              output: d,
+              expected: cases
+                .map((i) => (i.equal ? i.output : i.expected))
+                .join(options.outputSeperator),
+            },
+          }
+        );
+      });
     }
   }
 
@@ -284,5 +310,53 @@ export function shuffle(array: unknown[]): void {
   for (let i = array.length - 1; i >= 0; i--) {
     const j = rand(i + 1);
     [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+type Iterableify<T> = { [K in keyof T]: Iterable<T[K]> };
+
+export function* zip<T extends Array<any>>(
+  ...toZip: Iterableify<T>
+): Generator<T> {
+  // Source: https://dev.to/chrismilson/zip-iterator-in-typescript-ldm
+
+  // Get iterators for all of the iterables.
+  const iterators = toZip.map((i) => i[Symbol.iterator]());
+
+  while (true) {
+    // Advance all of the iterators.
+    const results = iterators.map((i) => i.next());
+
+    // If any of the iterators are done, we should stop.
+    if (results.some(({ done }) => done)) {
+      break;
+    }
+
+    // We can assert the yield type, since we know none
+    // of the iterators are done.
+    yield results.map(({ value }) => value) as T;
+  }
+}
+
+export function* zipLongest<T extends Array<any>>(
+  ...toZip: Iterableify<T>
+): Generator<T> {
+  // Source: https://dev.to/chrismilson/zip-iterator-in-typescript-ldm
+
+  // Get iterators for all of the iterables.
+  const iterators = toZip.map((i) => i[Symbol.iterator]());
+
+  while (true) {
+    // Advance all of the iterators.
+    const results = iterators.map((i) => i.next());
+
+    // If any of the iterators are done, we should stop.
+    if (results.every(({ done }) => done)) {
+      break;
+    }
+
+    // We can assert the yield type, since we know none
+    // of the iterators are done.
+    yield results.map(({ value }) => value) as T;
   }
 }
