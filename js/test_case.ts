@@ -1,4 +1,5 @@
 import { stat } from "node:fs";
+import { addShowHideListenersToTextCase } from "./test_case_show_hide";
 
 export type ResultDisplay = {
   judgeError: null | string;
@@ -11,6 +12,7 @@ type Test = {
   columns: Column[];
   status: string;
   title: string | null;
+  defaultVisible: boolean;
 };
 
 type DiffCell = {
@@ -50,12 +52,18 @@ function renderTestCase(testCase: Test): HTMLDivElement {
 
   const header = document.createElement("div");
   header.classList.add("test-case-header");
+
+  const img = document.createElement("img");
+  img.src = "/static/triangle.svg";
+  img.width = 32;
+  header.appendChild(img);
+
+  const title = document.createElement("h2");
+  title.classList.add("test-case-title");
   if (testCase.title) {
-    const title = document.createElement("h2");
-    title.classList.add("test-case-title");
     title.textContent = testCase.title;
-    header.appendChild(title);
   }
+  header.appendChild(title);
 
   const status = document.createElement("div");
   status.classList.add("test-case-status");
@@ -76,7 +84,9 @@ function renderTestCase(testCase: Test): HTMLDivElement {
   for (let column of testCase.columns) {
     columns.appendChild(renderColumn(column));
   }
-  root.appendChild(columns);
+  body.appendChild(columns);
+
+  addShowHideListenersToTextCase(root, testCase.defaultVisible);
 
   return root;
 }

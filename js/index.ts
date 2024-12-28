@@ -6,7 +6,7 @@ import {
 } from "./code_editor";
 import "./style.css";
 import { renderResultDisplay, ResultDisplay } from "./test_case";
-import { initTestCaseHideShow } from "./test_cases";
+import { initTestCaseHideShow } from "./test_case_show_hide";
 
 const setupEditorControls = (
   editorControls: HTMLElement,

@@ -313,6 +313,7 @@ button {
   display: flex;
   justify-content: end;
   height: 3rem;
+  align-items: center;
 }
 
 .test-case-title {
@@ -322,6 +323,7 @@ button {
 .test-case-header img {
   transition: transform 0.5s ease;
   transform: rotate(90deg);
+  vertical-align: middle;
 }
 
 .test-case.test-case-hidden {
