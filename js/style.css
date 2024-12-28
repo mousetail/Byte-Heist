@@ -11,7 +11,9 @@
   --link-visited: hsl(var(--main-hue) 100% 15%);
   --body-text: hsl(var(--main-hue) 60% 10%);
   --background: hsl(var(--main-hue) 60% 90%);
+  --editor-bg: #fff;
   @media (prefers-color-scheme: dark) {
+    --editor-bg: hsl(var(--main-hue) 100% 3%);
     --body-text: hsl(var(--main-hue) 60% 80%);
     --background: hsl(var(--main-hue) 60% 5%);
     --link: hsl(var(--main-hue) 60% 65%);
@@ -39,6 +41,14 @@ footer {
   padding: 0 1rem;
 }
 
+input,
+textarea {
+  padding: 0.5rem;
+  color: var(--body-text);
+  border: 1px solid var(--light-border);
+  background-color: var(--editor-bg);
+}
+
 .footer-content {
   margin: 1rem auto;
   max-width: 58rem;
@@ -51,6 +61,11 @@ footer {
   footer img,
   .lang-icon {
     filter: invert(1);
+  }
+
+  input,
+  textarea {
+    color: white;
   }
 }
 
@@ -138,11 +153,7 @@ textarea:focus-within {
 }
 
 .cm-editor {
-  --editor-bg: #fff;
-  @media (prefers-color-scheme: dark) {
-    --editor-bg: hsl(var(--main-hue) 100% 3%);
-  }
-  border: 1px solid rgb(227, 227, 227);
+  border: 1px solid var(--light-border);
   min-height: 8rem;
   background-color: var(--editor-bg);
 }
