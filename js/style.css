@@ -319,6 +319,21 @@ button {
   flex-grow: 1;
 }
 
+.test-case-header img {
+  transition: transform 0.5s ease;
+  transform: rotate(90deg);
+}
+
+.test-case.test-case-hidden {
+  & .test-case-header img {
+    transform: rotate(0);
+  }
+
+  & .test-case-content {
+    display: none;
+  }
+}
+
 .test-case-columns {
   display: grid;
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));

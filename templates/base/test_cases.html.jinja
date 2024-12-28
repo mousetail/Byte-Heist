@@ -32,9 +32,17 @@
     <div class="test-cases">
       {% if cases.tests %}
         {% for test in cases.tests %}
-          <div class="test-case test-{{ test.status | lower }}">
+          <div class="test-case test-{{ test.status | lower }}
+                      {% if test.defaultVisible %}
+                        default-visible
+                      {% else %}
+                        default-hidden
+                      {% endif %}">
             <div class="test-case-header">
-              {% if test.title %}<h2 class="test-case-title">{{ test.title }}</h2>{% endif %}
+              <img src="/static/triangle.svg" width="32" alt="">
+              <h2 class="test-case-title">
+                {% if test.title %}{{ test.title }}{% endif %}
+              </h2>
               <div class="test-case-status">{{ test.status }}</div>
             </div>
             <div class="test-case-content">

@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
-use common::{RunLangOutput, TestCase, TestPassState};
+use common::{ResultDisplay, RunLangOutput, TestCase, TestPassState};
 use serde::Serialize;
-use similar::TextDiff;
+use similar::{TextDiff, TextDiffConfig};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,6 +10,7 @@ pub struct TestCaseDisplay {
     columns: Vec<Column>,
     title: Option<Cow<'static, str>>,
     status: TestPassState,
+    default_visible: bool,
 }
 
 #[derive(Serialize)]
@@ -35,10 +36,8 @@ impl DiffElement {
 }
 
 impl TestCaseDisplay {
-    pub fn from_test_case(test_case: TestCase) -> Self {
-        let diff_generator = TextDiff::configure();
-
-        let columns = match test_case.result_display {
+    fn get_columns(result_display: ResultDisplay, diff_generator: &TextDiffConfig) -> Vec<Column> {
+        return match result_display {
             common::ResultDisplay::Empty => vec![],
             common::ResultDisplay::Text(e) => vec![Column {
                 title: None,
@@ -122,11 +121,34 @@ impl TestCaseDisplay {
                 },
             ],
         };
+    }
+
+    fn get_default_visible(test_case: &TestCase) -> bool {
+        return match test_case.pass {
+            TestPassState::Pass => false,
+            TestPassState::Fail => true,
+            TestPassState::Info => match &test_case.result_display {
+                ResultDisplay::Run {
+                    input: _,
+                    output: _,
+                    error,
+                } => !error.is_empty(),
+                _ => true,
+            },
+            TestPassState::Warning => true,
+        };
+    }
+
+    pub fn from_test_case(test_case: TestCase) -> Self {
+        let diff_generator = TextDiff::configure();
+        let default_visible = Self::get_default_visible(&test_case);
+        let columns = Self::get_columns(test_case.result_display, &diff_generator);
 
         TestCaseDisplay {
             columns,
             title: test_case.name.map(Cow::Owned),
             status: test_case.pass,
+            default_visible,
         }
     }
 }
@@ -148,6 +170,17 @@ impl From<RunLangOutput> for OutputDisplay {
                 .test_cases
                 .into_iter()
                 .map(TestCaseDisplay::from_test_case)
+                .map(|e| {
+                    // If the test passes, hide all info boxes
+                    if value.tests.pass {
+                        TestCaseDisplay {
+                            default_visible: false,
+                            ..e
+                        }
+                    } else {
+                        e
+                    }
+                })
                 .collect(),
             passed: value.tests.pass,
             timed_out: value.timed_out,
