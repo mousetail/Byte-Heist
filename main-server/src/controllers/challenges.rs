@@ -226,7 +226,17 @@ pub async fn new_challenge(
                 if existing_challenge.challenge.challenge.status != ChallengeStatus::Public
                     && challenge.status == ChallengeStatus::Public
                 {
-                    tokio::spawn(post_new_challenge(account, new_challenge.clone(), id));
+                    let new_challenge = new_challenge.clone();
+                    tokio::spawn(async move {
+                        post_new_challenge(
+                            Account::get_by_id(&pool, existing_challenge.challenge.author)
+                                .await
+                                .unwrap_or(account),
+                            new_challenge,
+                            id,
+                        )
+                        .await
+                    });
                 }
             }
 
