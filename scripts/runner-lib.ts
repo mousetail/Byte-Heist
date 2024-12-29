@@ -306,6 +306,11 @@ export function rand(a: number, b?: number): number {
   return b === undefined ? Math.floor(Math.random() * a) : rand(b - a) + a;
 }
 
+/**
+ * Shuffles an array in place, then returns it.
+ * @param array The array to shuffle
+ * @returns The same array reference
+ */
 export function shuffle<T>(array: T[]): T[] {
   for (let i = array.length - 1; i >= 0; i--) {
     const j = rand(i + 1);
