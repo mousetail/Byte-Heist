@@ -1,13 +1,11 @@
 use axum::{
     extract::{Path, Query},
-    http::StatusCode,
-    response::Redirect,
     Extension,
 };
 use common::langs::LANGS;
 use discord_bot::Bot;
-use serde::{Deserialize, Serialize};
-use sqlx::{query_scalar, types::time::OffsetDateTime, PgPool};
+use reqwest::StatusCode;
+use sqlx::{types::time::OffsetDateTime, PgPool};
 
 use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format},
@@ -16,114 +14,12 @@ use crate::{
     models::{
         account::Account,
         challenge::ChallengeWithAuthorInfo,
-        solutions::{Code, LeaderboardEntry, NewSolution, RankingMode},
+        solutions::{Code, LeaderboardEntry, NewSolution},
     },
-    slug::Slug,
-    test_case_display::OutputDisplay,
     test_solution::test_solution,
 };
 
-#[derive(Serialize, Deserialize)]
-pub struct SolutionQueryParameters {
-    #[serde(default)]
-    ranking: RankingMode,
-}
-
-#[derive(Serialize)]
-pub struct AllSolutionsOutput {
-    challenge: ChallengeWithAuthorInfo,
-    leaderboard: Vec<LeaderboardEntry>,
-    tests: Option<OutputDisplay>,
-    code: Option<String>,
-    previous_solution_invalid: bool,
-    language: String,
-    ranking: RankingMode,
-}
-
-pub async fn all_solutions(
-    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
-    Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
-    format: Format,
-    account: Option<Account>,
-    Extension(pool): Extension<PgPool>,
-) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
-    let leaderboard = LeaderboardEntry::get_leaderboard_near(
-        &pool,
-        challenge_id,
-        &language_name,
-        account.as_ref().map(|e| e.id),
-        ranking,
-    )
-    .await
-    .map_err(Error::Database)?;
-
-    let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
-        .await?
-        .ok_or(Error::NotFound)?;
-    let code = match account {
-        Some(account) => {
-            Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await
-        }
-        None => None,
-    };
-
-    Ok(AutoOutputFormat::new(
-        AllSolutionsOutput {
-            challenge,
-            leaderboard,
-            tests: None,
-            previous_solution_invalid: code.as_ref().is_some_and(|e| !e.valid),
-            code: code.map(|d| d.code),
-            language: language_name,
-            ranking,
-        },
-        "challenge.html.jinja",
-        format,
-    ))
-}
-
-pub async fn challenge_redirect(
-    Path(id): Path<i32>,
-    account: Option<Account>,
-    pool: Extension<PgPool>,
-) -> Result<Redirect, Error> {
-    challenge_redirect_no_slug(Path((id, None)), account, pool).await
-}
-
-pub async fn challenge_redirect_with_slug(
-    Path((id, _slug)): Path<(i32, String)>,
-    account: Option<Account>,
-    pool: Extension<PgPool>,
-) -> Result<Redirect, Error> {
-    challenge_redirect_no_slug(Path((id, None)), account, pool).await
-}
-
-pub async fn challenge_redirect_no_slug(
-    Path((id, language)): Path<(i32, Option<String>)>,
-    account: Option<Account>,
-    Extension(pool): Extension<PgPool>,
-) -> Result<Redirect, Error> {
-    let language = match language.as_ref() {
-        Some(language) => language.as_str(),
-        None => match account.as_ref() {
-            Some(account) => account.preferred_language.as_str(),
-            None => "python",
-        },
-    };
-
-    let Some(slug) = query_scalar!("SELECT name FROM challenges WHERE id=$1", id)
-        .fetch_optional(&pool)
-        .await
-        .map_err(Error::Database)?
-    else {
-        return Err(Error::NotFound);
-    };
-
-    Ok(Redirect::temporary(&format!(
-        "/challenge/{id}/{}/solve/{language}",
-        Slug(&slug)
-    )))
-}
+use super::{all_solutions::AllSolutionsOutput, SolutionQueryParameters};
 
 pub async fn new_solution(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
@@ -262,28 +158,4 @@ pub async fn new_solution(
         format,
     )
     .with_status(status))
-}
-
-pub async fn get_leaderboard(
-    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
-    Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
-    account: Account,
-    Extension(pool): Extension<PgPool>,
-    format: Format,
-) -> Result<AutoOutputFormat<Vec<LeaderboardEntry>>, Error> {
-    let leaderbaord = LeaderboardEntry::get_leaderboard_near(
-        &pool,
-        challenge_id,
-        &language_name,
-        Some(account.id),
-        ranking,
-    )
-    .await
-    .map_err(Error::Database)?;
-
-    Ok(AutoOutputFormat::new(
-        leaderbaord,
-        "leaderboard.html.jinja",
-        format,
-    ))
 }
