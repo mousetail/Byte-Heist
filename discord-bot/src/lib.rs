@@ -124,9 +124,11 @@ async fn handle_message(
     .await?;
     let challenge_name = get_challenge_name_by_id(pool, score_improved_event.challenge_id).await?;
     let user_info = get_user_info_by_id(pool, score_improved_event.author).await?;
+    let latest_message = get_last_posted_message_id(pool).await?;
 
     let last_best_score = get_last_best_score_fields(
         &last_message,
+        latest_message,
         NewScore {
             username: user_info.username.clone(),
             user_id: score_improved_event.author,
@@ -140,8 +142,7 @@ async fn handle_message(
         &user_info,
         &last_best_score,
     );
-    let message_id =
-        should_post_new_message(get_last_posted_message_id(pool).await?, &last_message);
+    let message_id = should_post_new_message(latest_message, &last_message);
     let posted_message = post_or_edit_message(
         message_id,
         last_message
