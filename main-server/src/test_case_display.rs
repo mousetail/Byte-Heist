@@ -28,10 +28,10 @@ struct DiffElement {
 
 impl DiffElement {
     fn from_string(e: String) -> Self {
-        return DiffElement {
+        DiffElement {
             tag: similar::ChangeTag::Equal,
             content: e,
-        };
+        }
     }
 }
 
@@ -124,7 +124,7 @@ impl TestCaseDisplay {
     }
 
     fn get_default_visible(test_case: &TestCase) -> bool {
-        return match test_case.pass {
+        match test_case.pass {
             TestPassState::Pass => false,
             TestPassState::Fail => true,
             TestPassState::Info => match &test_case.result_display {
@@ -136,7 +136,7 @@ impl TestCaseDisplay {
                 _ => true,
             },
             TestPassState::Warning => true,
-        };
+        }
     }
 
     pub fn from_test_case(test_case: TestCase) -> Self {

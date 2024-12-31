@@ -46,7 +46,7 @@ impl TestCase {
 }
 
 fn create_default_sep() -> String {
-    return "\n".to_string();
+    "\n".to_string()
 }
 
 #[derive(Serialize, Deserialize)]
@@ -82,7 +82,7 @@ impl ResultDisplay {
             } => {
                 output.truncate(length);
                 expected.truncate(length);
-                input.as_mut().map(|d| d.truncate(length));
+                if let Some(d) = input.as_mut() { d.truncate(length) }
                 sep.truncate(5);
             }
             ResultDisplay::Run {
