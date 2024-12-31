@@ -6,20 +6,13 @@ pub use all_solutions::all_solutions;
 pub use leaderboard::get_leaderboard;
 pub use new_solution::new_solution;
 
-use axum::{
-    extract::Path,
-    response::Redirect,
-    Extension,
-};
+use axum::{extract::Path, response::Redirect, Extension};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_scalar, PgPool};
 
 use crate::{
     error::Error,
-    models::{
-        account::Account,
-        solutions::RankingMode,
-    },
+    models::{account::Account, solutions::RankingMode},
     slug::Slug,
 };
 

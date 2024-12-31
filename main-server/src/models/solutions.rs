@@ -72,7 +72,6 @@ pub enum RankingMode {
     Me,
 }
 
-
 impl LeaderboardEntry {
     pub async fn get_leaderboard_near(
         pool: &PgPool,

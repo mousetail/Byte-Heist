@@ -21,6 +21,70 @@ use crate::{
 
 use super::{all_solutions::AllSolutionsOutput, SolutionQueryParameters};
 
+async fn insert_new_solution(
+    pool: &PgPool,
+    language_name: &str,
+    version: &str,
+    challenge_id: i32,
+    code: &str,
+    account_id: i32,
+    new_score: i32,
+) -> Result<(), Error> {
+    sqlx::query!(
+        "INSERT INTO solutions (
+            language,
+            version,
+            challenge, 
+            code,
+            author, 
+            score, 
+            last_improved_date
+        ) values ($1, $2, $3, $4, $5, $6, $7)",
+        language_name,
+        version,
+        challenge_id,
+        code,
+        account_id,
+        new_score,
+        OffsetDateTime::now_utc()
+    )
+    .execute(pool)
+    .await
+    .map_err(Error::Database)?;
+
+    Ok(())
+}
+
+async fn update_solution(
+    pool: &PgPool,
+    solution: &NewSolution,
+    new_score: i32,
+    previous_solution_code: &Code,
+) -> Result<(), Error> {
+    sqlx::query!(
+        "UPDATE solutions SET 
+            code=$1,
+            score=$2,
+            valid=true,
+            validated_at=now(),
+            last_improved_date=$3
+        WHERE id=$4",
+        solution.code,
+        new_score,
+        if new_score < previous_solution_code.score || !previous_solution_code.valid {
+            OffsetDateTime::now_utc()
+        } else {
+            previous_solution_code.last_improved_date
+        },
+        previous_solution_code.id
+    )
+    .execute(pool)
+    .await
+    .map_err(Error::Database)?;
+
+    Ok(())
+}
+
 pub async fn new_solution(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
     Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
@@ -67,28 +131,7 @@ pub async fn new_solution(
 
         match previous_code {
             None => {
-                sqlx::query!(
-                    "INSERT INTO solutions (
-                        language,
-                        version,
-                        challenge, 
-                        code,
-                        author, 
-                        score, 
-                        last_improved_date
-                    ) values ($1, $2, $3, $4, $5, $6, $7)",
-                    language_name,
-                    version,
-                    challenge_id,
-                    solution.code,
-                    account.id,
-                    new_score,
-                    OffsetDateTime::now_utc()
-                )
-                .execute(&pool)
-                .await
-                .map_err(Error::Database)?;
-
+                insert_new_solution(&pool, &language_name, version, challenge_id, &solution.code, account.id, new_score).await?;
                 tokio::spawn(
                     post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
                 );
@@ -100,30 +143,13 @@ pub async fn new_solution(
                 !w.valid
                 // Replace a solution if the score is better
                 || w.score >= new_score => {
-                sqlx::query!(
-                    "UPDATE solutions SET 
-                        code=$1,
-                        score=$2,
-                        valid=true,
-                        validated_at=now(),
-                        last_improved_date=$3
-                    WHERE id=$4",
-                    solution.code,
-                    new_score,
-                    if new_score < w.score || !w.valid {
-                        OffsetDateTime::now_utc()
-                    } else {
-                        w.last_improved_date
-                    },
-                    w.id
-                )
-                .execute(&pool)
-                .await
-                .map_err(Error::Database)?;
+                update_solution(&pool, &solution, new_score, &w).await?;
 
-                tokio::spawn(
-                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
-                );
+                if new_score < w.score {
+                    tokio::spawn(
+                        post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
+                    );
+                }
 
                 StatusCode::CREATED
             }

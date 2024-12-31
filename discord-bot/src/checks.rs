@@ -1,10 +1,6 @@
 use serenity::all::MessageId;
 
-use crate::{
-    message_id_from_i64,
-    queries::NewScore,
-    LastMessage,
-};
+use crate::{message_id_from_i64, queries::NewScore, LastMessage};
 
 pub(crate) fn should_post_new_message(
     latest_message: Option<i32>,

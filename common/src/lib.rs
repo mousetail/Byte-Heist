@@ -82,7 +82,9 @@ impl ResultDisplay {
             } => {
                 output.truncate(length);
                 expected.truncate(length);
-                if let Some(d) = input.as_mut() { d.truncate(length) }
+                if let Some(d) = input.as_mut() {
+                    d.truncate(length)
+                }
                 sep.truncate(5);
             }
             ResultDisplay::Run {
