@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE solutions SET \n            code=$1,\n            score=$2,\n            valid=true,\n            validated_at=now(),\n            last_improved_date=$3\n        WHERE id=$4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f0b5e0948496de60e0b75083977e6c832f367c757c262cbb8c6efcd927aa46af"
+}
