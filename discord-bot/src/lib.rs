@@ -4,8 +4,8 @@ mod queries;
 use checks::{get_last_best_score_fields, should_post_new_message};
 use common::langs::LANGS;
 use queries::{
-    get_challenge_name_by_id, get_last_message, get_last_posted_message_id, get_user_info_by_id,
-    save_new_message_info, BasicAccontInfo, NewScore,
+    get_challenge_name_by_id, get_last_message_for_challenge, get_last_posted_message_id,
+    get_user_info_by_id, save_new_message_info, BasicAccontInfo, NewScore,
 };
 use serenity::all::{
     ChannelId, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
@@ -116,7 +116,7 @@ async fn handle_message(
     http_client: &serenity::http::Http,
     channel_id: ChannelId,
 ) -> Result<(), HandleMessageError> {
-    let last_message = get_last_message(
+    let last_message_for_challenge = get_last_message_for_challenge(
         pool,
         score_improved_event.challenge_id,
         &score_improved_event.language,
@@ -127,7 +127,7 @@ async fn handle_message(
     let latest_message = get_last_posted_message_id(pool).await?;
 
     let last_best_score = get_last_best_score_fields(
-        &last_message,
+        &last_message_for_challenge,
         latest_message,
         NewScore {
             username: user_info.username.clone(),
@@ -142,10 +142,10 @@ async fn handle_message(
         &user_info,
         &last_best_score,
     );
-    let message_id = should_post_new_message(latest_message, &last_message);
+    let message_id = should_post_new_message(latest_message, &last_message_for_challenge);
     let posted_message = post_or_edit_message(
         message_id,
-        last_message
+        last_message_for_challenge
             .as_ref()
             .map(|k| channel_id_from_i64(k.channel_id))
             .unwrap_or(channel_id),
@@ -156,7 +156,7 @@ async fn handle_message(
 
     save_new_message_info(
         pool,
-        last_message,
+        last_message_for_challenge,
         score_improved_event,
         posted_message.id,
         Some(last_best_score.user_id),

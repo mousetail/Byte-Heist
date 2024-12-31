@@ -46,7 +46,7 @@ pub(crate) async fn get_user_info_by_id(
     .await
 }
 
-pub(crate) async fn get_last_message(
+pub(crate) async fn get_last_message_for_challenge(
     pool: &PgPool,
     challenge: i32,
     language: &str,
