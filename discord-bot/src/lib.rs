@@ -142,7 +142,11 @@ async fn handle_message(
         &user_info,
         &last_best_score,
     );
-    let message_id = should_post_new_message(latest_message, &last_message_for_challenge);
+    let message_id = should_post_new_message(
+        latest_message,
+        &score_improved_event,
+        &last_message_for_challenge,
+    );
     let posted_message = post_or_edit_message(
         message_id,
         last_message_for_challenge
