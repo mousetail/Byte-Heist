@@ -11,5 +11,5 @@ WITH ranks AS (
     FROM solutions
     WHERE solutions.valid
 )
-SELECT author, challenge, language, total_sols, rank, (total_sols - rank + 1) / total_sols * 1000 as score
+SELECT author, challenge, language, total_sols, rank, (total_sols - rank + 1) * 1000 / total_sols as score
 FROM ranks;
