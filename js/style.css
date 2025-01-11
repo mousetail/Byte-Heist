@@ -127,18 +127,34 @@ main {
 }
 
 #challenges ul {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 17rem);
   list-style-type: none;
-}
+  gap: 1rem;
 
-#challenges li {
-  display: block;
-  padding: 0.6rem;
-}
+  & li {
+    display: block;
+    background: var(--light-border);
 
-#challenges li + li {
-  border-top: 3px solid var(--light-border);
+    display: grid;
+    grid-template-columns: 1fr 4rem;
+    grid-template-rows: 2rem 2rem;
+
+    & .challenge-category {
+      grid-column: 1;
+      grid-row: 2;
+      padding: 0.25rem;
+    }
+
+    & a {
+      padding: 0.25rem;
+    }
+
+    & .score-icon {
+      grid-column: 2;
+      grid-row: 1/2;
+    }
+  }
 }
 
 textarea {
