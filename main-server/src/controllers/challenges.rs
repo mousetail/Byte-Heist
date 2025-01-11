@@ -16,7 +16,7 @@ use crate::{
         account::Account,
         challenge::{
             Challenge, ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo,
-            ChallengeWithTests, NewChallenge, NewOrExistingChallenge,
+            ChallengeWithTests, HomePageChallenge, NewChallenge, NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
     },
@@ -27,8 +27,8 @@ use crate::{
 
 #[derive(Serialize)]
 pub struct AllChallengesOutput {
-    public_challenges: Vec<Challenge>,
-    beta_challenges: Vec<Challenge>,
+    public_challenges: Vec<HomePageChallenge>,
+    beta_challenges: Vec<HomePageChallenge>,
     invalid_solutions_exist: bool,
 }
 
@@ -37,17 +37,10 @@ pub async fn all_challenges(
     account: Option<Account>,
     format: Format,
 ) -> Result<AutoOutputFormat<AllChallengesOutput>, Error> {
-    let sql = "SELECT * FROM challenges WHERE status='public' AND category!='private' ORDER BY created_at DESC";
-    let public_challenges = sqlx::query_as::<_, Challenge>(sql)
-        .fetch_all(&pool)
-        .await
-        .map_err(Error::Database)?;
-
-    let sql = "SELECT * FROM challenges WHERE status='beta' AND category!='private' ORDER BY created_at DESC";
-    let beta_challenges = sqlx::query_as::<_, Challenge>(sql)
-        .fetch_all(&pool)
-        .await
-        .map_err(Error::Database)?;
+    let public_challenges =
+        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Public, &account).await?;
+    let beta_challenges =
+        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Beta, &account).await?;
 
     let invalid_solutions_exist = if let Some(account) = account {
         InvalidatedSolution::invalidated_solution_exists(account.id, &pool)

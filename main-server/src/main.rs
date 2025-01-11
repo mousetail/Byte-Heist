@@ -25,13 +25,13 @@ use controllers::{
 };
 use discord_bot::{init_bot, Bot};
 use solution_invalidation::solution_invalidation_task;
-use sqlx::postgres::PgPoolOptions;
-use std::env;
+use sqlx::{postgres::PgPoolOptions, query, PgPool};
+use std::{env, time::Duration};
 use strip_trailing_slashes::strip_trailing_slashes;
 use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_sessions::ExpiredDeletion;
-use tower_sessions::{cookie::time::Duration, Expiry, SessionManagerLayer};
+use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_file_store::FileSessionStorage;
 
 #[tokio::main]
@@ -62,7 +62,9 @@ async fn main() -> anyhow::Result<()> {
         .with_secure(false)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_name("yq_session_store_id")
-        .with_expiry(Expiry::OnInactivity(Duration::days(360)));
+        .with_expiry(Expiry::OnInactivity(
+            tower_sessions::cookie::time::Duration::days(360),
+        ));
     let _deletion_task = tokio::task::spawn(
         session_store
             .clone()
@@ -84,6 +86,8 @@ async fn main() -> anyhow::Result<()> {
         eprint!("Not starting discord bot because environment variables DISCORD_TOKEN or DISCORD_CHANNEL_ID not found");
         Bot { channel: None }
     };
+
+    start_task_to_refresh_views(pool.clone());
 
     let app = Router::new()
         .route("/", get(all_challenges))
@@ -164,4 +168,22 @@ async fn shutdown_signal() {
         _ = ctrl_c => {},
         _ = terminate => {},
     }
+}
+
+fn start_task_to_refresh_views(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            let statement = query!("REFRESH MATERIALIZED VIEW scores")
+                .execute(&pool)
+                .await;
+            match statement {
+                Ok(_) => (),
+                Err(e) => {
+                    eprintln!("Error refreshing scores: {e:?}");
+                }
+            }
+
+            tokio::time::sleep(Duration::from_secs(30)).await;
+        }
+    });
 }

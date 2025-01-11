@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{query_as, PgPool};
 
 use crate::{error::Error, test_case_display::OutputDisplay};
+
+use super::account::Account;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
@@ -162,6 +164,42 @@ pub struct Challenge {
     #[serde(flatten)]
     pub challenge: NewChallenge,
     pub author: i32,
+}
+
+#[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
+pub struct HomePageChallenge {
+    id: i32,
+    name: String,
+    category: ChallengeCategory,
+    score: Option<i64>,
+}
+
+impl HomePageChallenge {
+    pub async fn get_all_by_status(
+        pool: &PgPool,
+        status: ChallengeStatus,
+        user: &Option<Account>,
+    ) -> Result<Vec<HomePageChallenge>, Error> {
+        query_as!(
+            HomePageChallenge,
+            r#"
+            SELECT
+                id,
+                name,
+                category as "category!: ChallengeCategory",
+                scores.score
+            FROM challenges
+            LEFT JOIN scores ON challenges.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
+            WHERE status=($1)
+        "#,
+            status as ChallengeStatus,
+            user.as_ref().map(|i| i.id),
+            user.as_ref().map(|i| &i.preferred_language)
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(Error::Database)
+    }
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
