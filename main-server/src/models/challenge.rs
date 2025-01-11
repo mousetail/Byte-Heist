@@ -189,8 +189,9 @@ impl HomePageChallenge {
                 category as "category!: ChallengeCategory",
                 scores.score
             FROM challenges
-            LEFT JOIN scores ON challenges.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
+            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
             WHERE status=($1) AND category != 'private'
+            ORDER BY challenges.created_at DESC
         "#,
             status as ChallengeStatus,
             user.as_ref().map(|i| i.id),
