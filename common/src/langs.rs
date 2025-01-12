@@ -81,6 +81,17 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.22.4.3",
         icon: "vyxal.svg"
     },
+    "vyxal3" => Lang {
+        plugin_name: "vyxal3",
+        display_name: "Vyxal 3",
+        compile_command: &[],
+        run_command: &["${LANG_LOCATION}/bin/vyxal3", "${FILE_LOCATION}", "--stdin"],
+        plugin: "https://github.com/lyxal/vyxasd3f.git",
+        env: &[],
+        install_env: &[],
+        latest_version: "3.5.0",
+        icon: "vyxal.svg"
+    },
     "tinyapl" => Lang {
         plugin_name: "tinyapl",
         display_name: "APL (TinyAPL)",
