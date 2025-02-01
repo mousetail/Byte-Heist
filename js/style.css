@@ -407,3 +407,7 @@ button {
 .diff-tag-delete {
   color: red;
 }
+
+.header-content img {
+  vertical-align: middle;
+}

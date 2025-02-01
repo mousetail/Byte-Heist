@@ -17,6 +17,7 @@ use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
     challenges::{all_challenges, compose_challenge, new_challenge, view_challenge},
+    global_leaderboard::global_leaderboard,
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
         challenge_redirect_with_slug, get_leaderboard, new_solution,
@@ -97,6 +98,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
+        .route("/leaderboard/:category", get(global_leaderboard))
         .route("/challenge", get(compose_challenge).post(new_challenge))
         .route("/challenge/:id", get(challenge_redirect))
         .route(

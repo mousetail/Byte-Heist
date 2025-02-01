@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    scores.author as \"author_id!\",\n                    accounts.username as author_name,\n                    COUNT(*) as \"solutions!\",\n                    CAST(SUM(scores.score) AS integer) as \"total_score!:i32\"\n                FROM scores\n                INNER JOIN accounts\n                    ON scores.author = accounts.id\n                INNER JOIN challenges\n                    ON scores.challenge = challenges.id\n                WHERE\n                    challenges.category = $1\n                    AND challenges.status = 'public'\n                GROUP BY scores.author, accounts.username\n                ORDER BY \"total_score!:i32\" DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "author_id!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "solutions!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_score!:i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "f3f1cb6431de9bb83a28f9aa3d2041c6819729b7d13123327a5269863fb26d0b"
+}

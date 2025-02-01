@@ -15,8 +15,8 @@ use crate::{
     models::{
         account::Account,
         challenge::{
-            ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo,
-            ChallengeWithTests, HomePageChallenge, NewChallenge, NewOrExistingChallenge,
+            ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo, ChallengeWithTests,
+            HomePageChallenge, NewChallenge, NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
     },
