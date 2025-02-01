@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    scores.author as \"author_id!\",\n                    accounts.username as author_name,\n                    accounts.avatar as author_avatar,\n                    COUNT(*) as \"solutions!\",\n                    CAST(SUM(scores.score) AS integer) as \"total_score!:i32\",\n                    RANK() OVER () as \"rank!\"\n                FROM scores\n                INNER JOIN accounts\n                    ON scores.author = accounts.id\n                INNER JOIN challenges\n                    ON scores.challenge = challenges.id\n                WHERE\n                    challenges.category = $1\n                    AND challenges.status = 'public'\n                GROUP BY scores.author, accounts.username, accounts.avatar\n                ORDER BY \"total_score!:i32\" DESC\n            ",
+  "query": "\n                SELECT\n                    scores.author as \"author_id!\",\n                    accounts.username as author_name,\n                    accounts.avatar as author_avatar,\n                    COUNT(*) as \"solutions!\",\n                    CAST(SUM(scores.score) AS integer) as \"total_score!:i32\",\n                    rank() OVER (ORDER BY CAST(SUM(scores.score) AS integer)) as \"rank!\"\n                FROM scores\n                INNER JOIN accounts\n                    ON scores.author = accounts.id\n                INNER JOIN challenges\n                    ON scores.challenge = challenges.id\n                WHERE\n                    challenges.category = $1\n                    AND challenges.status = 'public'\n                GROUP BY scores.author, accounts.username, accounts.avatar\n                ORDER BY \"total_score!:i32\" DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -59,5 +59,5 @@
       null
     ]
   },
-  "hash": "b5e46a1dcf0eb1d5f2bbd797d860194d609fc111692cece6319ee44b4d7370e5"
+  "hash": "e74bf5ab2a70149be26dcd62023e178c37e4d16a58ae98b093c050f9c5101a2a"
 }

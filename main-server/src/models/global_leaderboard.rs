@@ -26,7 +26,7 @@ impl GlobalLeaderboardEntry {
                     accounts.avatar as author_avatar,
                     COUNT(*) as "solutions!",
                     CAST(SUM(scores.score) AS integer) as "total_score!:i32",
-                    RANK() OVER () as "rank!"
+                    rank() OVER (ORDER BY CAST(SUM(scores.score) AS integer)) as "rank!"
                 FROM scores
                 INNER JOIN accounts
                     ON scores.author = accounts.id
