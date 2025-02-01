@@ -20,8 +20,11 @@
     </tr>
     {% for solution in object.entries %}
       <tr>
-        <td>-</td>
-        <td>{{ solution.author_name }}</td>
+        <td>{{ solution.rank }}</td>
+        <td>
+          <img src="{{ solution.author_avatar }}" alt="" width="32">
+          <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
+        </td>
         <td>{{ solution.total_score }}</td>
         <td>{{ solution.solutions }}</td>
       </tr>

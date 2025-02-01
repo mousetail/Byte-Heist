@@ -9,8 +9,10 @@ use super::challenge::ChallengeCategory;
 pub struct GlobalLeaderboardEntry {
     author_name: String,
     author_id: i32,
+    author_avatar: String,
     total_score: i32,
     solutions: i64,
+    rank: i64,
 }
 
 impl GlobalLeaderboardEntry {
@@ -21,8 +23,10 @@ impl GlobalLeaderboardEntry {
                 SELECT
                     scores.author as "author_id!",
                     accounts.username as author_name,
+                    accounts.avatar as author_avatar,
                     COUNT(*) as "solutions!",
-                    CAST(SUM(scores.score) AS integer) as "total_score!:i32"
+                    CAST(SUM(scores.score) AS integer) as "total_score!:i32",
+                    RANK() OVER () as "rank!"
                 FROM scores
                 INNER JOIN accounts
                     ON scores.author = accounts.id
@@ -31,7 +35,7 @@ impl GlobalLeaderboardEntry {
                 WHERE
                     challenges.category = $1
                     AND challenges.status = 'public'
-                GROUP BY scores.author, accounts.username
+                GROUP BY scores.author, accounts.username, accounts.avatar
                 ORDER BY "total_score!:i32" DESC
             "#,
             category as ChallengeCategory
