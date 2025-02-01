@@ -9,7 +9,6 @@ mod solution_invalidation;
 mod strip_trailing_slashes;
 mod test_case_display;
 mod test_solution;
-mod vite;
 
 use axum::{routing::get, Extension, Router};
 
