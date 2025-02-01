@@ -25,7 +25,7 @@
           <img src="{{ solution.author_avatar }}" alt="" width="32">
           <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
         </td>
-        <td>{{ solution.total_score }}</td>
+        <td>{{ solution.total_score | format_number }}</td>
         <td>{{ solution.solutions }}</td>
       </tr>
     {% endfor %}
