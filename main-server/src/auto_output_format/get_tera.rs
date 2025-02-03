@@ -48,11 +48,11 @@ fn format_number(value: &Value, data: &HashMap<String, Value>) -> Result<Value, 
 
     match value {
         Value::Number(number) => {
-            return Ok(Value::String(format_number_with_thousands_seperators(
+            Ok(Value::String(format_number_with_thousands_seperators(
                 number.as_i64().unwrap(),
             )))
         }
-        _ => return Err(tera::Error::msg(format!("Expected a number, got {value}"))),
+        _ => Err(tera::Error::msg(format!("Expected a number, got {value}"))),
     }
 }
 
