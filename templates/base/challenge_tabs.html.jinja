@@ -3,6 +3,11 @@
         <span class="tab {% if active=='solve' %}active{% endif %}">
             <a href="/challenge/{{ id }}/{{ name | slugify }}/solve">Solve</a>
         </span>
+        {% if account %}
+            <span class="tab {% if active=='post-mortem' %}active{% endif %}">
+                <a href="/challenge/{{ id }}/{{ name | slugify }}/solutions">Solutions</a>
+            </span>
+        {% endif %}
         <span class="tab {% if active=='view' %}active{% endif %}">
             <a href="/challenge/{{ id }}/{{ name | slugify }}/view">View</a>
         </span>

@@ -411,3 +411,12 @@ button {
 .header-content img {
   vertical-align: middle;
 }
+
+.horizontal-dl {
+  display: flex;
+  justify-content: space-between;
+
+  & dt {
+    font-weight: bold;
+  }
+}

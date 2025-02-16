@@ -1,0 +1,127 @@
+use axum::{
+    extract::Path,
+    response::Redirect,
+    Extension,
+};
+use serde::Serialize;
+use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
+
+use crate::{
+    auto_output_format::{AutoOutputFormat, Format},
+    error::Error,
+    models::{account::Account, challenge::ChallengeWithAuthorInfo},
+};
+
+#[derive(Serialize)]
+pub struct PostMortemViewOutput {
+    solutions: Vec<PostMortemSolutionView>,
+    id: i32,
+    name: String,
+    author: i32,
+}
+
+#[derive(Serialize)]
+struct PostMortemSolutionView {
+    code: Option<String>,
+    author_id: i32,
+    author_name: String,
+    author_avatar: String,
+    score: i32,
+    runtime: f32,
+}
+
+pub async fn post_mortem_view_without_language(
+    Path((challenge_id, slug)): Path<(i32, String)>,
+    account: Account,
+) -> Redirect {
+    return Redirect::temporary(&format!(
+        "/challenge/{challenge_id}/{slug}/solutions/{}",
+        account.preferred_language
+    ));
+}
+
+pub async fn post_mortem_view(
+    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
+    format: Format,
+    _account: Account,
+    Extension(pool): Extension<PgPool>,
+) -> Result<AutoOutputFormat<PostMortemViewOutput>, Error> {
+    let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
+        .await?
+        .ok_or(Error::NotFound)?;
+
+    let is_post_mortem = challenge
+        .challenge
+        .post_mortem_date
+        .is_some_and(|i| i < OffsetDateTime::now_utc());
+
+    let solutions = if is_post_mortem {
+        post_mortem_query(&pool, &language_name, challenge_id).await
+    } else {
+        pre_mortem_query(&pool, &language_name, challenge_id).await
+    }
+    .map_err(Error::Database)?;
+
+    Ok(AutoOutputFormat::new(
+        PostMortemViewOutput {
+            solutions,
+            id: challenge_id,
+            name: challenge.challenge.challenge.name,
+            author: challenge.challenge.author,
+        },
+        "post_mortem_view.html.jinja",
+        format,
+    ))
+}
+
+async fn post_mortem_query(
+    pool: &PgPool,
+    language: &str,
+    challenge_id: i32,
+) -> Result<Vec<PostMortemSolutionView>, sqlx::Error> {
+    query_as!(
+        PostMortemSolutionView,
+        "
+            SELECT solutions.code,
+                solutions.score,
+                solutions.runtime,
+                accounts.id as author_id,
+                accounts.username as author_name,
+                accounts.avatar as author_avatar
+            FROM solutions
+                INNER JOIN accounts ON solutions.author = accounts.id
+            WHERE solutions.challenge=$1 AND solutions.language=$2
+            ORDER BY score ASC
+        ",
+        challenge_id,
+        language
+    )
+    .fetch_all(pool)
+    .await
+}
+
+async fn pre_mortem_query(
+    pool: &PgPool,
+    language: &str,
+    challenge_id: i32,
+) -> Result<Vec<PostMortemSolutionView>, sqlx::Error> {
+    query_as!(
+        PostMortemSolutionView,
+        "
+            SELECT null as code,
+                solutions.score,
+                solutions.runtime,
+                accounts.id as author_id,
+                accounts.username as author_name,
+                accounts.avatar as author_avatar
+            FROM solutions
+                INNER JOIN accounts ON solutions.author = accounts.id
+            WHERE solutions.challenge=$1 AND solutions.language=$2
+            ORDER BY score ASC
+        ",
+        challenge_id,
+        language
+    )
+    .fetch_all(pool)
+    .await
+}

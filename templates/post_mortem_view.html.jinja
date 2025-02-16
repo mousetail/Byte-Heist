@@ -1,0 +1,36 @@
+{% extends "base/base.html.jinja" %}
+{% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
+{% import "base/test_cases.html.jinja" as test_cases %}
+{% block content %}
+  {% if object.id %}
+    {{ challenge_tabs::challenge_tabs(active="post-mortem", id=object.id, name=object.name, author=object.author) }}
+  {% endif %}
+  {% for solution in object.solutions %}
+    <div class="post-mortem-solution">
+      {% if solution.code %}<pre>{{ solution.code }}</pre>{% endif %}
+      <div class="horizontal-dl">
+        <div>
+          <dt>Runtime</dt>
+          <dd>
+            {{ solution.runtime }}
+          </dd>
+        </div>
+        <div>
+          <dt>Score</dt>
+          <dd>
+            {{ solution.score }}
+          </dd>
+        </div>
+        <div>
+          <dt>Author</dt>
+          <dd>
+            <a href="/user/{{ solution.author_id }}">
+              {{ solution.author_name }}
+              <img src="{{ solution.author_avatar }}" width="32" alt="">
+            </a>
+          </dd>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% endblock content %}

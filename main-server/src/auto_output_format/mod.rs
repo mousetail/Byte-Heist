@@ -10,15 +10,10 @@ pub use format::Format;
 use html_context::HtmlContext;
 use std::error::Error;
 
-use axum::{
-    body::Body,
-    http::Response,
-    response::IntoResponse, Json,
-};
+use axum::{body::Body, http::Response, response::IntoResponse, Json};
 use reqwest::StatusCode;
 use serde::Serialize;
 use tera::{escape_html, Context};
-
 
 pub struct AutoOutputFormat<T: Serialize> {
     data: T,
@@ -34,6 +29,7 @@ fn render_html_error(title: &str, error: &tera::Error) -> Response<Body> {
     };
     Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
+        .header("Content-Type", "text/html")
         .body(Body::from(format!(
             "<h2>{}</h2>\n<pre>{}</pre>",
             escape_html(title),
@@ -78,6 +74,7 @@ impl<T: Serialize> AutoOutputFormat<T> {
         };
         Response::builder()
             .status(status)
+            .header("Content-Type", "text/html")
             .body(axum::body::Body::from(html))
             .unwrap()
     }

@@ -20,6 +20,7 @@ use controllers::{
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
         challenge_redirect_with_slug, get_leaderboard, new_solution,
+        post_mortem::{post_mortem_view, post_mortem_view_without_language},
     },
     user::get_user,
 };
@@ -116,6 +117,14 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/challenge/:id/:slug/solve/:language",
             get(all_solutions).post(new_solution),
+        )
+        .route(
+            "/challenge/:id/:slug/solutions",
+            get(post_mortem_view_without_language),
+        )
+        .route(
+            "/challenge/:id/:slug/solutions/:language",
+            get(post_mortem_view),
         )
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))

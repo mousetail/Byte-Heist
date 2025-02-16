@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, PgPool};
+use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
 
 use crate::{error::Error, test_case_display::OutputDisplay};
 
@@ -164,6 +164,7 @@ pub struct Challenge {
     #[serde(flatten)]
     pub challenge: NewChallenge,
     pub author: i32,
+    pub post_mortem_date: Option<OffsetDateTime>,
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
@@ -223,6 +224,7 @@ impl ChallengeWithAuthorInfo {
             challenges.author,
             challenges.category,
             challenges.status,
+            challenges.post_mortem_date,
             accounts.username as author_name,
             accounts.avatar as author_avatar
             FROM challenges LEFT JOIN accounts ON challenges.author = accounts.id
