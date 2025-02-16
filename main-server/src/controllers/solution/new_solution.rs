@@ -29,6 +29,7 @@ async fn insert_new_solution(
     code: &str,
     account_id: i32,
     new_score: i32,
+    runtime: f32,
 ) -> Result<(), Error> {
     sqlx::query!(
         "INSERT INTO solutions (
@@ -38,15 +39,17 @@ async fn insert_new_solution(
             code,
             author, 
             score, 
-            last_improved_date
-        ) values ($1, $2, $3, $4, $5, $6, $7)",
+            last_improved_date,
+            runtime
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8)",
         language_name,
         version,
         challenge_id,
         code,
         account_id,
         new_score,
-        OffsetDateTime::now_utc()
+        OffsetDateTime::now_utc(),
+        runtime
     )
     .execute(pool)
     .await
@@ -60,6 +63,7 @@ async fn update_solution(
     solution: &NewSolution,
     new_score: i32,
     previous_solution_code: &Code,
+    runtime: f32,
 ) -> Result<(), Error> {
     sqlx::query!(
         "UPDATE solutions SET 
@@ -67,8 +71,9 @@ async fn update_solution(
             score=$2,
             valid=true,
             validated_at=now(),
-            last_improved_date=$3
-        WHERE id=$4",
+            last_improved_date=$3,
+            runtime=$4
+        WHERE id=$5",
         solution.code,
         new_score,
         if new_score < previous_solution_code.score || !previous_solution_code.valid {
@@ -76,6 +81,7 @@ async fn update_solution(
         } else {
             previous_solution_code.last_improved_date
         },
+        runtime,
         previous_solution_code.id
     )
     .execute(pool)
@@ -131,7 +137,7 @@ pub async fn new_solution(
 
         match previous_code {
             None => {
-                insert_new_solution(&pool, &language_name, version, challenge_id, &solution.code, account.id, new_score).await?;
+                insert_new_solution(&pool, &language_name, version, challenge_id, &solution.code, account.id, new_score, test_result.runtime).await?;
                 tokio::spawn(
                     post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
                 );
@@ -143,7 +149,7 @@ pub async fn new_solution(
                 !w.valid
                 // Replace a solution if the score is better
                 || w.score >= new_score => {
-                update_solution(&pool, &solution, new_score, &w).await?;
+                update_solution(&pool, &solution, new_score, &w, test_result.runtime).await?;
 
                 if new_score < w.score {
                     tokio::spawn(

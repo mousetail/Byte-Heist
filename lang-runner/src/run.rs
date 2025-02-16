@@ -7,6 +7,7 @@ use common::{
 };
 use futures_util::AsyncWriteExt;
 use serde::Serialize;
+use tokio::time::Instant;
 
 use crate::{
     cachemap::CacheMap,
@@ -193,6 +194,8 @@ async fn run_lang(
     ));
     let id = child.id();
 
+    let start_time = Instant::now();
+
     let timed_out = tokio::select! {
         _status = child.status() => {
             println!("Child finished normally {id}");
@@ -204,10 +207,9 @@ async fn run_lang(
             true
         }
     };
-    eprintln!("Awaiting output");
-    let output = child.output().await?;
 
-    eprintln!("Output Awaited");
+    let end_time = Instant::now();
+    let output = child.output().await?;
 
     let mut stderr = output.stderr;
     stderr.truncate(1000);
@@ -216,6 +218,7 @@ async fn run_lang(
         stderr: String::from_utf8_lossy(&stderr).into_owned(),
         tests: judge_result.await.unwrap(),
         timed_out,
+        runtime: (end_time - start_time).as_secs_f32(),
     })
 }
 

@@ -15,6 +15,7 @@ pub struct RunLangOutput {
     pub tests: JudgeResult,
     pub stderr: String,
     pub timed_out: bool,
+    pub runtime: f32,
 }
 
 #[derive(Serialize, Deserialize)]
