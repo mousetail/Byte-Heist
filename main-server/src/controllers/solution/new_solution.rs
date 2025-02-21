@@ -177,6 +177,19 @@ pub async fn new_solution(
         // Related: https://github.com/mousetail/Byte-Heist/issues/34
         let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
 
+        if test_result.tests.pass && previous_code.as_ref().is_none_or(|e| e.score > new_score) {
+            tokio::spawn(post_updated_score(
+                pool.clone(),
+                bot,
+                challenge_id,
+                account.id,
+                language_name.clone(),
+                new_score,
+                challenge.challenge.challenge.status,
+                challenge.challenge.is_post_mortem,
+            ));
+        }
+
         match should_update_solution(&previous_code, &challenge, new_score).await {
             ShouldUpdateSolution::CreateNew => {
                 insert_new_solution(
@@ -191,34 +204,18 @@ pub async fn new_solution(
                     challenge.challenge.is_post_mortem,
                 )
                 .await?;
-                tokio::spawn(post_updated_score(
-                    pool.clone(),
-                    bot,
-                    challenge_id,
-                    account.id,
-                    language_name.clone(),
-                    new_score,
-                    challenge.challenge.challenge.status,
-                    challenge.challenge.is_post_mortem,
-                ));
 
                 StatusCode::CREATED
             }
-            ShouldUpdateSolution::Update(w) => {
-                update_solution(&pool, &solution, new_score, &w, test_result.runtime).await?;
-
-                if new_score < w.score {
-                    tokio::spawn(post_updated_score(
-                        pool.clone(),
-                        bot,
-                        challenge_id,
-                        account.id,
-                        language_name.clone(),
-                        new_score,
-                        challenge.challenge.challenge.status,
-                        challenge.challenge.is_post_mortem,
-                    ));
-                }
+            ShouldUpdateSolution::Update(previous_code) => {
+                update_solution(
+                    &pool,
+                    &solution,
+                    new_score,
+                    &previous_code,
+                    test_result.runtime,
+                )
+                .await?;
 
                 StatusCode::CREATED
             }
