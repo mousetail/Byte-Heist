@@ -14,6 +14,7 @@ pub struct PostMortemViewOutput {
     id: i32,
     name: String,
     author: i32,
+    language: String,
 }
 
 #[derive(Serialize)]
@@ -63,6 +64,7 @@ pub async fn post_mortem_view(
             id: challenge_id,
             name: challenge.challenge.challenge.name,
             author: challenge.challenge.author,
+            language: language_name,
         },
         "post_mortem_view.html.jinja",
         format,

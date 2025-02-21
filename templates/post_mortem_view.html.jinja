@@ -5,9 +5,22 @@
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="post-mortem", id=object.id, name=object.name, author=object.author) }}
   {% endif %}
+  <div class="lang-list tabs">
+    {% for lang, lang_data in languages() %}
+      <a href="/challenge/{{ object.id }}/{{ object.name | slugify }}/solutions/{{ lang }}"
+         class="lang tab
+                {% if object.language == lang %}active{% endif %}">
+        <img width="32"
+             src="/static/lang-icons/{{ lang_data.icon }}"
+             alt=""
+             class="lang-icon">
+        {{ lang_data.displayName }}
+      </a>
+    {% endfor %}
+  </div>
   {% for solution in object.solutions %}
     <div class="post-mortem-solution">
-      {% if solution.code %}<pre>{{ solution.code }}</pre>{% endif %}
+      {% if solution.code %}<pre class="code-pre code-pre-short">{{ solution.code }}</pre>{% endif %}
       <div class="horizontal-dl">
         <div>
           <dt>Runtime</dt>

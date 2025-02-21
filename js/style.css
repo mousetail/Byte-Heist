@@ -390,6 +390,11 @@ button {
   height: 15rem;
   overflow-y: auto;
   color: black;
+
+  &.code-pre-short {
+    height: 7.5rem;
+  }
+
   @media (prefers-color-scheme: dark) {
     background-color: black;
     color: white;
