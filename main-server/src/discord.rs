@@ -122,6 +122,7 @@ pub async fn post_updated_score(
     language: String,
     score: i32,
     status: ChallengeStatus,
+    is_post_mortem: bool,
 ) {
     match status {
         ChallengeStatus::Beta | ChallengeStatus::Draft | ChallengeStatus::Private => return,
@@ -141,6 +142,7 @@ pub async fn post_updated_score(
             author,
             language,
             score,
+            is_post_mortem,
         })
         .await;
     }

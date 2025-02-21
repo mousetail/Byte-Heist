@@ -199,6 +199,7 @@ pub async fn new_solution(
                     language_name.clone(),
                     new_score,
                     challenge.challenge.challenge.status,
+                    challenge.challenge.is_post_mortem,
                 ));
 
                 StatusCode::CREATED
@@ -215,6 +216,7 @@ pub async fn new_solution(
                         language_name.clone(),
                         new_score,
                         challenge.challenge.challenge.status,
+                        challenge.challenge.is_post_mortem,
                     ));
                 }
 
