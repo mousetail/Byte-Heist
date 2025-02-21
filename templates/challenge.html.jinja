@@ -67,6 +67,17 @@
           {% endfor %}
         </tbody>
       </table>
+      {% if object.challenge.post_mortem_date %}
+        <div>
+          {% if object.challenge.is_post_mortem %}
+            Challenge ended
+          {% else %}
+            Challenge ends in
+          {% endif %}
+          {{ object.challenge.post_mortem_date | format_date }}
+          {% if object.challenge.is_post_mortem %}ago{% endif %}
+        </div>
+      {% endif %}
     </div>
   </div>
   <div class="lang-list tabs">
@@ -87,6 +98,11 @@
       <div class="warning">
         Your previous submitted solution has been made invalid due to updates in the challenge. Please fix your solution before it will
         be added back to the leaderboard.
+      </div>
+    {% endif %}
+    {% if object.challenge.is_post_mortem %}
+      <div class="warning">
+        This challenge has ended. You are free to submit more solutions but they won't count for scoring.
       </div>
     {% endif %}
     <div class="hidden" id="editor-controls">
