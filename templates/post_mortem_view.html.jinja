@@ -30,6 +30,26 @@
             </a>
           </dd>
         </div>
+        <div>
+          <dt>Valid</dt>
+          <dd>
+            {% if solution.valid %}
+              True
+            {% else %}
+              False
+            {% endif %}
+          </dd>
+        </div>
+        <div>
+          <dt>Post Mortem</dt>
+          <dd>
+            {% if solution.is_post_mortem %}
+              True
+            {% else %}
+              False
+            {% endif %}
+          </dd>
+        </div>
       </div>
     </div>
   {% endfor %}

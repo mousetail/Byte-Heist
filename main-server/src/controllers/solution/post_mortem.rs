@@ -24,6 +24,8 @@ struct PostMortemSolutionView {
     author_avatar: String,
     score: i32,
     runtime: f32,
+    is_post_mortem: bool,
+    valid: bool,
 }
 
 pub async fn post_mortem_view_without_language(
@@ -74,18 +76,20 @@ async fn post_mortem_query(
 ) -> Result<Vec<PostMortemSolutionView>, sqlx::Error> {
     query_as!(
         PostMortemSolutionView,
-        "
+        r#"
             SELECT solutions.code,
                 solutions.score,
                 solutions.runtime,
+                solutions.valid,
+                solutions.is_post_mortem as "is_post_mortem!",
                 accounts.id as author_id,
                 accounts.username as author_name,
                 accounts.avatar as author_avatar
             FROM solutions
                 INNER JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2
-            ORDER BY score ASC
-        ",
+            ORDER BY valid DESC, score ASC
+        "#,
         challenge_id,
         language
     )
@@ -100,18 +104,20 @@ async fn pre_mortem_query(
 ) -> Result<Vec<PostMortemSolutionView>, sqlx::Error> {
     query_as!(
         PostMortemSolutionView,
-        "
+        r#"
             SELECT null as code,
                 solutions.score,
                 solutions.runtime,
                 accounts.id as author_id,
+                solutions.valid,
+                solutions.is_post_mortem as "is_post_mortem!",
                 accounts.username as author_name,
                 accounts.avatar as author_avatar
             FROM solutions
                 INNER JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2
-            ORDER BY score ASC
-        ",
+            ORDER BY valid DESC, score ASC
+        "#,
         challenge_id,
         language
     )

@@ -1,6 +1,6 @@
 -- Add migration script here
 ALTER TABLE solutions
-    ADD COLUMN is_post_mortem boolean DEFAULT false;
+    ADD COLUMN is_post_mortem boolean NOT NULL DEFAULT false;
 
 DROP MATERIALIZED VIEW scores;
 
