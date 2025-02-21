@@ -42,7 +42,6 @@ fn format_message(
     challenge_name: &str,
     author: &BasicAccontInfo,
     last_best_score: &NewScore,
-    is_post_mortem: bool,
 ) -> CreateEmbed {
     let public_url = std::env::var("YQ_PUBLIC_URL").unwrap();
 
@@ -53,7 +52,11 @@ fn format_message(
                 .get(&new_message.language)
                 .map(|d| d.display_name)
                 .unwrap_or(&new_message.language),
-            if is_post_mortem { " (Post mortem)" } else { "" }
+            if new_message.is_post_mortem {
+                " (Post mortem)"
+            } else {
+                ""
+            }
         ))
         .author(
             CreateEmbedAuthor::new(&author.username)
@@ -61,10 +64,15 @@ fn format_message(
                 .url(format!("{public_url}/user/{}", &new_message.author)),
         )
         .url(format!(
-            "{}/challenge/{}/{}/solve/{}",
+            "{}/challenge/{}/{}/{}/{}",
             public_url,
             new_message.challenge_id,
             slug::slugify(challenge_name),
+            if new_message.is_post_mortem {
+                "solutions"
+            } else {
+                "solve"
+            },
             new_message.language
         ))
         .field(
@@ -73,7 +81,7 @@ fn format_message(
             true,
         )
         .field(&author.username, format!("{}", new_message.score), true)
-        .color(if is_post_mortem {
+        .color(if new_message.is_post_mortem {
             Colour::from_rgb(255, 0, 0)
         } else {
             Colour::from_rgb(0, 0, 255)
@@ -149,7 +157,6 @@ async fn handle_message(
         &challenge_name,
         &user_info,
         &last_best_score,
-        score_improved_event.is_post_mortem,
     );
     let message_id = should_post_new_message(
         latest_message,
