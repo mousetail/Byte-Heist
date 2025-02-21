@@ -1,10 +1,6 @@
-use axum::{
-    extract::Path,
-    response::Redirect,
-    Extension,
-};
+use axum::{extract::Path, response::Redirect, Extension};
 use serde::Serialize;
-use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
+use sqlx::{query_as, PgPool};
 
 use crate::{
     auto_output_format::{AutoOutputFormat, Format},
@@ -50,10 +46,7 @@ pub async fn post_mortem_view(
         .await?
         .ok_or(Error::NotFound)?;
 
-    let is_post_mortem = challenge
-        .challenge
-        .post_mortem_date
-        .is_some_and(|i| i < OffsetDateTime::now_utc());
+    let is_post_mortem = challenge.challenge.is_post_mortem;
 
     let solutions = if is_post_mortem {
         post_mortem_query(&pool, &language_name, challenge_id).await

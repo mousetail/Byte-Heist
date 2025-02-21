@@ -30,6 +30,7 @@ async fn insert_new_solution(
     account_id: i32,
     new_score: i32,
     runtime: f32,
+    is_post_mortem: bool,
 ) -> Result<(), Error> {
     sqlx::query!(
         "INSERT INTO solutions (
@@ -40,8 +41,9 @@ async fn insert_new_solution(
             author, 
             score, 
             last_improved_date,
-            runtime
-        ) values ($1, $2, $3, $4, $5, $6, $7, $8)",
+            runtime,
+            is_post_mortem
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
         language_name,
         version,
         challenge_id,
@@ -49,7 +51,8 @@ async fn insert_new_solution(
         account_id,
         new_score,
         OffsetDateTime::now_utc(),
-        runtime
+        runtime,
+        is_post_mortem
     )
     .execute(pool)
     .await
@@ -65,15 +68,16 @@ async fn update_solution(
     previous_solution_code: &Code,
     runtime: f32,
 ) -> Result<(), Error> {
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE solutions SET 
             code=$1,
             score=$2,
             valid=true,
             validated_at=now(),
             last_improved_date=$3,
-            runtime=$4
-        WHERE id=$5",
+            runtime=$4,
+            is_post_mortem=$5
+        WHERE id=$6",
         solution.code,
         new_score,
         if new_score < previous_solution_code.score || !previous_solution_code.valid {
@@ -82,13 +86,51 @@ async fn update_solution(
             previous_solution_code.last_improved_date
         },
         runtime,
+        previous_solution_code.is_post_mortem,
         previous_solution_code.id
     )
     .execute(pool)
     .await
     .map_err(Error::Database)?;
 
+    if result.rows_affected() != 1 {
+        return Err(Error::ServerError);
+    }
+
     Ok(())
+}
+
+enum ShouldUpdateSolution<'a> {
+    CreateNew,
+    Update(&'a Code),
+    None,
+}
+
+async fn should_update_solution<'a>(
+    previous_code: &'a Option<Code>,
+    challenge: &ChallengeWithAuthorInfo,
+    new_score: i32,
+) -> ShouldUpdateSolution<'a> {
+    match previous_code {
+        // If there is no previous solution, of course replace it
+        None => ShouldUpdateSolution::CreateNew,
+        // If the previous solution was from before the challenge ended, create a new one
+        Some(k) if !k.is_post_mortem && challenge.challenge.is_post_mortem => {
+            ShouldUpdateSolution::CreateNew
+        }
+        Some(w) if
+            // Always replace an invalid solution
+            !w.valid
+            // Replace a solution if the score is better
+            || w.score >= new_score => {
+                ShouldUpdateSolution::Update(w)
+        }
+        Some(_) => {
+            // This means the code passed but is not better than the previously saved solution
+            // So we don't save
+            ShouldUpdateSolution::None
+        },
+    }
 }
 
 pub async fn new_solution(
@@ -135,35 +177,50 @@ pub async fn new_solution(
         // Related: https://github.com/mousetail/Byte-Heist/issues/34
         let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
 
-        match previous_code {
-            None => {
-                insert_new_solution(&pool, &language_name, version, challenge_id, &solution.code, account.id, new_score, test_result.runtime).await?;
-                tokio::spawn(
-                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
-                );
+        match should_update_solution(&previous_code, &challenge, new_score).await {
+            ShouldUpdateSolution::CreateNew => {
+                insert_new_solution(
+                    &pool,
+                    &language_name,
+                    version,
+                    challenge_id,
+                    &solution.code,
+                    account.id,
+                    new_score,
+                    test_result.runtime,
+                    challenge.challenge.is_post_mortem,
+                )
+                .await?;
+                tokio::spawn(post_updated_score(
+                    pool.clone(),
+                    bot,
+                    challenge_id,
+                    account.id,
+                    language_name.clone(),
+                    new_score,
+                    challenge.challenge.challenge.status,
+                ));
 
                 StatusCode::CREATED
             }
-            Some(w) if
-                // Always replace an invalid solution
-                !w.valid
-                // Replace a solution if the score is better
-                || w.score >= new_score => {
+            ShouldUpdateSolution::Update(w) => {
                 update_solution(&pool, &solution, new_score, &w, test_result.runtime).await?;
 
                 if new_score < w.score {
-                    tokio::spawn(
-                        post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
-                    );
+                    tokio::spawn(post_updated_score(
+                        pool.clone(),
+                        bot,
+                        challenge_id,
+                        account.id,
+                        language_name.clone(),
+                        new_score,
+                        challenge.challenge.challenge.status,
+                    ));
                 }
 
                 StatusCode::CREATED
             }
-            Some(_) => {
-                // This means the code passed but is not better than the previously saved solution
-                // So we don't save
-                StatusCode::OK
-            },
+            ShouldUpdateSolution::None => StatusCode::OK,
         }
     } else {
         StatusCode::BAD_REQUEST

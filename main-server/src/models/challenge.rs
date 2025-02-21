@@ -165,6 +165,7 @@ pub struct Challenge {
     pub challenge: NewChallenge,
     pub author: i32,
     pub post_mortem_date: Option<OffsetDateTime>,
+    pub is_post_mortem: bool,
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
@@ -225,6 +226,8 @@ impl ChallengeWithAuthorInfo {
             challenges.category,
             challenges.status,
             challenges.post_mortem_date,
+            (challenges.post_mortem_date IS NOT NULL
+                AND challenges.post_mortem_date < now()) as is_post_mortem,
             accounts.username as author_name,
             accounts.avatar as author_avatar
             FROM challenges LEFT JOIN accounts ON challenges.author = accounts.id
