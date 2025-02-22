@@ -420,18 +420,27 @@ button {
 .post-mortem-solution {
   display: flex;
   align-items: center;
-  background-color: #b9edd4;
   margin: 0.6ch;
   flex-wrap: wrap;
+
+  background-color: #b9edd4;
+  @media (prefers-color-scheme: dark) {
+    background-color: hsl(var(--main-hue) 60% 10%);
+  }
+
+  &.post-mortem {
+    background-color: #dee9e3;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: hsl(var(--main-hue) 20% 10%);
+    }
+  }
+
   & pre {
     min-width: 15ch;
     margin: 0.6rem;
     flex-grow: 1;
   }
-}
-
-.post-mortem-solution.post-mortem {
-  background-color: #dee9e3;
 }
 
 .solution-metadata {
