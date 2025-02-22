@@ -177,7 +177,11 @@ pub async fn new_solution(
         // Related: https://github.com/mousetail/Byte-Heist/issues/34
         let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
 
-        if test_result.tests.pass && previous_code.as_ref().is_none_or(|e| e.score > new_score) {
+        if test_result.tests.pass
+            && previous_code
+                .as_ref()
+                .is_none_or(|e| !e.valid || e.score > new_score)
+        {
             tokio::spawn(post_updated_score(
                 pool.clone(),
                 bot,
