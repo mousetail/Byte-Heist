@@ -47,10 +47,15 @@ pub struct NewChallenge {
 impl NewChallenge {
     pub fn validate(
         &self,
-        previous: Option<&NewChallenge>,
+        previous: Option<&Challenge>,
         is_admin: bool,
     ) -> Result<(), HashMap<&'static str, &'static str>> {
         let mut errors = HashMap::new();
+
+        if previous.is_some_and(|e| e.is_post_mortem) {
+            errors.insert("status", "Can't edit an ended challenge");
+        }
+
         if self.name.is_empty() {
             errors.insert("name", "name can't be empty");
         }
@@ -59,12 +64,12 @@ impl NewChallenge {
         }
         if self.status == ChallengeStatus::Public
             && !is_admin
-            && previous.is_none_or(|k| k.status == ChallengeStatus::Public)
+            && previous.is_none_or(|k| k.challenge.status == ChallengeStatus::Public)
         {
             errors.insert("status", "you can't make a challenge public");
         } else if self.status != ChallengeStatus::Public
             && !is_admin
-            && previous.is_some_and(|k| k.status == ChallengeStatus::Public)
+            && previous.is_some_and(|k| k.challenge.status == ChallengeStatus::Public)
         {
             errors.insert(
                 "status",
@@ -73,8 +78,10 @@ impl NewChallenge {
         }
 
         if !is_admin
-            && previous
-                .is_some_and(|k| k.status == ChallengeStatus::Public && k.category != self.category)
+            && previous.is_some_and(|k| {
+                k.challenge.status == ChallengeStatus::Public
+                    && k.challenge.category != self.category
+            })
         {
             errors.insert("category", "can't change the category of a live challenge");
         }

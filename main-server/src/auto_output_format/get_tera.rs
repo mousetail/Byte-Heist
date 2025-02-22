@@ -21,6 +21,7 @@ pub fn get_tera() -> Result<&'static Tera, Response> {
             tera.register_filter("markdown", MarkdownFilter);
             tera.register_filter("format_number", format_number);
             tera.register_filter("format_date", format_date);
+            tera.register_tester("empty", empty);
             tera
         })
     });
@@ -92,4 +93,24 @@ fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, te
             offset.whole_hours() % 24
         )
     }))
+}
+
+fn empty(value: Option<&Value>, args: &[Value]) -> tera::Result<bool> {
+    if !args.is_empty() {
+        return Err(tera::Error::msg(
+            "The format string filter takes no parameters",
+        ));
+    }
+
+    Ok(match value {
+        Some(e) => match e {
+            Value::Null => false,
+            Value::Bool(_) => false,
+            Value::Number(_number) => false,
+            Value::String(e) => e.is_empty(),
+            Value::Array(values) => values.is_empty(),
+            Value::Object(map) => map.is_empty(),
+        },
+        None => false,
+    })
 }
