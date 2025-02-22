@@ -19,31 +19,24 @@
     {% endfor %}
   </div>
   {% for solution in object.solutions %}
-    <div class="post-mortem-solution">
-      {% if solution.code %}<pre class="code-pre code-pre-short">{{ solution.code }}</pre>{% endif %}
-      <div class="horizontal-dl">
-        <div>
-          <dt>Runtime</dt>
+    <div class="post-mortem-solution {% if solution.is_post_mortem %}post-mortem{% endif %}">
+      <div class="solution-metadata">
+        <dl>
+          <dt>Author</dt>
           <dd>
-            {{ solution.runtime }}
+            <a href="/user/{{ solution.author_id }}">
+              <img src="{{ solution.author_avatar }}" width="32" alt="">
+              <span>{{ solution.author_name }}</span>
+            </a>
           </dd>
-        </div>
-        <div>
           <dt>Score</dt>
           <dd>
             {{ solution.score }}
           </dd>
-        </div>
-        <div>
-          <dt>Author</dt>
+          <dt>Runtime</dt>
           <dd>
-            <a href="/user/{{ solution.author_id }}">
-              {{ solution.author_name }}
-              <img src="{{ solution.author_avatar }}" width="32" alt="">
-            </a>
+            {{ 1000 * solution.runtime | round }} ms
           </dd>
-        </div>
-        <div>
           <dt>Valid</dt>
           <dd>
             {% if solution.valid %}
@@ -52,8 +45,6 @@
               False
             {% endif %}
           </dd>
-        </div>
-        <div>
           <dt>Post Mortem</dt>
           <dd>
             {% if solution.is_post_mortem %}
@@ -62,8 +53,9 @@
               False
             {% endif %}
           </dd>
-        </div>
+        </dl>
       </div>
+      {% if solution.code %}<pre class="code-pre code-pre-short">{{ solution.code }}</pre>{% endif %}
     </div>
   {% endfor %}
 {% endblock content %}

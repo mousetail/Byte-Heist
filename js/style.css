@@ -417,11 +417,42 @@ button {
   vertical-align: middle;
 }
 
-.horizontal-dl {
+.post-mortem-solution {
+  display: flex;
+  align-items: center;
+  background-color: #b9edd4;
+  margin: 0.6ch;
+  flex-wrap: wrap;
+  & pre {
+    min-width: 15ch;
+    margin: 0.6rem;
+    flex-grow: 1;
+  }
+}
+
+.post-mortem-solution.post-mortem {
+  background-color: #dee9e3;
+}
+
+.solution-metadata {
   display: flex;
   justify-content: space-between;
-
-  & dt {
-    font-weight: bold;
+  margin: 0.6rem;
+  & dl {
+    display: grid;
+    grid-template-columns: 12ch 1fr;
+    & dt {
+      width: 11ch;
+      white-space: pre;
+      font-weight: bold;
+    }
+    & dd {
+      min-width: 20ch;
+      & a {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+      }
+    }
   }
 }
