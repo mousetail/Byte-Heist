@@ -169,31 +169,14 @@ pub async fn new_solution(
     let previous_solution_invalid =
         !test_result.tests.pass && previous_code.as_ref().is_some_and(|e| !e.valid);
 
+    // Currently the web browser turns all line breaks into "\r\n" when a solution
+    // is submitted. This should eventually be fixed in the frontend, but for now
+    // we just replace "\r\n" with "\n" when calculating the score to make it match
+    // the byte counter in the editor.
+    // Related: https://github.com/mousetail/Byte-Heist/issues/34
+    let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
+
     let status = if test_result.tests.pass {
-        // Currently the web browser turns all line breaks into "\r\n" when a solution
-        // is submitted. This should eventually be fixed in the frontend, but for now
-        // we just replace "\r\n" with "\n" when calculating the score to make it match
-        // the byte counter in the editor.
-        // Related: https://github.com/mousetail/Byte-Heist/issues/34
-        let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
-
-        if test_result.tests.pass
-            && previous_code
-                .as_ref()
-                .is_none_or(|e| !e.valid || e.score > new_score)
-        {
-            tokio::spawn(post_updated_score(
-                pool.clone(),
-                bot,
-                challenge_id,
-                account.id,
-                language_name.clone(),
-                new_score,
-                challenge.challenge.challenge.status,
-                challenge.challenge.is_post_mortem,
-            ));
-        }
-
         match should_update_solution(&previous_code, &challenge, new_score).await {
             ShouldUpdateSolution::CreateNew => {
                 insert_new_solution(
@@ -228,6 +211,24 @@ pub async fn new_solution(
     } else {
         StatusCode::BAD_REQUEST
     };
+
+    if test_result.tests.pass
+        && previous_code
+            .as_ref()
+            .is_none_or(|e| !e.valid || new_score < e.score)
+    {
+        tokio::spawn(post_updated_score(
+            pool.clone(),
+            bot,
+            challenge_id,
+            account.id,
+            language_name.clone(),
+            new_score,
+            challenge.challenge.challenge.status,
+            challenge.challenge.is_post_mortem,
+        ));
+    }
+
     Ok(AutoOutputFormat::new(
         AllSolutionsOutput {
             challenge,
