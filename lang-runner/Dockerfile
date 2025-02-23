@@ -23,7 +23,12 @@ RUN apt-get update -y && apt-get install -y \
   libreadline-dev \
   libssl-dev \
   zip \
-  unzip
+  unzip \
+  # Java, because Java is a thing some languages need.
+  openjdk-17-jdk
+
+
+RUN ln /usr/bin/java /usr/local/bin/java
 
 RUN adduser yq
 
@@ -37,6 +42,10 @@ ENV PATH="$PATH:/home/yq/.asdf/bin"
 
 # Add asdf shims to PATH, so installed executables can be run in this Dockerfile
 ENV PATH=$PATH:/home/yq/.asdf/shims
+
+# Set JAVA_HOME
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+ENV PATH="$JAVA_HOME/bin:$PATH"
 
 COPY --from=rust-build /usr/src/myapp/target/release/lang-runner /lang-runner
 COPY ./scripts /scripts
