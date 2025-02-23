@@ -85,7 +85,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         plugin_name: "vyxal3",
         display_name: "Vyxal 3",
         compile_command: &[],
-        run_command: &["${LANG_LOCATION}/bin/vyxal3", "${FILE_LOCATION}", "--stdin"],
+        run_command: &["${LANG_LOCATION}/bin/vyxal3", "--file", "${FILE_LOCATION}", "--stdin"],
         plugin: "https://github.com/lyxal/vyxasd3f.git",
         env: &[],
         install_env: &[],
