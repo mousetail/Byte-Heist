@@ -113,12 +113,7 @@ async fn run_lang(
     command
         .args([
             "--die-with-parent",
-            // "--ro-bind",
-            // "/proc/self",
-            // "/proc/self",
-            // "--ro-bind",
-            // "/bin",
-            // "/bin",
+            //
             "--chdir",
             "/",
             "--ro-bind",
@@ -150,12 +145,17 @@ async fn run_lang(
         .args(["--ro-bind"])
         .arg(judge_lang_folder)
         .arg("/judge")
-        .args(["--ro-bind", "/scripts", "/scripts"])
-        .args(["--unshare-all", "--new-session"]);
+        .args(["--ro-bind", "/scripts", "/scripts"]);
 
     for (key, value) in judge_lang.env {
         command.args(["--setenv", *key, *value]);
     }
+
+    for (key, value) in judge_lang.extra_mounts.iter().chain(lang.extra_mounts) {
+        command.args(["--ro-bind", key, value]);
+    }
+
+    command.args(["--unshare-all", "--new-session"]);
 
     command
         .args(

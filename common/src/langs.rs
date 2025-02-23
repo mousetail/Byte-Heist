@@ -13,6 +13,7 @@ pub struct Lang {
     pub install_env: &'static [(&'static str, &'static str)],
     pub latest_version: &'static str,
     pub icon: &'static str,
+    pub extra_mounts: &'static [(&'static str, &'static str)],
 }
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -25,7 +26,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         env: &[],
         install_env: &[],
         latest_version: "22.9.0",
-        icon: "nodejs.svg"
+        icon: "nodejs.svg",
+        extra_mounts: &[],
     },
     "deno" => Lang {
         plugin_name: "deno",
@@ -40,7 +42,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         ],
         install_env: &[],
         latest_version: "2.0.6",
-        icon: "deno.svg"
+        icon: "deno.svg",
+        extra_mounts: &[],
     },
     "python" => Lang {
         plugin_name: "python",
@@ -51,7 +54,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         env: &[("LD_LIBRARY_PATH", "/lang/lib")],
         install_env: &[],
         latest_version: "3.12.0",
-        icon: "python.svg"
+        icon: "python.svg",
+        extra_mounts: &[],
     },
     "rust" => Lang {
         plugin_name: "rust",
@@ -68,7 +72,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             "rust-docs,rust-docs-json-preview,cargo,rustfmt-preview,rls-preview,rust-analyzer-preview,llvm-tools-preview,clippy-preview,rust-analysis-x86_64-unknown-linux-gnu,llvm-bitcode-linker-preview"
         )],
         latest_version: "1.85.0",
-        icon: "rust.svg"
+        icon: "rust.svg",
+        extra_mounts: &[],
     },
     "vyxal" => Lang {
         plugin_name: "vyxal",
@@ -79,18 +84,24 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         env: &[],
         install_env: &[],
         latest_version: "2.22.4.3",
-        icon: "vyxal.svg"
+        icon: "vyxal.svg",
+        extra_mounts: &[],
     },
     "vyxal3" => Lang {
         plugin_name: "vyxal3",
         display_name: "Vyxal 3",
         compile_command: &[],
-        run_command: &["${LANG_LOCATION}/bin/vyxal3", "${FILE_LOCATION}", "--stdin"],
+        run_command: &["/java/bin/java", "-jar", "${LANG_LOCATION}/bin/vyxal3.jar", "--file", "${FILE_LOCATION}", "--stdin"],
         plugin: "https://github.com/lyxal/vyxasd3f.git",
-        env: &[],
+        env: &[
+            ("LD_LIBRARY_PATH", "/java/lib:/lib"),
+        ],
         install_env: &[],
         latest_version: "3.7.0",
-        icon: "vyxal3.svg"
+        icon: "vyxal3.svg",
+        extra_mounts: &[
+            ("/usr/lib/jvm/java-17-openjdk-amd64", "/java", )
+        ],
     },
     "tinyapl" => Lang {
         plugin_name: "tinyapl",
@@ -101,7 +112,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         env: &[],
         install_env: &[],
         latest_version: "0.11.1.0",
-        icon: "tinyapl.svg"
+        icon: "tinyapl.svg",
+        extra_mounts: &[],
     },
     "tcc" => Lang {
         plugin_name: "tcc",
@@ -115,6 +127,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         ],
         install_env: &[],
         latest_version: "0.9.27",
-        icon: "c.svg"
+        icon: "c.svg",
+        extra_mounts: &[],
     }
 };

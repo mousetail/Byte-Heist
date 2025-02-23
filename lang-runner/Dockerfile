@@ -24,8 +24,8 @@ RUN apt-get update -y && apt-get install -y \
   libssl-dev \
   zip \
   unzip \
-  # Temporary
-  nano
+  # Vyxal Dependencies
+  openjdk-17-jdk
 
 RUN adduser yq
 
