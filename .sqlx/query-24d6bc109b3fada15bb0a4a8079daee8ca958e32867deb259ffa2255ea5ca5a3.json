@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO challenges (name, judge, description, author, status, category)\n                values ($1, $2, $3, $4, $5::challenge_status, $6::challenge_category)\n                RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Text",
+        "Int4",
+        {
+          "Custom": {
+            "name": "challenge_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "beta",
+                "public",
+                "private"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "24d6bc109b3fada15bb0a4a8079daee8ca958e32867deb259ffa2255ea5ca5a3"
+}

@@ -1,21 +1,55 @@
 {% import "base/test_cases.html.jinja" as test_cases %}
 {% extends "base/base.html.jinja" %}
 {% block content %}
-    <h1>{{ object.user_name }}</h1>
+  <h1>{{ object.user_name }}</h1>
+  {% set langs = languages() %}
+  <table>
+    <tr>
+      <th>Challenge</th>
+      <th>Language</th>
+      <th>Score</th>
+    </tr>
+    {% for solution in object.solutions %}
+      <tr>
+        <td>
+          <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.challenge_name }}</a>
+        </td>
+        <td>
+          <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">
+            <img src="/static/lang-icons/{{ langs[solution.language].icon }}"
+                 width="32"
+                 alt=""
+                 class="lang-icon">
+            {{ langs[solution.language].displayName }}
+          </a>
+        </td>
+        <td>{{ solution.score }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+  {% if account and account.id == object.id %}
+    <h2>Invalid Solutions</h2>
     <table>
+      <tr>
+        <th>Challenge</th>
+        <th>Language</th>
+      </tr>
+      {% for solution in object.invalidated_solutions %}
         <tr>
-            <th>Challenge</th>
-            <th>Language</th>
-            <th>Score</th>
+          <td>
+            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.challenge_name }}</a>
+          </td>
+          <td>
+            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">
+              <img src="/static/lang-icons/{{ langs[solution.language].icon }}"
+                   width="32"
+                   alt=""
+                   class="lang-icon">
+              {{ langs[solution.language].displayName }}
+            </a>
+          </td>
         </tr>
-        {% for solution in object.solutions %}
-            <tr>
-                <td>
-                    <a href="/{{ solution.challenge_id }}/{{ solution.language }}">{{ solution.challenge_name }}</a>
-                </td>
-                <td>{{ solution.language }}</td>
-                <td>{{ solution.score }}</td>
-            </tr>
-        {% endfor %}
+      {% endfor %}
     </table>
+  {% endif %}
 {% endblock content %}

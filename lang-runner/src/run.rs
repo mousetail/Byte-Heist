@@ -1,23 +1,30 @@
-use std::{path::PathBuf, process::Stdio};
+use std::{path::PathBuf, process::Stdio, time::Duration};
 
 use async_process::Command;
 use common::{
     langs::{Lang, LANGS},
-    JudgeResult, RunLangOutput, TestCase,
+    RunLangOutput,
 };
 use futures_util::AsyncWriteExt;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use tokio::time::Instant;
 
 use crate::{
     cachemap::CacheMap,
     error::{RunLangError, RunProcessError},
+    parse_output::parse_judge_result_from_stream,
     Message,
 };
 
+const MAX_CONCURRENT_RUNS: usize = 4;
+
+static RUNS_SEMAPHORE: tokio::sync::Semaphore =
+    tokio::sync::Semaphore::const_new(MAX_CONCURRENT_RUNS);
+
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
-    println!("Installing language version {}", lang.name);
+    println!("Installing language version {}", lang.display_name);
     let plugin_install_output = Command::new("asdf")
-        .args(["plugin", "add", lang.name, lang.plugin])
+        .args(["plugin", "add", lang.plugin_name, lang.plugin])
         .stderr(Stdio::inherit())
         .status()
         .await?;
@@ -30,12 +37,20 @@ async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessE
 }
 
 async fn install_language_version(lang: &Lang, version: &str) -> Result<(), RunProcessError> {
-    println!("Installing language version {} {}", lang.name, version);
-    let status = Command::new("asdf")
-        .args(["install", lang.name, version])
-        .stderr(Stdio::inherit())
-        .status()
-        .await?;
+    println!(
+        "Installing language version {} {}",
+        lang.display_name, version
+    );
+    let mut command = Command::new("asdf");
+    command
+        .args(["install", lang.plugin_name, version])
+        .stderr(Stdio::inherit());
+
+    for env in lang.install_env {
+        command.env(env.0, env.1);
+    }
+
+    let status = command.status().await?;
 
     if !status.success() {
         return Err(RunProcessError::NonZeroStatusCode(status.code()));
@@ -48,9 +63,9 @@ async fn install_lang(
     version: &str,
     versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<(), RunProcessError> {
-    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
+    let lang = LANGS.get(&lang_name).unwrap();
 
-    let lang_version_token = versions.get(lang.name.to_owned());
+    let lang_version_token = versions.get(lang.plugin_name.to_owned());
     let lang_versions = lang_version_token
         .get_or_try_init(|| install_plugin(lang))
         .await?;
@@ -66,7 +81,7 @@ async fn install_lang(
 
 async fn get_lang_directory(lang: &Lang, version: &str) -> Result<PathBuf, RunProcessError> {
     let lang_folder = Command::new("asdf")
-        .args(["where", lang.name, version])
+        .args(["where", lang.plugin_name, version])
         .stderr(Stdio::inherit())
         .output()
         .await?;
@@ -88,34 +103,22 @@ async fn run_lang(
     judge_lang: &str,
     judge_version: &str,
 ) -> Result<RunLangOutput, RunProcessError> {
-    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
-    let judge_lang = LANGS.iter().find(|k| k.name == judge_lang).unwrap();
+    let lang = LANGS.get(lang_name).unwrap();
+    let judge_lang = LANGS.get(judge_lang).unwrap();
 
     let code_lang_folder = get_lang_directory(lang, version).await?;
     let judge_lang_folder = get_lang_directory(judge_lang, judge_version).await?;
 
-    // let temp_directory = tempfile::TempDir::new()?;
-    // let path = temp_directory.path().join("file");
-    // let mut tmp_file = OpenOptions::new()
-    //     .create_new(true)
-    //     .write(true)
-    //     .open(&path)?;
-    // tmp_file.write_all(code.as_bytes())?;
-    // tmp_file.flush()?;
-    println!("Running code in lang");
-
     let mut command = Command::new("bwrap");
     command
         .args([
-            // "--clearenv",
-            // "--hostname",
-            // "yq",
-            "--ro-bind",
-            "/proc/self",
-            "/proc/self",
-            "--ro-bind",
-            "/bin",
-            "/bin",
+            "--die-with-parent",
+            // "--ro-bind",
+            // "/proc/self",
+            // "/proc/self",
+            // "--ro-bind",
+            // "/bin",
+            // "/bin",
             "--chdir",
             "/",
             "--ro-bind",
@@ -166,7 +169,8 @@ async fn run_lang(
                 .collect::<Vec<_>>(),
         )
         .stdout(Stdio::piped())
-        .stdin(Stdio::piped());
+        .stdin(Stdio::piped())
+        .stderr(Stdio::piped());
 
     // .args([&format!("/lang/{}", lang.bin_location), code as &str, judge]);
 
@@ -185,73 +189,73 @@ async fn run_lang(
     let data = serde_json::to_string(&RunnerInput { lang, code, judge })
         .map_err(RunProcessError::SerializationFailed)?;
     stdin.write_all(data.as_bytes()).await?;
+    stdin.close().await?;
 
+    let judge_result = tokio::spawn(parse_judge_result_from_stream(
+        child
+            .stdout
+            .take()
+            .expect("The child stdout is already consumed"),
+    ));
+    let id = child.id();
+
+    let start_time = Instant::now();
+
+    let timed_out = tokio::select! {
+        _status = child.status() => {
+            println!("Child finished normally {id}");
+            false
+        }
+        _timeout = tokio::time::sleep(Duration::from_secs(3)) => {
+            child.kill().unwrap();
+            eprintln!("Timed out {id}");
+            true
+        }
+    };
+
+    let end_time = Instant::now();
     let output = child.output().await?;
 
-    let mut stdout = output.stdout;
-    stdout.truncate(10000);
     let mut stderr = output.stderr;
     stderr.truncate(1000);
 
     Ok(RunLangOutput {
         stderr: String::from_utf8_lossy(&stderr).into_owned(),
-        tests: parse_output(&stdout),
+        tests: judge_result.await.unwrap(),
+        timed_out,
+        runtime: (end_time - start_time).as_secs_f32(),
     })
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct FinalVerdict {
-    pass: bool,
-}
-
-fn parse_output(out: &[u8]) -> JudgeResult {
-    let mut test_cases = vec![];
-    let mut pass = false;
-    for line in out.split(|&k| k == b'\n') {
-        if line.is_empty() {
-            continue;
-        }
-        match serde_json::from_slice::<TestCase>(line) {
-            Ok(test_case) => test_cases.push(test_case),
-            Err(_) => match serde_json::from_slice::<FinalVerdict>(line) {
-                Ok(FinalVerdict { pass: new_pass }) => pass = new_pass,
-                Err(_e) => test_cases.push(TestCase {
-                    name: Some("Judge Debug Message".to_owned()),
-                    pass: common::TestPassState::Info,
-                    result_display: common::ResultDisplay::Text(
-                        String::from_utf8_lossy(line).to_string(),
-                    ),
-                    error: None,
-                }),
-            },
-        }
-    }
-
-    JudgeResult { pass, test_cases }
 }
 
 pub async fn process_message(
     message: Message,
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<RunLangOutput, RunLangError> {
+    let deno_latest_version = LANGS.get("deno").unwrap().latest_version;
+
     // Runner Lang
-    install_lang("deno".to_owned(), "2.0.4", lang_versions)
+    install_lang("deno".to_owned(), deno_latest_version, lang_versions)
         .await
         .map_err(RunLangError::PluginInstallFailure)?;
 
     install_lang(message.lang.clone(), &message.version, lang_versions)
         .await
         .map_err(RunLangError::PluginInstallFailure)?;
+
+    let _semaphore = RUNS_SEMAPHORE
+        .acquire()
+        .await
+        .map_err(RunLangError::SemaphoreError)?;
     let output = run_lang(
         &message.lang,
         &message.version,
         &message.code,
         &message.judge,
         "deno",
-        "2.0.4",
+        deno_latest_version,
     )
     .await
-    .map_err(RunLangError::RunLangError)?;
+    .map_err(RunLangError::RunLang)?;
     Ok(output)
 }
 

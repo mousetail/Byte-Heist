@@ -28,11 +28,16 @@ impl From<std::io::Error> for RunProcessError {
 #[derive(Debug, Serialize)]
 pub enum RunLangError {
     PluginInstallFailure(#[allow(unused)] RunProcessError),
-    RunLangError(#[allow(unused)] RunProcessError),
+    RunLang(#[allow(unused)] RunProcessError),
     IOError(
         #[allow(unused)]
         #[serde(serialize_with = "serialize_error")]
         std::io::Error,
+    ),
+    SemaphoreError(
+        #[allow(unused)]
+        #[serde(serialize_with = "serialize_error")]
+        tokio::sync::AcquireError,
     ),
 }
 

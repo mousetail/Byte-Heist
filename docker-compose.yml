@@ -11,10 +11,10 @@ services:
       # Except it doesn't run as root so it couldn't do anything anyway? I'm not betting anything on this though.
       # Finding comprehesive information seems extremely difficult.
 
-      - CAP_AUDIT_CONTROL 
-      - CAP_BLOCK_SUSPEND 
+      - CAP_AUDIT_CONTROL
+      - CAP_BLOCK_SUSPEND
       # - CAP_BPF
-      # - CAP_CHECKPOINT_RESTORE 
+      # - CAP_CHECKPOINT_RESTORE
       - CAP_DAC_OVERRIDE
       - CAP_FSETID
       - CAP_KILL
@@ -34,9 +34,9 @@ services:
     volumes:
       - ./target/debug:/debug
       - ./scripts:/scripts
-    entrypoint: ['/scripts/auto-reload.sh', '/debug/lang-runner']
+    entrypoint: ["/scripts/auto-reload.sh", "/debug/lang-runner"]
   postgres:
-    image: 'postgres:latest'
+    image: "postgres:latest"
     ports:
       - 5432:5432
     environment:
@@ -44,4 +44,6 @@ services:
       POSTGRES_PASSWORD: password # The PostgreSQL password (useful to connect to the database)
       POSTGRES_DB: default_database # The PostgreSQL default database (automatically created at first launch)
     volumes:
-      - ./postgres-data/data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+volumes:
+  postgres-data:

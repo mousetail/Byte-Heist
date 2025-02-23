@@ -14,6 +14,8 @@ pub struct JudgeResult {
 pub struct RunLangOutput {
     pub tests: JudgeResult,
     pub stderr: String,
+    pub timed_out: bool,
+    pub runtime: f32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -32,15 +34,71 @@ pub enum TestPassState {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TestCase {
+    #[serde(default)]
     pub name: Option<String>,
     pub pass: TestPassState,
     pub result_display: ResultDisplay,
-    pub error: Option<String>,
+}
+
+impl TestCase {
+    pub fn truncate(&mut self, length: usize) {
+        self.result_display.truncate(length);
+    }
+}
+
+fn create_default_sep() -> String {
+    "\n".to_string()
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum ResultDisplay {
     Empty,
     Text(String),
-    Diff { output: String, expected: String },
+    Diff {
+        #[serde(default)]
+        input: Option<String>,
+        output: String,
+        expected: String,
+        #[serde(default = "create_default_sep")]
+        sep: String,
+    },
+    Run {
+        #[serde(default)]
+        input: Option<String>,
+        output: String,
+        error: String,
+    },
+}
+
+impl ResultDisplay {
+    pub fn truncate(&mut self, length: usize) {
+        match self {
+            ResultDisplay::Empty => {}
+            ResultDisplay::Text(e) => e.truncate(length),
+            ResultDisplay::Diff {
+                output,
+                expected,
+                sep,
+                input,
+            } => {
+                output.truncate(length);
+                expected.truncate(length);
+                if let Some(d) = input.as_mut() {
+                    d.truncate(length)
+                }
+                sep.truncate(5);
+            }
+            ResultDisplay::Run {
+                input,
+                output,
+                error,
+            } => {
+                if let Some(input) = input {
+                    input.truncate(length);
+                }
+                output.truncate(length);
+                error.truncate(length);
+            }
+        }
+    }
 }

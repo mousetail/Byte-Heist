@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE challenges SET name=$1, judge=$2, description=$3, example_code=$4, status=$5::challenge_status, category=$6::challenge_category WHERE id=$7",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "challenge_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "beta",
+                "public",
+                "private"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        },
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "af8300d4f80e5818fe977f56801138f397b350d70abea393f40751a408b9b303"
+}

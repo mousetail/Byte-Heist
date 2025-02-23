@@ -11,22 +11,44 @@ use serde::Serialize;
 use sqlx::{prelude::FromRow, PgPool};
 use tower_sessions::Session;
 
-use crate::controllers::auth::ACCOUNT_ID_KEY;
+use crate::{controllers::auth::ACCOUNT_ID_KEY, error::Error};
 
 #[derive(FromRow, Serialize)]
 pub struct Account {
     pub id: i32,
     pub username: String,
     pub avatar: String,
+    pub preferred_language: String,
+    pub admin: bool,
 }
 
 impl Account {
     pub async fn get_by_id(pool: &PgPool, id: i32) -> Option<Self> {
-        sqlx::query_as("SELECT id, username, avatar from accounts where id=$1")
-            .bind(id)
-            .fetch_optional(pool)
-            .await
-            .unwrap()
+        sqlx::query_as!(
+            Account,
+            "SELECT id, username, avatar, preferred_language, admin from accounts where id=$1",
+            id
+        )
+        .fetch_optional(pool)
+        .await
+        .unwrap()
+    }
+
+    pub async fn save_preferred_language(
+        &self,
+        pool: &PgPool,
+        preferred_language: &str,
+    ) -> Result<(), Error> {
+        sqlx::query!(
+            "UPDATE accounts SET preferred_language=$1 WHERE id=$2",
+            preferred_language,
+            self.id
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        Ok(())
     }
 }
 
@@ -72,17 +94,17 @@ impl<S: Send + Sync> FromRequestParts<S> for Account {
             .await
             .map_err(|_| AccountFetchError::DatabaseLoadFailed)?;
 
-        if let Some(account_id) = session
+        match session
             .get(ACCOUNT_ID_KEY)
             .await
             .map_err(|_| AccountFetchError::NoSession)?
-        {
+        { Some(account_id) => {
             if let Some(account) = Account::get_by_id(&pool, account_id).await {
                 return Ok(account);
             }
             return Err(AccountFetchError::NoAccountFound);
-        } else {
+        } _ => {
             return Err(AccountFetchError::NotLoggedIn);
-        }
+        }}
     }
 }

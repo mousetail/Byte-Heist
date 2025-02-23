@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO discord_messages\n                (\n                    language,\n                    challenge,\n                    author,\n                    previous_author,\n                    previous_author_score,\n                    score,\n                    message_id,\n                    channel_id\n                ) VALUES (\n                    $1,\n                    $2,\n                    $3,\n                    $4,\n                    $5,\n                    $6,\n                    $7,\n                    $8 \n                )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2d3cd7647a278c8890111c390edbedd976ea0c2bafc29b2a8ba9ab9ee3af4cf9"
+}

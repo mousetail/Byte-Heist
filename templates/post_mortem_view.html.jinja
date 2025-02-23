@@ -1,0 +1,61 @@
+{% extends "base/base.html.jinja" %}
+{% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
+{% import "base/test_cases.html.jinja" as test_cases %}
+{% block content %}
+  {% if object.id %}
+    {{ challenge_tabs::challenge_tabs(active="post-mortem", id=object.id, name=object.name, author=object.author) }}
+  {% endif %}
+  <div class="lang-list tabs">
+    {% for lang, lang_data in languages() %}
+      <a href="/challenge/{{ object.id }}/{{ object.name | slugify }}/solutions/{{ lang }}"
+         class="lang tab
+                {% if object.language == lang %}active{% endif %}">
+        <img width="32"
+             src="/static/lang-icons/{{ lang_data.icon }}"
+             alt=""
+             class="lang-icon">
+        {{ lang_data.displayName }}
+      </a>
+    {% endfor %}
+  </div>
+  {% for solution in object.solutions %}
+    <div class="post-mortem-solution {% if solution.is_post_mortem %}post-mortem{% endif %}">
+      <div class="solution-metadata">
+        <dl>
+          <dt>Author</dt>
+          <dd>
+            <a href="/user/{{ solution.author_id }}">
+              <img src="{{ solution.author_avatar }}" width="32" alt="">
+              <span>{{ solution.author_name }}</span>
+            </a>
+          </dd>
+          <dt>Score</dt>
+          <dd>
+            {{ solution.score }}
+          </dd>
+          <dt>Runtime</dt>
+          <dd>
+            {{ 1000 * solution.runtime | round }} ms
+          </dd>
+          <dt>Valid</dt>
+          <dd>
+            {% if solution.valid %}
+              True
+            {% else %}
+              False
+            {% endif %}
+          </dd>
+          <dt>Post Mortem</dt>
+          <dd>
+            {% if solution.is_post_mortem %}
+              True
+            {% else %}
+              False
+            {% endif %}
+          </dd>
+        </dl>
+      </div>
+      {% if solution.code %}<pre class="code-pre code-pre-short">{{ solution.code }}</pre>{% endif %}
+    </div>
+  {% endfor %}
+{% endblock content %}

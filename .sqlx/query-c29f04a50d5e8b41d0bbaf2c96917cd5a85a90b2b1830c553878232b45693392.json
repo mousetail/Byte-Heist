@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.created_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "category!: ChallengeCategory",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "score",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "challenge_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "beta",
+                "public",
+                "private"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "c29f04a50d5e8b41d0bbaf2c96917cd5a85a90b2b1830c553878232b45693392"
+}

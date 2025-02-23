@@ -7,6 +7,7 @@ export default defineConfig({
         rollupOptions: {
             // overwrite default .html entry
             input: 'js/index.ts',
+            treeshake: 'smallest'
         },
         outDir: 'static/target'
     },

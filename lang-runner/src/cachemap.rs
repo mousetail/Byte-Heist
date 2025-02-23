@@ -1,6 +1,7 @@
 use std::{hash::Hash, sync::Arc};
 
 use dashmap::DashMap;
+use serde::{ser::SerializeMap, Serialize};
 use tokio::sync::OnceCell;
 
 // todo: Evaluate replacing with `OnceMap` from the UV project:
@@ -30,5 +31,19 @@ impl<K: Hash + Eq, V> FromIterator<(K, V)> for CacheMap<K, V> {
                 .map(|(k, v)| (k, Arc::new(OnceCell::new_with(Some(v)))))
                 .collect(),
         }
+    }
+}
+
+impl<K: Hash + Eq + ToString, V: Serialize> Serialize for CacheMap<K, V> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_serializer = serializer.serialize_map(Some(self.inner.len()))?;
+        for object in self.inner.iter() {
+            map_serializer.serialize_entry(&object.key().to_string(), &object.value().get())?;
+        }
+
+        map_serializer.end()
     }
 }

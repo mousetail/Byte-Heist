@@ -1,3 +1,4 @@
 {
-    "ignore": "H006,J018,J004"
+    "ignore": "H006,J018,J004,H021",
+    "exclude": "main-server,lang-runner"
 }

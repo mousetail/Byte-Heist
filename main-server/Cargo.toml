@@ -11,11 +11,15 @@ axum = { version = "0.7.6", features = ["macros"] }
 futures-util = "0.3.30"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_bytes = "0.11.15"
-sqlx = { version="0.8.2", features=["postgres", "runtime-tokio"] }
+sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "time"] }
 tokio = { version = "1.40.0", features = ["rt-multi-thread", "signal"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-reqwest = { version = "0.12", features = ["json", "rustls-tls", "http2"], default_features=false }
-common = {path = "../common" }
+reqwest = { version = "0.12", features = [
+    "json",
+    "rustls-tls",
+    "http2",
+], default-features = false }
+common = { path = "../common" }
 tera = "1.20.0"
 dotenvy = "0.15.7"
 oauth2 = "5.0.0-rc.1"
@@ -24,3 +28,7 @@ tower-http = { version = "0.6.1", features = ["catch-panic", "fs"] }
 serde_json = "1.0.128"
 markdown-it = "0.6.1"
 tower-sessions-file-store = "0.1.2"
+slug = "0.1.6"
+discord-bot = { path = "../discord-bot" }
+similar = { version = "2.6.0", features = ["serde"] }
+num-format = "0.4.4"

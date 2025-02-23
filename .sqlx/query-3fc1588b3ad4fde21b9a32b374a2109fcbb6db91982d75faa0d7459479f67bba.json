@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT solutions.language, solutions.score, solutions.challenge as challenge_id, challenges.name as challenge_name\n        FROM solutions\n        LEFT JOIN challenges ON challenges.id = solutions.challenge\n        WHERE solutions.author=$1\n        AND solutions.valid=true\n        AND challenges.status in ('public', 'beta')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "language",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "challenge_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "challenge_name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "3fc1588b3ad4fde21b9a32b374a2109fcbb6db91982d75faa0d7459479f67bba"
+}

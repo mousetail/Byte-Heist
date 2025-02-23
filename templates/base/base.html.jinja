@@ -1,20 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-
     {% block head %}
-      <title>YQ</title>
+      <title>Byte Heist</title>
       <meta name="description" value="Yet Another Golf Site" />
       <meta name="keywords" value="code-golf" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta charset="UTF-8" />
-      <link rel="icon" href="/static/favicon.svg">
+      <link rel="icon" href="/static/favicon.svg" />
     {% endblock head %}
-
     {% block scripts %}
       {{ modules(modules="js/index.ts") | safe }}
     {% endblock scripts %}
-
     {% if dev %}
       <!-- temporary hacks to get webworkers to work during dev -->
       <script>
@@ -39,31 +36,57 @@
           })();
       </script>
     {% endif %}
-
-    <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <div class="header">
-      <div>
-        <a href="/"><img src="/static/favicon.svg" width="24">Home</a>
+    <header>
+      <div class="header-content">
+        <div>
+          <a href="/">
+            <img src="/static/favicon.svg" width="30" alt="Byte Heist" />
+          Home</a>
+          <a href="/leaderboard/code-golf">Leaderboard</a>
+        </div>
+        <div>
+          {% if account %}
+            <a href="/user/{{ account.id }}">
+              {{ account.username }}
+              <img src="{{ account.avatar }}&size=18"
+                   width="18"
+                   alt="{{ account.username }} profile picture" />
+            </a>
+          {% else %}
+            <a href="/login/github">Join the Heist (with Github)</a>
+          {% endif %}
+        </div>
       </div>
-      <div>
-        {% if account %}
-          {{ account.username }}
-          <img src="{{ account.avatar }}&size=18" alt="{{ account.username }} profile picture" />
-        {% else %}
-          <a href="/login/github">Login</a>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="content">
+    </header>
+    <main>
       {% block content %}
       {% endblock content %}
-    </div>
-
+    </main>
     <footer>
-      <a href="https://discord.gg/ugbfdgzpjK">Join The Discord</a>
+      <div class="footer-content">
+        <p>Copyright © 2024-2025 Byte Heist. All rights reserved.</p>
+        <p>
+          <a href="https://github.com/mousetail/Byte-Heist"
+             alt="GitHub"
+             title="GitHub"
+             target="_blank"
+             rel="noopener"
+             style="text-decoration:none">
+            <img src="/static/footer-icons/github.svg" alt="GitHub" title="GitHub" />
+          </a>
+          &nbsp;
+          <a href="https://discord.gg/ugbfdgzpjK"
+             alt="Discord"
+             title="Discord"
+             target="_blank"
+             rel="noopener"
+             style="text-decoration:none">
+            <img src="/static/footer-icons/discord.svg" alt="Discord" title="Discord" />
+          </a>
+        </p>
+      </div>
     </footer>
   </body>
 </html>

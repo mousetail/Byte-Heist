@@ -1,5 +1,6 @@
 mod cachemap;
 mod error;
+mod parse_output;
 mod run;
 
 use std::sync::Arc;
@@ -20,42 +21,6 @@ pub struct Message {
     judge: String,
 }
 
-// fn main() {
-//     println!("Starting!");
-
-//     let mut lang_versions = get_lang_versions();
-//     println!("{lang_versions:?}");
-
-//     let messages = [
-//         Message::Install {
-//             lang: "nodejs".to_owned(),
-//             version: "17.3.0".to_owned(),
-//         },
-//         Message::Install {
-//             lang: "python".to_owned(),
-//             version: "3.12.0".to_owned(),
-//         },
-//         Message::Run {
-//             lang: "nodejs".to_owned(),
-//             version: "17.3.0".to_owned(),
-//             code: "console.log(\"Hello World!\");".to_owned(),
-//         },
-//         Message::Run {
-//             lang: "python".to_owned(),
-//             version: "3.12.0".to_owned(),
-//             code: "import math\nprint(f\"Hello World! {math.sqrt(25)}\");".to_owned(),
-//         },
-//     ];
-
-//     for message in messages {
-//         println!("processing message {message:?}");
-//         process_message(message, &mut lang_versions).unwrap();
-//     }
-
-//     let lang_versions = get_lang_versions();
-//     println!("{lang_versions:?}");
-// }
-
 #[tokio::main]
 async fn main() {
     println!("Starting server");
@@ -68,6 +33,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root).post(handle_message))
+        .route("/lang-versions", get(lang_versions_endpoint))
         .with_state(Arc::new(lang_versions));
 
     // run our app with hyper, listening globally on port 3000
@@ -82,6 +48,12 @@ async fn main() {
 
 async fn root() -> &'static str {
     "Server is working properly"
+}
+
+async fn lang_versions_endpoint(
+    State(lang_versions): State<Arc<CacheMap<String, CacheMap<String, ()>>>>,
+) -> Json<impl Serialize> {
+    Json(serde_json::to_value(&*lang_versions).unwrap())
 }
 
 #[axum::debug_handler]

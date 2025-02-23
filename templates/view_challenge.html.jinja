@@ -1,0 +1,18 @@
+{% extends "base/base.html.jinja" %}
+{% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
+{% import "base/test_cases.html.jinja" as test_cases %}
+{% block content %}
+  {% if object.id %}
+    {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author) }}
+  {% endif %}
+  <h1>{{ object.name }}</h1>
+  {{ object.description | markdown }}
+  <h2>Judge</h2>
+  <pre class="code-pre">{{- object.judge -}}</pre>
+  <h2>Example Code</h2>
+  <pre class="code-pre">
+    {{-
+      object.example_code
+    -}}
+  </pre>
+{% endblock content %}

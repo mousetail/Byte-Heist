@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO solution_invalidation_log(solution, pass)\n                VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "622ee0e913e3ef5f6dce46add06a137d35f80deaa944c3e746f71f229f19996d"
+}

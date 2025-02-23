@@ -1,5 +1,3 @@
 [workspace]
-resolver="2"
-members=[ "common",
-    "lang-runner"
-, "main-server"]
+resolver = "2"
+members = ["common", "discord-bot", "lang-runner", "main-server"]

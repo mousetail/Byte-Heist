@@ -1,46 +1,69 @@
 {% macro test_cases(cases) %}
+  {# Note:
+  This macro is also invoked with an empty "cases" object when creating the "initial framework"
+  that the JS will use to fill in the test cases after a re-submit.
 
-  {% if cases.tests.pass %}
-    Pass
-  {% else %}
-    Fail
-  {% endif %}
-
-  {% if cases.stderr %}
-    <h3>Judge Errors</h3>
-    <pre>{{ cases.stderr }}</pre>
-  {% endif %}
-
-  {% for test in cases.tests.testCases %}
-    <div class="test-case test-{{- test.pass | lower }}">
-      {% if test.name %}<h2>{{ test.name }}</h2>{% endif %}
-
-      {% if test.pass == "Pass" %}
+  So make sure you check if the cases object itself exists before trying to read any data from it.
+  
+  All the basic divs should be created anyways.
+  
+  #}
+  <div class="result-display-wrapper">
+    <div class="result-pass-state">
+      {% if not cases %}
+      {% elif cases.passed %}
         Pass
-      {% elif test.pass == "Fail" %}
+      {% else %}
         Fail
-      {% elif test.pass == "Warning" %}
-        Warning
-      {% elif test.pass == "Info" %}
-        Info
-      {% endif %}
-
-      {% if test.resultDisplay.Empty %}
-
-      {% elif test.resultDisplay.Text %}
-        <div class="results">{{ test.resultDisplay.Text }}</div>
-      {% elif test.resultDisplay.Diff %}
-        <div class="diff">
-          <div id="column">
-            <h3>Output</h3>
-            <pre>{{ test.resultDisplay.Diff.output }}</pre>
-          </div>
-          <div id="column">
-            <h3>Expected</h3>
-            <pre>{{ test.resultDisplay.Diff.expected }}</pre>
-          </div>
-        </div>
       {% endif %}
     </div>
-  {% endfor %}
+    <div class="time-out-warning warning
+                {% if not cases or not cases.timedOut %}hidden{% endif %}">Code timed out after 3 seconds</div>
+    <div class="judge-errors
+                {% if cases and cases.judgeError %}
+                {% else %}
+                  hidden
+                {% endif %}">
+      <h3>Judge Errors</h3>
+      <pre class="code-pre">
+      {% if cases %}{{ cases.judgeError }}
+      {% endif %}</pre>
+    </div>
+    <div class="test-cases">
+      {% if cases.tests %}
+        {% for test in cases.tests %}
+          <div class="test-case test-{{ test.status | lower }}
+                      {% if test.defaultVisible %}
+                        default-visible
+                      {% else %}
+                        default-hidden
+                      {% endif %}">
+            <div class="test-case-header">
+              <img src="/static/triangle.svg" width="32" alt="">
+              <h2 class="test-case-title">
+                {% if test.title %}{{ test.title }}{% endif %}
+              </h2>
+              <div class="test-case-status">{{ test.status }}</div>
+            </div>
+            <div class="test-case-content">
+              <div class="test-case-columns test-case-{{ test.columns | length }}-columns">
+                {% for column in test.columns %}
+                  <div class="test-case-column">
+                    {% if column.title %}<h3>{{ column.title }}</h3>{% endif %}
+                    <pre class="code-pre">
+                      {%- for value in column.content -%}
+                        <span class="diff-tag-{{ value.tag }}">
+                          {{- value.content -}}
+                        </span>
+                      {%- endfor -%}
+                    </pre>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
 {% endmacro test_cases %}

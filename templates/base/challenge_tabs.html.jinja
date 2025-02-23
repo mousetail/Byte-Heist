@@ -1,0 +1,20 @@
+{% macro challenge_tabs(active, name, id, author) %}
+    <div class="tabs">
+        <span class="tab {% if active=='solve' %}active{% endif %}">
+            <a href="/challenge/{{ id }}/{{ name | slugify }}/solve">Solve</a>
+        </span>
+        {% if account %}
+            <span class="tab {% if active=='post-mortem' %}active{% endif %}">
+                <a href="/challenge/{{ id }}/{{ name | slugify }}/solutions">Solutions</a>
+            </span>
+        {% endif %}
+        <span class="tab {% if active=='view' %}active{% endif %}">
+            <a href="/challenge/{{ id }}/{{ name | slugify }}/view">View</a>
+        </span>
+        {% if account and (account.id == author or account.admin) %}
+            <span class="tab {% if active=='edit' %}active{% endif %}">
+                <a href="/challenge/{{ id }}/{{ name | slugify }}/edit">Edit</a>
+            </span>
+        {% endif %}
+    </div>
+{% endmacro challenge_tabs %}

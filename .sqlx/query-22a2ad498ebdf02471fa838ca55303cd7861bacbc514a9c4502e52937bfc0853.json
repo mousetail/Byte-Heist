@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                solutions.id as id,\n                solutions.author as author_id,\n                accounts.username as author_name,\n                accounts.avatar as author_avatar,\n                1 as \"rank!\",\n                score\n            FROM solutions\n                LEFT JOIN accounts ON solutions.author = accounts.id\n            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true\n            ORDER BY solutions.score ASC, last_improved_date ASC\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "rank!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "score",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "22a2ad498ebdf02471fa838ca55303cd7861bacbc514a9c4502e52937bfc0853"
+}

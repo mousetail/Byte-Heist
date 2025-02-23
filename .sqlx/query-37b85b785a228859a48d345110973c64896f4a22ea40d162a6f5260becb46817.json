@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT solutions.id, solutions.code as code, challenges.judge as judge, solutions.language as language\n                FROM solutions\n                LEFT JOIN challenges ON solutions.challenge = challenges.id\n                WHERE challenges.updated_at > solutions.validated_at\n                AND solutions.valid = true\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "judge",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "language",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "37b85b785a228859a48d345110973c64896f4a22ea40d162a6f5260becb46817"
+}

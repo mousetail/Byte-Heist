@@ -31,10 +31,10 @@ pub async fn test_solution(
         .timeout(Duration::from_secs(60))
         .send()
         .await
-        .map_err(|_e| Error::RunLangError("Failed to connect to the lang runner".to_string()))?;
+        .map_err(|_e| Error::RunLang("Failed to connect to the lang runner".to_string()))?;
 
     if !resp.status().is_success() {
-        return Err(Error::RunLangError(
+        return Err(Error::RunLang(
             resp.text().await.map_err(|_| Error::ServerError)?,
         ));
     }
@@ -42,7 +42,7 @@ pub async fn test_solution(
     let out = resp
         .json::<RunLangOutput>()
         .await
-        .map_err(|_| Error::RunLangError("Failed to parse json".to_string()))?;
+        .map_err(|_| Error::RunLang("Failed to parse json".to_string()))?;
 
     Ok(out)
 }

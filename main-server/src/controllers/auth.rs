@@ -15,7 +15,9 @@ use sqlx::prelude::FromRow;
 use sqlx::{PgPool, Pool, Postgres};
 use tower_sessions::Session;
 
+use crate::discord::post_new_golfer;
 use crate::error::Error;
+use crate::models::account::Account;
 use crate::models::InsertedId;
 
 const GITHUB_SESSION_CSRF_KEY: &str = "GITHUB_SESSION_CSRF_TOKEN";
@@ -81,7 +83,6 @@ pub struct GithubUser {
     avatar_url: String,
 }
 
-#[axum::debug_handler]
 pub async fn github_callback(
     session: Session,
     Extension(pool): Extension<PgPool>,
@@ -104,16 +105,14 @@ pub async fn github_callback(
         .and_then(|b| b)
         .is_some_and(|d: CsrfToken| d.secret() == state.secret())
     {
-        return Err(Error::OauthError(
-            crate::error::OauthError::CsrfValidationFailed,
-        ));
+        return Err(Error::Oauth(crate::error::OauthError::CsrfValidation));
     }
 
     let token_res = client
         .exchange_code(code)
         .request_async(&http_client)
         .await
-        .map_err(|_| Error::OauthError(crate::error::OauthError::TokenExchangeFailed))?;
+        .map_err(|_| Error::Oauth(crate::error::OauthError::TokenExchange))?;
 
     let token = token_res.access_token();
 
@@ -125,15 +124,23 @@ pub async fn github_callback(
         .bearer_auth(token.secret())
         .send()
         .await
-        .map_err(|_k| Error::OauthError(crate::error::OauthError::UserInfoFetchFailed))?;
+        .map_err(|_k| Error::Oauth(crate::error::OauthError::UserInfoFetch))?;
 
     if response.status().is_success() {
-        let user_info: GithubUser = response
+        let mut user_info: GithubUser = response
             .json()
             .await
-            .map_err(|_k| Error::OauthError(crate::error::OauthError::DeserializationFailed))?;
+            .map_err(|_k| Error::Oauth(crate::error::OauthError::Deserialization))?;
 
-        insert_user(&pool, &user_info, &token_res, &session).await;
+        if user_info.avatar_url.len() > 255 {
+            // TODO: Figure out why this happens
+            user_info.avatar_url = format!(
+                "https://avatars.githubusercontent.com/u/{}?v=4",
+                user_info.id
+            );
+        }
+
+        insert_user(&pool, &user_info, &token_res, &session).await?;
         Ok(Redirect::temporary("/").into_response())
     } else {
         let data = response.bytes().await.unwrap();
@@ -156,14 +163,14 @@ async fn insert_user(
     github_user: &GithubUser,
     token: &StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
     session: &Session,
-) {
+) -> Result<(), Error> {
     let sql = "SELECT id, account FROM account_oauth_codes WHERE id_on_provider=$1";
 
     let user: Option<UserQueryResponse> = sqlx::query_as::<_, UserQueryResponse>(sql)
         .bind(github_user.id)
         .fetch_optional(pool)
         .await
-        .unwrap();
+        .map_err(Error::Database)?;
 
     if let Some(user) = user {
         let sql: &str =
@@ -180,9 +187,11 @@ async fn insert_user(
             .bind(user.id)
             .fetch_optional(pool)
             .await
-            .unwrap();
+            .map_err(Error::Database)?;
 
         session.insert(ACCOUNT_ID_KEY, user.account).await.unwrap();
+
+        Ok(())
     } else {
         let sql: &str = "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id";
 
@@ -191,7 +200,7 @@ async fn insert_user(
             .bind(&github_user.avatar_url)
             .fetch_one(pool)
             .await
-            .unwrap();
+            .map_err(Error::Database)?;
 
         let sql: &str =
             "INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
@@ -209,8 +218,18 @@ async fn insert_user(
             .bind(github_user.id)
             .execute(pool)
             .await
-            .unwrap();
+            .map_err(Error::Database)?;
 
         session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
+
+        tokio::spawn(post_new_golfer(Account {
+            id: new_user_id.0,
+            username: github_user.login.clone(),
+            avatar: github_user.avatar_url.clone(),
+            preferred_language: "python".to_owned(),
+            admin: false,
+        }));
+
+        Ok(())
     }
 }

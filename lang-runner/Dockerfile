@@ -1,4 +1,4 @@
-FROM rust:1.81-bullseye AS rust-build
+FROM rust:1.85-bullseye AS rust-build
 
 WORKDIR /usr/src/myapp
 COPY . .
@@ -6,7 +6,7 @@ COPY . .
 RUN ls
 RUN cargo build --package lang-runner --release
 
-FROM debian:12
+FROM ubuntu:25.04
 
 # Install asdf dependencies
 RUN apt-get update -y && apt-get install -y \
@@ -25,10 +25,12 @@ RUN apt-get update -y && apt-get install -y \
   zip \
   unzip \
   # Java, because Java is a thing some languages need.
-  openjdk-17-jdk
-
-
+  openjdk-17-jdk \
+  # Temporary
+  nano
+  
 RUN ln /usr/bin/java /usr/local/bin/java
+
 
 RUN adduser yq
 

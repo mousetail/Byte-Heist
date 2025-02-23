@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT solutions.language, solutions.score, solutions.challenge as challenge_id, challenges.name as challenge_name\n        FROM solutions\n        LEFT JOIN challenges ON challenges.id = solutions.challenge\n        WHERE solutions.author=$1",
+  "query": "SELECT solutions.language, challenges.id as challenge_id, challenges.name as challenge_name\n            FROM solutions LEFT JOIN challenges ON solutions.challenge = challenges.id\n            WHERE solutions.valid = false AND solutions.author = $1",
   "describe": {
     "columns": [
       {
@@ -10,16 +10,11 @@
       },
       {
         "ordinal": 1,
-        "name": "score",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 2,
         "name": "challenge_id",
         "type_info": "Int4"
       },
       {
-        "ordinal": 3,
+        "ordinal": 2,
         "name": "challenge_name",
         "type_info": "Varchar"
       }
@@ -32,9 +27,8 @@
     "nullable": [
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "c440feaec0653840476c56e28acded4d3540220070ade02568daea364d844b58"
+  "hash": "3216a669a60b3bbaaca13eb537af7863715c6b7c220006677218c70f0460c7c8"
 }
