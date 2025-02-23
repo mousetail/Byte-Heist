@@ -19,6 +19,7 @@ pub fn get_tera() -> Result<&'static Tera, Response> {
             tera.register_function("languages", get_langs);
             tera.register_function("modules", load_assets);
             tera.register_filter("markdown", MarkdownFilter);
+            tera.register_filter("prepend_linebreak", prepend_line_break);
             tera.register_filter("format_number", format_number);
             tera.register_filter("format_date", format_date);
             tera.register_tester("empty", empty);
@@ -93,6 +94,18 @@ fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, te
             offset.whole_hours() % 24
         )
     }))
+}
+
+fn prepend_line_break(value: &Value, data: &HashMap<String, Value>) -> Result<Value, tera::Error> {
+    if !data.is_empty() {
+        return Err(tera::Error::msg(
+            "The format string filter takes no parameters",
+        ));
+    }
+    match value {
+        Value::String(s) => Ok(Value::String(format!("\n{s}"))),
+        _ => Err(tera::Error::msg("prepend_line_break: Expected a string")),
+    }
 }
 
 fn empty(value: Option<&Value>, args: &[Value]) -> tera::Result<bool> {

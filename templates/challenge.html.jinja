@@ -115,7 +115,7 @@
     </div>
     <textarea name="code" class="codemirror" id="main-code">
         {%- if object.code -%}
-          {{- object.code -}}
+          {{- object.code | prepend_linebreak -}}
         {%- endif -%}
 </textarea>
     {% if account %}
