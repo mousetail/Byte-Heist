@@ -7,6 +7,7 @@ use common::{
 };
 use futures_util::AsyncWriteExt;
 use serde::Serialize;
+use tokio::time::Instant;
 
 use crate::{
     cachemap::CacheMap,
@@ -40,11 +41,16 @@ async fn install_language_version(lang: &Lang, version: &str) -> Result<(), RunP
         "Installing language version {} {}",
         lang.display_name, version
     );
-    let status = Command::new("asdf")
+    let mut command = Command::new("asdf");
+    command
         .args(["install", lang.plugin_name, version])
-        .stderr(Stdio::inherit())
-        .status()
-        .await?;
+        .stderr(Stdio::inherit());
+
+    for env in lang.install_env {
+        command.env(env.0, env.1);
+    }
+
+    let status = command.status().await?;
 
     if !status.success() {
         return Err(RunProcessError::NonZeroStatusCode(status.code()));
@@ -110,9 +116,9 @@ async fn run_lang(
             // "--ro-bind",
             // "/proc/self",
             // "/proc/self",
-            "--ro-bind",
-            "/bin",
-            "/bin",
+            // "--ro-bind",
+            // "/bin",
+            // "/bin",
             "--chdir",
             "/",
             "--ro-bind",
@@ -193,6 +199,8 @@ async fn run_lang(
     ));
     let id = child.id();
 
+    let start_time = Instant::now();
+
     let timed_out = tokio::select! {
         _status = child.status() => {
             println!("Child finished normally {id}");
@@ -204,10 +212,9 @@ async fn run_lang(
             true
         }
     };
-    eprintln!("Awaiting output");
-    let output = child.output().await?;
 
-    eprintln!("Output Awaited");
+    let end_time = Instant::now();
+    let output = child.output().await?;
 
     let mut stderr = output.stderr;
     stderr.truncate(1000);
@@ -216,6 +223,7 @@ async fn run_lang(
         stderr: String::from_utf8_lossy(&stderr).into_owned(),
         tests: judge_result.await.unwrap(),
         timed_out,
+        runtime: (end_time - start_time).as_secs_f32(),
     })
 }
 

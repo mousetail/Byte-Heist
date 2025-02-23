@@ -390,6 +390,11 @@ button {
   height: 15rem;
   overflow-y: auto;
   color: black;
+
+  &.code-pre-short {
+    height: 7.5rem;
+  }
+
   @media (prefers-color-scheme: dark) {
     background-color: black;
     color: white;
@@ -406,4 +411,57 @@ button {
 
 .diff-tag-delete {
   color: red;
+}
+
+.header-content img {
+  vertical-align: middle;
+}
+
+.post-mortem-solution {
+  display: flex;
+  align-items: center;
+  margin: 0.6ch;
+  flex-wrap: wrap;
+
+  background-color: #b9edd4;
+  @media (prefers-color-scheme: dark) {
+    background-color: hsl(var(--main-hue) 60% 10%);
+  }
+
+  &.post-mortem {
+    background-color: #dee9e3;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: hsl(var(--main-hue) 20% 10%);
+    }
+  }
+
+  & pre {
+    min-width: 15ch;
+    margin: 0.6rem;
+    flex-grow: 1;
+  }
+}
+
+.solution-metadata {
+  display: flex;
+  justify-content: space-between;
+  margin: 0.6rem;
+  & dl {
+    display: grid;
+    grid-template-columns: 12ch 1fr;
+    & dt {
+      width: 11ch;
+      white-space: pre;
+      font-weight: bold;
+    }
+    & dd {
+      min-width: 20ch;
+      & a {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+      }
+    }
+  }
 }

@@ -15,8 +15,8 @@ use crate::{
     models::{
         account::Account,
         challenge::{
-            ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo,
-            ChallengeWithTests, HomePageChallenge, NewChallenge, NewOrExistingChallenge,
+            ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo, ChallengeWithTests,
+            HomePageChallenge, NewChallenge, NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
     },
@@ -118,10 +118,11 @@ pub async fn new_challenge(
         }
         None => (NewOrExistingChallenge::New(challenge), None),
     };
+
     let challenge = new_challenge.get_new_challenge();
 
     if let Err(e) = challenge.validate(
-        existing_challenge.as_ref().map(|k| &k.challenge.challenge),
+        existing_challenge.as_ref().map(|k| &k.challenge),
         account.admin,
     ) {
         return Ok(AutoOutputFormat::new(

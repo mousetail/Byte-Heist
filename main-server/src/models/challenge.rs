@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, PgPool};
+use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
 
 use crate::{error::Error, test_case_display::OutputDisplay};
 
@@ -47,10 +47,15 @@ pub struct NewChallenge {
 impl NewChallenge {
     pub fn validate(
         &self,
-        previous: Option<&NewChallenge>,
+        previous: Option<&Challenge>,
         is_admin: bool,
     ) -> Result<(), HashMap<&'static str, &'static str>> {
         let mut errors = HashMap::new();
+
+        if previous.is_some_and(|e| e.is_post_mortem) {
+            errors.insert("status", "Can't edit an ended challenge");
+        }
+
         if self.name.is_empty() {
             errors.insert("name", "name can't be empty");
         }
@@ -59,12 +64,12 @@ impl NewChallenge {
         }
         if self.status == ChallengeStatus::Public
             && !is_admin
-            && previous.is_none_or(|k| k.status == ChallengeStatus::Public)
+            && previous.is_none_or(|k| k.challenge.status == ChallengeStatus::Public)
         {
             errors.insert("status", "you can't make a challenge public");
         } else if self.status != ChallengeStatus::Public
             && !is_admin
-            && previous.is_some_and(|k| k.status == ChallengeStatus::Public)
+            && previous.is_some_and(|k| k.challenge.status == ChallengeStatus::Public)
         {
             errors.insert(
                 "status",
@@ -73,8 +78,10 @@ impl NewChallenge {
         }
 
         if !is_admin
-            && previous
-                .is_some_and(|k| k.status == ChallengeStatus::Public && k.category != self.category)
+            && previous.is_some_and(|k| {
+                k.challenge.status == ChallengeStatus::Public
+                    && k.challenge.category != self.category
+            })
         {
             errors.insert("category", "can't change the category of a live challenge");
         }
@@ -164,6 +171,8 @@ pub struct Challenge {
     #[serde(flatten)]
     pub challenge: NewChallenge,
     pub author: i32,
+    pub post_mortem_date: Option<OffsetDateTime>,
+    pub is_post_mortem: bool,
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
@@ -223,6 +232,9 @@ impl ChallengeWithAuthorInfo {
             challenges.author,
             challenges.category,
             challenges.status,
+            challenges.post_mortem_date,
+            (challenges.post_mortem_date IS NOT NULL
+                AND challenges.post_mortem_date < now()) as is_post_mortem,
             accounts.username as author_name,
             accounts.avatar as author_avatar
             FROM challenges LEFT JOIN accounts ON challenges.author = accounts.id

@@ -291,7 +291,7 @@ export class Context {
 
 export const eqIgnoreTrailingWhitespace = (a: string, b: string): boolean => {
   const [a_stripped, b_stripped] = [a, b].map((text) =>
-    text.replace(/\s*(?=\n|$)/gu, "")
+    text.replace(/\s+$|(\s*?(?=\n))/gu, "")
   );
   return a_stripped == b_stripped;
 };

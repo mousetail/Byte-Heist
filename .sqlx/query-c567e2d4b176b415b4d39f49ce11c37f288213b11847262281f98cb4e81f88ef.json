@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE solutions SET \n            code=$1,\n            score=$2,\n            valid=true,\n            validated_at=now(),\n            last_improved_date=$3,\n            runtime=$4,\n            is_post_mortem=$5\n        WHERE id=$6",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Timestamptz",
+        "Float4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c567e2d4b176b415b4d39f49ce11c37f288213b11847262281f98cb4e81f88ef"
+}

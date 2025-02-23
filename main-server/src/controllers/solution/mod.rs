@@ -1,6 +1,7 @@
 mod all_solutions;
 mod leaderboard;
 mod new_solution;
+pub mod post_mortem;
 
 pub use all_solutions::all_solutions;
 pub use leaderboard::get_leaderboard;

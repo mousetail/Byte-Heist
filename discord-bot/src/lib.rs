@@ -8,7 +8,7 @@ use queries::{
     get_user_info_by_id, save_new_message_info, BasicAccontInfo, NewScore,
 };
 use serenity::all::{
-    ChannelId, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
+    ChannelId, Colour, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
 };
 use sqlx::PgPool;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -18,6 +18,7 @@ pub struct ScoreImproved {
     pub author: i32,
     pub language: String,
     pub score: i32,
+    pub is_post_mortem: bool,
 }
 
 struct LastMessage {
@@ -46,11 +47,16 @@ fn format_message(
 
     CreateEmbed::new()
         .title(format!(
-            "Improved score for {challenge_name} in {}",
+            "Improved score for {challenge_name} in {}{}",
             LANGS
                 .get(&new_message.language)
                 .map(|d| d.display_name)
-                .unwrap_or(&new_message.language)
+                .unwrap_or(&new_message.language),
+            if new_message.is_post_mortem {
+                " (Post mortem)"
+            } else {
+                ""
+            }
         ))
         .author(
             CreateEmbedAuthor::new(&author.username)
@@ -58,10 +64,15 @@ fn format_message(
                 .url(format!("{public_url}/user/{}", &new_message.author)),
         )
         .url(format!(
-            "{}/challenge/{}/{}/solve/{}",
+            "{}/challenge/{}/{}/{}/{}",
             public_url,
             new_message.challenge_id,
             slug::slugify(challenge_name),
+            if new_message.is_post_mortem {
+                "solutions"
+            } else {
+                "solve"
+            },
             new_message.language
         ))
         .field(
@@ -70,6 +81,11 @@ fn format_message(
             true,
         )
         .field(&author.username, format!("{}", new_message.score), true)
+        .color(if new_message.is_post_mortem {
+            Colour::from_rgb(255, 0, 0)
+        } else {
+            Colour::from_rgb(0, 0, 255)
+        })
 }
 
 #[derive(Debug)]

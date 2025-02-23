@@ -9,7 +9,6 @@ mod solution_invalidation;
 mod strip_trailing_slashes;
 mod test_case_display;
 mod test_solution;
-mod vite;
 
 use axum::{routing::get, Extension, Router};
 
@@ -17,9 +16,11 @@ use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
     challenges::{all_challenges, compose_challenge, new_challenge, view_challenge},
+    global_leaderboard::global_leaderboard,
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
         challenge_redirect_with_slug, get_leaderboard, new_solution,
+        post_mortem::{post_mortem_view, post_mortem_view_without_language},
     },
     user::get_user,
 };
@@ -97,6 +98,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
+        .route("/leaderboard/:category", get(global_leaderboard))
         .route("/challenge", get(compose_challenge).post(new_challenge))
         .route("/challenge/:id", get(challenge_redirect))
         .route(
@@ -115,6 +117,14 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/challenge/:id/:slug/solve/:language",
             get(all_solutions).post(new_solution),
+        )
+        .route(
+            "/challenge/:id/:slug/solutions",
+            get(post_mortem_view_without_language),
+        )
+        .route(
+            "/challenge/:id/:slug/solutions/:language",
+            get(post_mortem_view),
         )
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))

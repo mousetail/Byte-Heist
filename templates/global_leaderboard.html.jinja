@@ -1,0 +1,33 @@
+{% import "base/test_cases.html.jinja" as test_cases %}
+{% extends "base/base.html.jinja" %}
+{% block content %}
+  <h1>Leaderboard</h1>
+  <div class="tabs">
+    <span class="tab {% if object.category=='code-golf' %}active{% endif %}">
+      <a href="/leaderboard/code-golf">Code Golf</a>
+    </span>
+    <span class="tab
+                 {% if object.category=='restricted-source' %}active{% endif %}">
+      <a href="/leaderboard/restricted-source">Restricted Source</a>
+    </span>
+  </div>
+  <table style="width: 100%">
+    <tr>
+      <th>Rank</th>
+      <th>Name</th>
+      <th>Score</th>
+      <th>Num Sols</th>
+    </tr>
+    {% for solution in object.entries %}
+      <tr>
+        <td>{{ solution.rank }}</td>
+        <td>
+          <img src="{{ solution.author_avatar }}" alt="" width="32">
+          <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
+        </td>
+        <td>{{ solution.total_score | format_number }}</td>
+        <td>{{ solution.solutions }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock content %}

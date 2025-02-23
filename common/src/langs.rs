@@ -56,7 +56,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     "rust" => Lang {
         plugin_name: "rust",
         display_name: "Rust",
-        compile_command: &["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "${OUTPUT_LOCATION}"],
+        compile_command: &["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "${OUTPUT_LOCATION}", "--edition", "2024"],
         run_command: &["${OUTPUT_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-rust.git",
         env: &[
@@ -67,7 +67,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             "RUST_WITHOUT",
             "rust-docs,rust-docs-json-preview,cargo,rustfmt-preview,rls-preview,rust-analyzer-preview,llvm-tools-preview,clippy-preview,rust-analysis-x86_64-unknown-linux-gnu,llvm-bitcode-linker-preview"
         )],
-        latest_version: "1.82.0",
+        latest_version: "1.85.0",
         icon: "rust.svg"
     },
     "vyxal" => Lang {

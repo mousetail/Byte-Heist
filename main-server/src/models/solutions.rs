@@ -26,6 +26,7 @@ pub struct Code {
     pub id: i32,
     pub valid: bool,
     pub last_improved_date: OffsetDateTime,
+    pub is_post_mortem: bool,
 }
 
 impl Code {
@@ -38,9 +39,15 @@ impl Code {
         sqlx::query_as!(
             Code,
             r#"
-                SELECT code, score, id, valid, last_improved_date from solutions
+                SELECT
+                    code, 
+                    score,
+                    id,
+                    valid,
+                    last_improved_date,
+                    is_post_mortem as "is_post_mortem!" from solutions
                 WHERE author=$1 AND challenge=$2 AND language=$3
-                ORDER BY score ASC
+                ORDER BY is_post_mortem DESC, score ASC
                 LIMIT 1
             "#,
             account,

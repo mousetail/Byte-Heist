@@ -56,7 +56,8 @@ pub async fn solution_invalidation_task(pool: PgPool) {
 
             if result.tests.pass {
                 query!(
-                    "UPDATE solutions SET validated_at=now() WHERE id=$1",
+                    "UPDATE solutions SET validated_at=now(), runtime=$1 WHERE id=$2",
+                    result.runtime,
                     task.id
                 )
                 .execute(&pool)

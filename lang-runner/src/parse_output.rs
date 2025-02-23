@@ -24,19 +24,16 @@ pub fn apply_to_judge_result(judge_result: &mut JudgeResult, line: &[u8]) {
             test_case.truncate(MAX_OUTPUT_LENGTH);
             judge_result.test_cases.push(test_case);
         }
-        Err(e) => {
-            eprintln!("{e:#?}");
-            match serde_json::from_slice::<FinalVerdict>(line) {
-                Ok(FinalVerdict { pass: new_pass }) => judge_result.pass = new_pass,
-                Err(_e) => judge_result.test_cases.push(TestCase {
-                    name: Some("Judge Debug Message".to_owned()),
-                    pass: common::TestPassState::Info,
-                    result_display: common::ResultDisplay::Text(
-                        String::from_utf8_lossy(line).to_string(),
-                    ),
-                }),
-            }
-        }
+        Err(_e) => match serde_json::from_slice::<FinalVerdict>(line) {
+            Ok(FinalVerdict { pass: new_pass }) => judge_result.pass = new_pass,
+            Err(_e) => judge_result.test_cases.push(TestCase {
+                name: Some("Judge Debug Message".to_owned()),
+                pass: common::TestPassState::Info,
+                result_display: common::ResultDisplay::Text(
+                    String::from_utf8_lossy(line).to_string(),
+                ),
+            }),
+        },
     }
 }
 
