@@ -94,17 +94,17 @@ impl<S: Send + Sync> FromRequestParts<S> for Account {
             .await
             .map_err(|_| AccountFetchError::DatabaseLoadFailed)?;
 
-        if let Some(account_id) = session
+        match session
             .get(ACCOUNT_ID_KEY)
             .await
             .map_err(|_| AccountFetchError::NoSession)?
-        {
+        { Some(account_id) => {
             if let Some(account) = Account::get_by_id(&pool, account_id).await {
                 return Ok(account);
             }
             return Err(AccountFetchError::NoAccountFound);
-        } else {
+        } _ => {
             return Err(AccountFetchError::NotLoggedIn);
-        }
+        }}
     }
 }
