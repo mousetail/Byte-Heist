@@ -1,6 +1,7 @@
 /target
 .env.local
 .vscode
+.idea
 .sessions
 node_modules
 static/target
