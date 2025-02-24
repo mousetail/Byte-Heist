@@ -14,6 +14,7 @@ pub struct Lang {
     pub latest_version: &'static str,
     pub icon: &'static str,
     pub extra_mounts: &'static [(&'static str, &'static str)],
+    pub extension: &'static str,
 }
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -28,6 +29,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "22.9.0",
         icon: "nodejs.svg",
         extra_mounts: &[],
+        extension: ".js",
     },
     "deno" => Lang {
         plugin_name: "deno",
@@ -44,6 +46,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.0.6",
         icon: "deno.svg",
         extra_mounts: &[],
+        extension: ".js",
     },
     "python" => Lang {
         plugin_name: "python",
@@ -56,6 +59,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "3.12.0",
         icon: "python.svg",
         extra_mounts: &[],
+        extension: ".py",
     },
     "rust" => Lang {
         plugin_name: "rust",
@@ -74,6 +78,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "1.85.0",
         icon: "rust.svg",
         extra_mounts: &[],
+        extension: ".rs",
     },
     "vyxal" => Lang {
         plugin_name: "vyxal",
@@ -86,6 +91,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.22.4.3",
         icon: "vyxal.svg",
         extra_mounts: &[],
+        extension: ".vy",
     },
     "vyxal3" => Lang {
         plugin_name: "vyxal3",
@@ -102,6 +108,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         extra_mounts: &[
             ("/usr/lib/jvm/java-17-openjdk-amd64", "/java", )
         ],
+        extension: ".vy3",
     },
     "tinyapl" => Lang {
         plugin_name: "tinyapl",
@@ -114,6 +121,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.11.1.0",
         icon: "tinyapl.svg",
         extra_mounts: &[],
+        extension: ".apl",
     },
     "tcc" => Lang {
         plugin_name: "tcc",
@@ -128,13 +136,14 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         install_env: &[],
         latest_version: "0.9.27",
         icon: "c.svg",
-        extra_mounts: &[]
+        extra_mounts: &[],
+        extension: ".c",
     },
     "kotlin" => Lang {
         plugin_name: "kotlin",
         display_name: "Kotlin (script)",
         compile_command: &[],
-        run_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "-script", "${OUTPUT_LOCATION}"],
+        run_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "-script", "${FILE_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-kotlin.git",
         env: &[
             ("PATH", "/usr/bin:/bin"),
@@ -143,6 +152,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         install_env: &[],
         latest_version: "2.1.10",
         icon: "kotlin.svg",
-        extra_mounts: &[]
+        extra_mounts: &[],
+        extension: ".kts",
     }
 };
