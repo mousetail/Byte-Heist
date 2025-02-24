@@ -136,7 +136,10 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "-script", "${OUTPUT_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-kotlin.git",
-        env: &[],
+        env: &[
+            ("PATH", "/usr/bin:/bin"),
+            ("LD_LIBRARY_PATH", "/usr/lib/jvm/java-17-openjdk-amd64/lib:/lib")
+        ],
         install_env: &[],
         latest_version: "2.1.10",
         icon: "kotlin.svg",
