@@ -141,18 +141,19 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     },
     "kotlin" => Lang {
         plugin_name: "kotlin",
-        display_name: "Kotlin (script)",
-        compile_command: &[],
-        run_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "-script", "${FILE_LOCATION}"],
+        display_name: "Kotlin",
+        compile_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"],
+        run_command: &["/java/bin/java", "-jar", "${OUTPUT_LOCATION}.jar"],
         plugin: "https://github.com/asdf-community/asdf-kotlin.git",
         env: &[
-            ("PATH", "/usr/bin:/bin"),
-            ("LD_LIBRARY_PATH", "/usr/lib/jvm/java-17-openjdk-amd64/lib:/lib")
+            ("LD_LIBRARY_PATH", "/java/lib:/lib"),
         ],
         install_env: &[],
         latest_version: "2.1.10",
         icon: "kotlin.svg",
-        extra_mounts: &[],
-        extension: ".kts",
+        extra_mounts: &[
+            ("/usr/lib/jvm/java-17-openjdk-amd64", "/java")
+        ],
+        extension: ".kt",
     }
 };

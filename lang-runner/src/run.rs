@@ -206,7 +206,7 @@ async fn run_lang(
             println!("Child finished normally {id}");
             false
         }
-        _timeout = tokio::time::sleep(Duration::from_secs(3)) => {
+        _timeout = tokio::time::sleep(Duration::from_secs(5)) => {
             child.kill().unwrap();
             eprintln!("Timed out {id}");
             true
