@@ -128,6 +128,18 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         install_env: &[],
         latest_version: "0.9.27",
         icon: "c.svg",
-        extra_mounts: &[],
+        extra_mounts: &[]
+    },
+    "kotlin" => Lang {
+        plugin_name: "kotlin",
+        display_name: "Kotlin (script)",
+        compile_command: &[],
+        run_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "-script", "${OUTPUT_LOCATION}"],
+        plugin: "https://github.com/asdf-community/asdf-kotlin.git",
+        env: &[],
+        install_env: &[],
+        latest_version: "2.1.10",
+        icon: "kotlin.svg",
+        extra_mounts: &[]
     }
 };
