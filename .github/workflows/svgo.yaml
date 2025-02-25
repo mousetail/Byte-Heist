@@ -36,7 +36,7 @@ jobs:
 
           for file in $svg_files; do
             echo "Checking $file..."
-            svgo_output=$(svgo "$file")
+            svgo_output=$(svgo --no-color "$file")
             echo $svgo_output | grep -q ' - 0% =' || {
               echo "SVG file $file is not optimized. Please run SVGO on it."
               echo $svgo_output
