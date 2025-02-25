@@ -17,6 +17,7 @@ use crate::{
 };
 
 const MAX_CONCURRENT_RUNS: usize = 4;
+const TIMEOUT: u64 = 3;
 
 static RUNS_SEMAPHORE: tokio::sync::Semaphore =
     tokio::sync::Semaphore::const_new(MAX_CONCURRENT_RUNS);
@@ -206,7 +207,7 @@ async fn run_lang(
             println!("Child finished normally {id}");
             false
         }
-        _timeout = tokio::time::sleep(Duration::from_secs(5)) => {
+        _timeout = tokio::time::sleep(Duration::from_secs(TIMEOUT + lang.extra_runtime)) => {
             child.kill().unwrap();
             eprintln!("Timed out {id}");
             true

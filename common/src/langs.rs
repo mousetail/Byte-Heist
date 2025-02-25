@@ -15,6 +15,7 @@ pub struct Lang {
     pub icon: &'static str,
     pub extra_mounts: &'static [(&'static str, &'static str)],
     pub extension: &'static str,
+    pub extra_runtime: u64
 }
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -30,6 +31,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "nodejs.svg",
         extra_mounts: &[],
         extension: "",
+        extra_runtime: 0,
     },
     "deno" => Lang {
         plugin_name: "deno",
@@ -47,6 +49,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "deno.svg",
         extra_mounts: &[],
         extension: "",
+        extra_runtime: 0,
     },
     "python" => Lang {
         plugin_name: "python",
@@ -60,6 +63,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "python.svg",
         extra_mounts: &[],
         extension: "",
+        extra_runtime: 0,
     },
     "rust" => Lang {
         plugin_name: "rust",
@@ -79,6 +83,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "rust.svg",
         extra_mounts: &[],
         extension: "",
+        extra_runtime: 0,
     },
     "vyxal" => Lang {
         plugin_name: "vyxal",
@@ -92,6 +97,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "vyxal.svg",
         extra_mounts: &[],
         extension: "",
+        extra_runtime: 2,
     },
     "vyxal3" => Lang {
         plugin_name: "vyxal3",
@@ -109,6 +115,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             ("/usr/lib/jvm/java-17-openjdk-amd64", "/java", )
         ],
         extension: "",
+        extra_runtime: 2,
     },
     "tinyapl" => Lang {
         plugin_name: "tinyapl",
@@ -122,6 +129,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "tinyapl.svg",
         extra_mounts: &[],
         extension: "",
+        extra_runtime: 0,
     },
     "tcc" => Lang {
         plugin_name: "tcc",
@@ -138,6 +146,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "c.svg",
         extra_mounts: &[],
         extension: "",
+        extra_runtime: 0,
     },
     "kotlin" => Lang {
         plugin_name: "kotlin",
@@ -155,5 +164,6 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             ("/usr/lib/jvm/java-17-openjdk-amd64", "/java")
         ],
         extension: ".kt",
+        extra_runtime: 2,
     }
 };
