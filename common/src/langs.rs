@@ -29,7 +29,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "22.9.0",
         icon: "nodejs.svg",
         extra_mounts: &[],
-        extension: ".js",
+        extension: "",
     },
     "deno" => Lang {
         plugin_name: "deno",
@@ -46,7 +46,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.0.6",
         icon: "deno.svg",
         extra_mounts: &[],
-        extension: ".js",
+        extension: "",
     },
     "python" => Lang {
         plugin_name: "python",
@@ -59,7 +59,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "3.12.0",
         icon: "python.svg",
         extra_mounts: &[],
-        extension: ".py",
+        extension: "",
     },
     "rust" => Lang {
         plugin_name: "rust",
@@ -78,7 +78,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "1.85.0",
         icon: "rust.svg",
         extra_mounts: &[],
-        extension: ".rs",
+        extension: "",
     },
     "vyxal" => Lang {
         plugin_name: "vyxal",
@@ -91,7 +91,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.22.4.3",
         icon: "vyxal.svg",
         extra_mounts: &[],
-        extension: ".vy",
+        extension: "",
     },
     "vyxal3" => Lang {
         plugin_name: "vyxal3",
@@ -108,7 +108,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         extra_mounts: &[
             ("/usr/lib/jvm/java-17-openjdk-amd64", "/java", )
         ],
-        extension: ".vy3",
+        extension: "",
     },
     "tinyapl" => Lang {
         plugin_name: "tinyapl",
@@ -121,7 +121,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.11.1.0",
         icon: "tinyapl.svg",
         extra_mounts: &[],
-        extension: ".apl",
+        extension: "",
     },
     "tcc" => Lang {
         plugin_name: "tcc",
@@ -137,7 +137,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.9.27",
         icon: "c.svg",
         extra_mounts: &[],
-        extension: ".c",
+        extension: "",
     },
     "kotlin" => Lang {
         plugin_name: "kotlin",
