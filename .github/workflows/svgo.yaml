@@ -1,0 +1,45 @@
+name: SVGO
+
+on:
+  pull_request:
+    branches: [ "master" ]
+    paths: ["**/*.svg"]
+  push:
+    branches: [ "master" ]
+    paths: ["**/*.svg"]
+
+jobs:
+  verify-svgs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install SVGO
+        run: npm install -g svgo
+
+      - name: Check SVG files
+        env:
+          changed_files: ${{ steps.changed-files.outputs.all_changed_files }} 
+        run: |
+          svg_files=$(echo $changed_files | grep '\.svg$')
+
+          for file in $svg_files; do
+            echo "Checking $file..."
+            svgo "$file" | grep -q ' - 0% =' || {
+              echo "SVG file $file is not optimized. Please run SVGO on it."
+              exit 1
+            }
+          done
+
+          echo "All SVG files are optimized."
