@@ -18,6 +18,7 @@ type Lang = {
   installEnv: [string, string][];
   plugin: string;
   latestVersion: string;
+  extension: string;
 };
 
 type Input = {
@@ -67,7 +68,7 @@ const compile_and_run_program = (() => {
     ar.map((e) => {
       return e
         .replace(/\$\{LANG_LOCATION\}/gu, "/lang")
-        .replace(/\$\{FILE_LOCATION\}/gu, "/tmp/code")
+        .replace(/\$\{FILE_LOCATION\}/gu, `/tmp/code${lang.extension}`)
         .replace(/\$\{OUTPUT_LOCATION\}/gu, outputLocation);
     });
 
@@ -136,7 +137,7 @@ const compile_and_run_program = (() => {
     program: string,
     input?: string | undefined
   ): Promise<RunCompiledCodeResult> => {
-    await writeFile("/tmp/code", program);
+    await writeFile(`/tmp/code${lang.extension}`, program);
     return await compile_and_run_program(lang, program, input ?? "");
   };
 

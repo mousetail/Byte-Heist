@@ -14,6 +14,8 @@ pub struct Lang {
     pub latest_version: &'static str,
     pub icon: &'static str,
     pub extra_mounts: &'static [(&'static str, &'static str)],
+    pub extension: &'static str,
+    pub extra_runtime: u64
 }
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -28,6 +30,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "22.9.0",
         icon: "nodejs.svg",
         extra_mounts: &[],
+        extension: "",
+        extra_runtime: 0,
     },
     "deno" => Lang {
         plugin_name: "deno",
@@ -44,6 +48,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.0.6",
         icon: "deno.svg",
         extra_mounts: &[],
+        extension: "",
+        extra_runtime: 0,
     },
     "python" => Lang {
         plugin_name: "python",
@@ -56,6 +62,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "3.12.0",
         icon: "python.svg",
         extra_mounts: &[],
+        extension: "",
+        extra_runtime: 0,
     },
     "rust" => Lang {
         plugin_name: "rust",
@@ -74,6 +82,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "1.85.0",
         icon: "rust.svg",
         extra_mounts: &[],
+        extension: "",
+        extra_runtime: 0,
     },
     "vyxal" => Lang {
         plugin_name: "vyxal",
@@ -86,6 +96,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.22.4.3",
         icon: "vyxal.svg",
         extra_mounts: &[],
+        extension: "",
+        extra_runtime: 2,
     },
     "vyxal3" => Lang {
         plugin_name: "vyxal3",
@@ -102,6 +114,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         extra_mounts: &[
             ("/usr/lib/jvm/java-17-openjdk-amd64", "/java", )
         ],
+        extension: "",
+        extra_runtime: 2,
     },
     "tinyapl" => Lang {
         plugin_name: "tinyapl",
@@ -114,6 +128,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.11.1.0",
         icon: "tinyapl.svg",
         extra_mounts: &[],
+        extension: "",
+        extra_runtime: 0,
     },
     "tcc" => Lang {
         plugin_name: "tcc",
@@ -129,5 +145,25 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.9.27",
         icon: "c.svg",
         extra_mounts: &[],
+        extension: "",
+        extra_runtime: 0,
+    },
+    "kotlin" => Lang {
+        plugin_name: "kotlin",
+        display_name: "Kotlin",
+        compile_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"],
+        run_command: &["/java/bin/java", "-jar", "${OUTPUT_LOCATION}.jar"],
+        plugin: "https://github.com/asdf-community/asdf-kotlin.git",
+        env: &[
+            ("LD_LIBRARY_PATH", "/java/lib:/lib"),
+        ],
+        install_env: &[],
+        latest_version: "2.1.10",
+        icon: "kotlin.svg",
+        extra_mounts: &[
+            ("/usr/lib/jvm/java-17-openjdk-amd64", "/java")
+        ],
+        extension: ".kt",
+        extra_runtime: 2,
     }
 };
