@@ -32,10 +32,14 @@ RUN adduser yq
 USER yq
 
 # Install asdf
-RUN git clone --depth 1 https://github.com/asdf-vm/asdf.git ~/.asdf
+#RUN git clone --depth 1 https://github.com/asdf-vm/asdf.git ~/.asdf
+RUN curl -L https://github.com/asdf-vm/asdf/releases/download/v0.16.4/asdf-v0.16.4-linux-amd64.tar.gz -o /home/yq/asdf.tar.gz
+RUN ls
+RUN mkdir -p ~/.bin
+RUN tar -xzf /home/yq/asdf.tar.gz -C ~/.bin
 
 # Add asdf to PATH, so it can be run in this Dockerfile
-ENV PATH="$PATH:/home/yq/.asdf/bin"
+ENV PATH="$PATH:/home/yq/.bin"
 
 # Add asdf shims to PATH, so installed executables can be run in this Dockerfile
 ENV PATH=$PATH:/home/yq/.asdf/shims
