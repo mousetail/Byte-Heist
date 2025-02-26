@@ -6,6 +6,11 @@ Byte Heist is a site where you can test your coding skills by solving challenges
 
 The site will be similar to sites like code.golf, anarchy golf, and the late week.golf. Some unique features will include:
 
+- Challenges will have a finite run time, probably around 6 months. After this time all solutions will be made public.
+- A highly customizable judging system that will allow things like restricted source challenges, alternate scoring systems, self referential challenges etc. Though I also hope to have a good selection of basic code golf challenges too.
+- Easily upload and collaborate on challenges via the interface. Built in ways to vote on challenges, give feedback, suggest test cases etc.
+- There will be curated challenges that contribute to a global leaderboard, but you can also create private challenges to play with your friends, or to use for C.M.C.s etc.
+
 # Project Overview
 
 Byte Heist conists of two main projects
