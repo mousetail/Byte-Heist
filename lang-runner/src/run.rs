@@ -276,14 +276,14 @@ async fn get_versions_for_language(line: &str) -> (String, CacheMap<String, ()>)
         println!("Finding versions failed");
     }
 
-    return (
+    (
         (*name).to_owned(),
         String::from_utf8(versions.stdout)
             .unwrap()
             .lines()
             .map(|k| (k.trim().to_owned(), ()))
             .collect::<CacheMap<_, ()>>(),
-    );
+    )
 }
 
 pub async fn get_lang_versions() -> CacheMap<String, CacheMap<String, ()>> {

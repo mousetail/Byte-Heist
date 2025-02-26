@@ -37,7 +37,7 @@ impl DiffElement {
 
 impl TestCaseDisplay {
     fn get_columns(result_display: ResultDisplay, diff_generator: &TextDiffConfig) -> Vec<Column> {
-        return match result_display {
+        match result_display {
             common::ResultDisplay::Empty => vec![],
             common::ResultDisplay::Text(e) => vec![Column {
                 title: None,
@@ -120,7 +120,7 @@ impl TestCaseDisplay {
                     content: vec![DiffElement::from_string(error)],
                 },
             ],
-        };
+        }
     }
 
     fn get_default_visible(test_case: &TestCase) -> bool {

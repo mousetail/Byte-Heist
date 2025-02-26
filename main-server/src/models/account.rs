@@ -77,7 +77,7 @@ impl IntoResponse for AccountFetchError {
             e => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header("Content-Type", "text/plain")
-                .body(Body::from(println!("{e:#?}")))
+                .body(Body::from(format!("{e:#?}")))
                 .unwrap(),
         }
     }
@@ -98,13 +98,16 @@ impl<S: Send + Sync> FromRequestParts<S> for Account {
             .get(ACCOUNT_ID_KEY)
             .await
             .map_err(|_| AccountFetchError::NoSession)?
-        { Some(account_id) => {
-            if let Some(account) = Account::get_by_id(&pool, account_id).await {
-                return Ok(account);
+        {
+            Some(account_id) => {
+                if let Some(account) = Account::get_by_id(&pool, account_id).await {
+                    return Ok(account);
+                }
+                return Err(AccountFetchError::NoAccountFound);
             }
-            return Err(AccountFetchError::NoAccountFound);
-        } _ => {
-            return Err(AccountFetchError::NotLoggedIn);
-        }}
+            _ => {
+                return Err(AccountFetchError::NotLoggedIn);
+            }
+        }
     }
 }

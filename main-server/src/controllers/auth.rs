@@ -67,7 +67,7 @@ pub async fn github_login(session: Session) -> Redirect {
         .await
         .unwrap();
 
-    return Redirect::temporary(authorize_url.as_str());
+    Redirect::temporary(authorize_url.as_str())
 }
 
 #[derive(Deserialize)]
@@ -98,12 +98,11 @@ pub async fn github_callback(
 
     let GithubResponse { code, state } = token;
 
-    if !session
+    if session
         .get(GITHUB_SESSION_CSRF_KEY)
         .await
         .ok()
-        .and_then(|b| b)
-        .is_some_and(|d: CsrfToken| d.secret() == state.secret())
+        .and_then(|b| b).is_none_or(|d: CsrfToken| d.secret() != state.secret())
     {
         return Err(Error::Oauth(crate::error::OauthError::CsrfValidation));
     }

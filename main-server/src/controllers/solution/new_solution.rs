@@ -21,6 +21,7 @@ use crate::{
 
 use super::{all_solutions::AllSolutionsOutput, SolutionQueryParameters};
 
+#[allow(clippy::too_many_arguments)]
 async fn insert_new_solution(
     pool: &PgPool,
     language_name: &str,
@@ -199,7 +200,7 @@ pub async fn new_solution(
                     &pool,
                     &solution,
                     new_score,
-                    &previous_code,
+                    previous_code,
                     test_result.runtime,
                 )
                 .await?;

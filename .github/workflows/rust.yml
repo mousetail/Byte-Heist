@@ -2,32 +2,33 @@ name: Rust
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 env:
   CARGO_TERM_COLOR: always
   SQLX_OFFLINE: true
+  RUSTFLAGS: "-Dwarnings"
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Cache Target
-      uses: actions/cache@v3
-      id: cache-cargo
-      with:
-       path: |
-         ~/.cargo/bin/
-         ~/.cargo/registry/index/
-         ~/.cargo/registry/cache/
-         ~/.cargo/git/db/
-         target/
-       key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/checkout@v4
+      - name: Cache Target
+        uses: actions/cache@v3
+        id: cache-cargo
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: Clippy
-      run: cargo clippy
-    - name: Build
-      run: cargo build --verbose
+      - name: Clippy
+        run: cargo clippy
+      - name: Build
+        run: cargo build --verbose

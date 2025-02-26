@@ -114,6 +114,7 @@ pub async fn post_new_golfer(account: Account) {
     };
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn post_updated_score(
     pool: PgPool,
     bot: Bot,

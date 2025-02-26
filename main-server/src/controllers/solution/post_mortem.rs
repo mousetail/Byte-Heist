@@ -33,10 +33,10 @@ pub async fn post_mortem_view_without_language(
     Path((challenge_id, slug)): Path<(i32, String)>,
     account: Account,
 ) -> Redirect {
-    return Redirect::temporary(&format!(
+    Redirect::temporary(&format!(
         "/challenge/{challenge_id}/{slug}/solutions/{}",
         account.preferred_language
-    ));
+    ))
 }
 
 pub async fn post_mortem_view(
