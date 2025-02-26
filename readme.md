@@ -1,3 +1,11 @@
+# Byte Heist
+
+https://byte-heist.com
+
+Byte Heist is a site where you can test your coding skills by solving challenges in as few bytes as possible.
+
+The site will be similar to sites like code.golf, anarchy golf, and the late week.golf. Some unique features will include:
+
 # Project Overview
 
 Byte Heist conists of two main projects
