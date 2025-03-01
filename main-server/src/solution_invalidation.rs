@@ -69,8 +69,9 @@ pub async fn solution_invalidation_task(pool: PgPool) {
                 .unwrap();
             } else {
                 println!(
-                    "Solution {} invalidated at {}",
+                    "Solution {} in {} invalidated at {}",
                     task.id,
+                    task.language,
                     OffsetDateTime::now_utc()
                 );
 
