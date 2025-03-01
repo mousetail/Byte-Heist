@@ -74,7 +74,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         run_command: &["${OUTPUT_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-rust.git",
         env: &[
-            ("LD_LIBRARY_PATH", "/lang/lib:/lib"),
+            ("LD_LIBRARY_PATH", "/usr/libexec/gcc/x86_64-linux-gnu/14:/usr/lib:/lang/lib:/lib"),
             ("PATH", "/usr/bin:/bin")
         ],
         install_env: &[(
@@ -83,6 +83,12 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         )],
         latest_version: "1.85.0",
         icon: "rust.svg",
+        extra_mounts: &[
+            ("/usr/bin/x86_64-linux-gnu-gcc-14", "/usr/bin/cc"),
+            ("/usr/bin/x86_64-linux-gnu-ld.bfd", "/usr/bin/ld"),
+            ("/usr/libexec/gcc/x86_64-linux-gnu/14", "/usr/libexec/gcc/x86_64-linux-gnu/14"),
+            //("/usr/lib/gcc/x86_64-linux-gnu/14/", "/usr/lib/gcc/x86_64-linux-gnu/14/")
+        ],
         ..DEFAULT_LANG
     },
     "vyxal" => Lang {
@@ -141,6 +147,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         plugin: "https://github.com/asdf-community/asdf-kotlin.git",
         env: &[
             ("LD_LIBRARY_PATH", "/java/lib:/lib"),
+            ("JAVA_HOME", "/java")
         ],
         latest_version: "2.1.10",
         icon: "kotlin.svg",
