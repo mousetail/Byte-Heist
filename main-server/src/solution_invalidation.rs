@@ -41,7 +41,11 @@ pub async fn solution_invalidation_task(pool: PgPool) {
                 }
             };
 
-            let version = LANGS.get(&task.language).unwrap().latest_version;
+            let Some(lang) = LANGS.get(&task.language) else {
+                eprintln!("Skipping solution in non-existant lang {}", task.language);
+                continue;
+            };
+            let version = lang.latest_version;
 
             let result = match test_solution(&task.code, &task.language, version, &task.judge).await
             {
