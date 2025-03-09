@@ -11,7 +11,6 @@ use serenity::all::{
     ChannelId, Colour, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
 };
 use sqlx::PgPool;
-use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct ScoreImproved {
     pub challenge_id: i32,
@@ -188,55 +187,31 @@ async fn handle_message(
     Ok(())
 }
 
-async fn handle_bot_queue(
-    mut receiver: Receiver<ScoreImproved>,
+pub struct Bot {
     http_client: serenity::http::Http,
     pool: PgPool,
     channel_id: ChannelId,
-) {
-    match http_client.get_current_application_info().await {
-        Ok(o) => {
-            println!("Discord Bot Initialized, user name: {:?}", o.name)
-        }
-        Err(e) => {
-            eprint!("Failed to initalize disocrd bot: {:?}", e);
-            return;
+}
+
+impl Bot {
+    pub fn new(pool: PgPool, discord_token: String, channel_id: u64) -> Self {
+        let http_client = serenity::http::Http::new(&discord_token);
+        let channel_id = ChannelId::new(channel_id);
+
+        Bot {
+            http_client,
+            pool,
+            channel_id,
         }
     }
 
-    while let Some(message) = receiver.recv().await {
-        match handle_message(message, &pool, &http_client, channel_id).await {
+    pub async fn send(&self, message: ScoreImproved) {
+        match handle_message(message, &self.pool, &self.http_client, self.channel_id).await {
             Ok(_) => (),
             Err(e) => {
                 eprintln!("(Partially) Failed to send discord update: {e:?}")
             }
         };
-    }
-}
-
-pub fn init_bot(pool: PgPool, discord_token: String, channel_id: u64) -> Sender<ScoreImproved> {
-    let (sender, receiver) = tokio::sync::mpsc::channel::<ScoreImproved>(32);
-    let http_client = serenity::http::Http::new(&discord_token);
-
-    let channel = ChannelId::new(channel_id);
-
-    tokio::spawn(handle_bot_queue(receiver, http_client, pool, channel));
-
-    sender
-}
-
-#[derive(Clone)]
-pub struct Bot {
-    pub channel: Option<Sender<ScoreImproved>>,
-}
-
-impl Bot {
-    pub async fn send(&self, message: ScoreImproved) {
-        if let Some(channel) = &self.channel {
-            if let Err(e) = channel.send(message).await {
-                eprintln!("Error sending: {e:?}",);
-            }
-        }
     }
 }
 

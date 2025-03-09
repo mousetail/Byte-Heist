@@ -3,18 +3,18 @@ use axum::{
     Extension,
 };
 use common::langs::LANGS;
-use discord_bot::Bot;
 use reqwest::StatusCode;
 use sqlx::{types::time::OffsetDateTime, PgPool};
 
 use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format},
-    discord::post_updated_score,
+    discord::DiscordEventSender,
     error::Error,
     models::{
         account::Account,
         challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, NewSolution},
+        GetById,
     },
     test_solution::test_solution,
 };
@@ -32,8 +32,8 @@ async fn insert_new_solution(
     new_score: i32,
     runtime: f32,
     is_post_mortem: bool,
-) -> Result<(), Error> {
-    sqlx::query!(
+) -> Result<i32, Error> {
+    let result = sqlx::query_scalar!(
         "INSERT INTO solutions (
             language,
             version,
@@ -44,7 +44,8 @@ async fn insert_new_solution(
             last_improved_date,
             runtime,
             is_post_mortem
-        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id",
         language_name,
         version,
         challenge_id,
@@ -55,11 +56,11 @@ async fn insert_new_solution(
         runtime,
         is_post_mortem
     )
-    .execute(pool)
+    .fetch_one(pool)
     .await
     .map_err(Error::Database)?;
 
-    Ok(())
+    Ok(result)
 }
 
 async fn update_solution(
@@ -139,7 +140,7 @@ pub async fn new_solution(
     Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
     account: Account,
     Extension(pool): Extension<PgPool>,
-    Extension(bot): Extension<Bot>,
+    Extension(bot): Extension<DiscordEventSender>,
     format: Format,
     AutoInput(solution): AutoInput<NewSolution>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
@@ -153,7 +154,8 @@ pub async fn new_solution(
         .await?;
 
     let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
-        .await?
+        .await
+        .map_err(Error::Database)?
         .ok_or(Error::NotFound)?;
 
     let test_result = test_solution(
@@ -177,10 +179,10 @@ pub async fn new_solution(
     // Related: https://github.com/mousetail/Byte-Heist/issues/34
     let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
 
-    let status = if test_result.tests.pass {
+    let (status, solution_id) = if test_result.tests.pass {
         match should_update_solution(&previous_code, &challenge, new_score).await {
             ShouldUpdateSolution::CreateNew => {
-                insert_new_solution(
+                let solution_id = insert_new_solution(
                     &pool,
                     &language_name,
                     version,
@@ -193,7 +195,7 @@ pub async fn new_solution(
                 )
                 .await?;
 
-                StatusCode::CREATED
+                (StatusCode::CREATED, Some(solution_id))
             }
             ShouldUpdateSolution::Update(previous_code) => {
                 update_solution(
@@ -205,29 +207,21 @@ pub async fn new_solution(
                 )
                 .await?;
 
-                StatusCode::CREATED
+                (StatusCode::CREATED, Some(previous_code.id))
             }
-            ShouldUpdateSolution::None => StatusCode::OK,
+            ShouldUpdateSolution::None => (StatusCode::OK, None),
         }
     } else {
-        StatusCode::BAD_REQUEST
+        (StatusCode::BAD_REQUEST, None)
     };
 
-    if test_result.tests.pass
-        && previous_code
-            .as_ref()
-            .is_none_or(|e| !e.valid || new_score < e.score)
-    {
-        tokio::spawn(post_updated_score(
-            pool.clone(),
-            bot,
+    if let Some(solution_id) = solution_id {
+        bot.send(crate::discord::DiscordEvent::NewBestScore {
             challenge_id,
-            account.id,
-            language_name.clone(),
-            new_score,
-            challenge.challenge.challenge.status,
-            challenge.challenge.is_post_mortem,
-        ));
+            solution_id,
+        })
+        .await
+        .unwrap();
     }
 
     Ok(AutoOutputFormat::new(

@@ -12,6 +12,7 @@ use crate::{
         account::Account,
         challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, RankingMode},
+        GetById,
     },
     test_case_display::OutputDisplay,
 };
@@ -47,7 +48,8 @@ pub async fn all_solutions(
     .map_err(Error::Database)?;
 
     let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
-        .await?
+        .await
+        .map_err(Error::Database)?
         .ok_or(Error::NotFound)?;
     let code = match account {
         Some(account) => {

@@ -5,7 +5,7 @@ use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
 
 use crate::{error::Error, test_case_display::OutputDisplay};
 
-use super::account::Account;
+use super::{account::Account, GetById};
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
@@ -145,7 +145,8 @@ impl NewOrExistingChallenge {
 
     pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, Error> {
         Ok(ChallengeWithAuthorInfo::get_by_id(pool, id)
-            .await?
+            .await
+            .map_err(Error::Database)?
             .map(NewOrExistingChallenge::Existing))
     }
 }
@@ -221,8 +222,8 @@ pub struct ChallengeWithAuthorInfo {
     pub author_avatar: String,
 }
 
-impl ChallengeWithAuthorInfo {
-    pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, Error> {
+impl GetById for ChallengeWithAuthorInfo {
+    async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, sqlx::Error> {
         let sql = "SELECT
             challenges.id,
             challenges.name,
@@ -242,11 +243,8 @@ impl ChallengeWithAuthorInfo {
             "
         .to_string();
 
-        let challenge: Option<ChallengeWithAuthorInfo> = sqlx::query_as(&sql)
-            .bind(id)
-            .fetch_optional(pool)
-            .await
-            .map_err(Error::Database)?;
+        let challenge: Option<ChallengeWithAuthorInfo> =
+            sqlx::query_as(&sql).bind(id).fetch_optional(pool).await?;
 
         Ok(challenge)
     }

@@ -10,7 +10,7 @@ use sqlx::PgPool;
 
 use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format},
-    discord::post_new_challenge,
+    discord::DiscordEventSender,
     error::Error,
     models::{
         account::Account,
@@ -19,6 +19,7 @@ use crate::{
             HomePageChallenge, NewChallenge, NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
+        GetById,
     },
     slug::Slug,
     solution_invalidation::notify_challenge_updated,
@@ -100,6 +101,7 @@ pub async fn view_challenge(
 pub async fn new_challenge(
     id: Option<Path<(i32, String)>>,
     Extension(pool): Extension<PgPool>,
+    Extension(bot): Extension<DiscordEventSender>,
     account: Account,
     format: Format,
     AutoInput(challenge): AutoInput<NewChallenge>,
@@ -107,7 +109,8 @@ pub async fn new_challenge(
     let (new_challenge, existing_challenge) = match id {
         Some(Path((id, _))) => {
             let existing_challenge = ChallengeWithAuthorInfo::get_by_id(&pool, id)
-                .await?
+                .await
+                .map_err(Error::Database)?
                 .ok_or(Error::NotFound)?;
             let mut new_challenge = existing_challenge.clone();
             new_challenge.challenge.challenge = challenge.clone();
@@ -185,7 +188,9 @@ pub async fn new_challenge(
                     .into_response();
 
             if challenge.status == ChallengeStatus::Public {
-                tokio::spawn(post_new_challenge(account, new_challenge, row));
+                bot.send(crate::discord::DiscordEvent::NewChallenge { challenge_id: row })
+                    .await
+                    .unwrap();
             }
 
             Ok(redirect)
@@ -220,17 +225,9 @@ pub async fn new_challenge(
                 if existing_challenge.challenge.challenge.status != ChallengeStatus::Public
                     && challenge.status == ChallengeStatus::Public
                 {
-                    let new_challenge = new_challenge.clone();
-                    tokio::spawn(async move {
-                        post_new_challenge(
-                            Account::get_by_id(&pool, existing_challenge.challenge.author)
-                                .await
-                                .unwrap_or(account),
-                            new_challenge,
-                            id,
-                        )
+                    bot.send(crate::discord::DiscordEvent::NewChallenge { challenge_id: id })
                         .await
-                    });
+                        .unwrap();
                 }
             }
 

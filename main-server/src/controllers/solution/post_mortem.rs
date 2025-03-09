@@ -5,7 +5,7 @@ use sqlx::{query_as, PgPool};
 use crate::{
     auto_output_format::{AutoOutputFormat, Format},
     error::Error,
-    models::{account::Account, challenge::ChallengeWithAuthorInfo},
+    models::{account::Account, challenge::ChallengeWithAuthorInfo, GetById},
 };
 
 #[derive(Serialize)]
@@ -46,7 +46,8 @@ pub async fn post_mortem_view(
     Extension(pool): Extension<PgPool>,
 ) -> Result<AutoOutputFormat<PostMortemViewOutput>, Error> {
     let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
-        .await?
+        .await
+        .map_err(Error::Database)?
         .ok_or(Error::NotFound)?;
 
     let is_post_mortem = challenge.challenge.is_post_mortem;

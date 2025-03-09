@@ -2,21 +2,38 @@ use serde::{Deserialize, Serialize};
 use sqlx::{query_as, query_scalar, PgPool};
 use tower_sessions::cookie::time::OffsetDateTime;
 
-#[derive(sqlx::FromRow, Deserialize, Serialize)]
-pub struct NewSolution {
-    pub code: String,
+use super::GetById;
+
+pub struct SolutionWithLanguage {
+    pub score: i32,
+    pub is_post_mortem: bool,
+    pub language: String,
+    pub author: i32,
+}
+
+impl GetById for SolutionWithLanguage {
+    async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, sqlx::Error> {
+        sqlx::query_as!(
+            SolutionWithLanguage,
+            r#"
+                SELECT
+                    score,
+                    is_post_mortem as "is_post_mortem!",
+                    language,
+                    author
+                FROM solutions
+                WHERE solutions.id=$1
+            "#,
+            id
+        )
+        .fetch_optional(pool)
+        .await
+    }
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize)]
-pub struct Solution {
-    pub id: i32,
-    pub language: String,
-    pub version: String,
-    pub challenge: i32,
-    #[sqlx(flatten)]
-    pub solution: NewSolution,
-    pub author: i32,
-    pub score: i32,
+pub struct NewSolution {
+    pub code: String,
 }
 
 #[derive(Serialize)]
