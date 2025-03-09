@@ -1,8 +1,10 @@
 mod checks;
+pub mod new_challenge;
 mod queries;
 
-use checks::{get_last_best_score_fields, should_post_new_message};
+use checks::{get_last_best_score_fields, should_edit_message};
 use common::langs::LANGS;
+use new_challenge::{on_new_challenge, NewChallengeEvent};
 use queries::{
     get_challenge_name_by_id, get_last_message_for_challenge, get_last_posted_message_id,
     get_user_info_by_id, save_new_message_info, BasicAccontInfo, NewScore,
@@ -32,7 +34,7 @@ struct LastMessage {
     previous_author_id: Option<i32>,
     previous_author_name: Option<String>,
     previous_author_score: Option<i32>,
-    message_id: i64,
+    message_id: Option<i64>,
     channel_id: i64,
 }
 
@@ -157,7 +159,7 @@ async fn handle_message(
         &user_info,
         &last_best_score,
     );
-    let message_id = should_post_new_message(
+    let message_id = should_edit_message(
         latest_message,
         &score_improved_event,
         &last_message_for_challenge,
@@ -177,7 +179,7 @@ async fn handle_message(
         pool,
         last_message_for_challenge,
         score_improved_event,
-        posted_message.id,
+        Some(posted_message.id),
         Some(last_best_score.user_id),
         Some(last_best_score.score),
         channel_id,
@@ -205,13 +207,20 @@ impl Bot {
         }
     }
 
-    pub async fn send(&self, message: ScoreImproved) {
+    pub async fn on_score_improved(&self, message: ScoreImproved) {
         match handle_message(message, &self.pool, &self.http_client, self.channel_id).await {
             Ok(_) => (),
             Err(e) => {
                 eprintln!("(Partially) Failed to send discord update: {e:?}")
             }
         };
+    }
+
+    pub async fn on_new_challenge(&self, event: NewChallengeEvent) {
+        match on_new_challenge(&self.http_client, &self.pool, self.channel_id, event).await {
+            Ok(()) => (),
+            Err(e) => eprintln!("{e}"),
+        }
     }
 }
 

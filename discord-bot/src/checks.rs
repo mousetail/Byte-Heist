@@ -2,21 +2,20 @@ use serenity::all::MessageId;
 
 use crate::{message_id_from_i64, queries::NewScore, LastMessage, ScoreImproved};
 
-pub(crate) fn should_post_new_message(
+pub(crate) fn should_edit_message(
     latest_message: Option<i32>,
     current_score: &ScoreImproved,
     previous_message_for_challenge: &Option<LastMessage>,
 ) -> Option<MessageId> {
     previous_message_for_challenge
         .as_ref()
-        .and_then(|last_message_for_challenge| {
-            latest_message
-                .is_some_and(|e| {
-                    e == last_message_for_challenge.id
-                        && current_score.author == last_message_for_challenge.author_id
-                })
-                .then(|| message_id_from_i64(last_message_for_challenge.message_id))
+        .filter(|e| {
+            Some(e.id) == latest_message
+                && e.author_id == current_score.author
+                && e.language == current_score.language
         })
+        .and_then(|k| k.message_id)
+        .map(message_id_from_i64)
 }
 
 pub(crate) fn get_last_best_score_fields(

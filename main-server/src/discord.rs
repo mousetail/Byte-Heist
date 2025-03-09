@@ -1,6 +1,9 @@
 use std::env::VarError;
 
-use discord_bot::{Bot, ScoreImproved};
+use discord_bot::{
+    new_challenge::{BestScore, NewChallengeEvent},
+    Bot, ScoreImproved,
+};
 use reqwest::StatusCode;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -49,7 +52,11 @@ async fn listen_for_events(
         match ev {
             DiscordEvent::NewGolfer { user_id } => post_new_golfer(&pool, user_id).await,
             DiscordEvent::NewChallenge { challenge_id } => {
-                post_new_challenge(&pool, challenge_id).await
+                post_new_challenge(&pool, challenge_id).await;
+
+                if let Some(bot) = &bot {
+                    post_best_scores_for_new_challenge(&pool, bot, challenge_id).await;
+                }
             }
             DiscordEvent::NewBestScore {
                 challenge_id,
@@ -88,7 +95,7 @@ pub enum DiscordError {
     BadStatusCode(#[allow(unused)] StatusCode),
 }
 
-pub async fn post_discord_webhook(request: WebHookRequest<'_>) -> Result<(), DiscordError> {
+async fn post_discord_webhook(request: WebHookRequest<'_>) -> Result<(), DiscordError> {
     let webhook_url = match std::env::var("DISCORD_WEBHOOK_URL") {
         Ok(value) => value,
         Err(VarError::NotPresent) => return Ok(()),
@@ -114,7 +121,33 @@ pub async fn post_discord_webhook(request: WebHookRequest<'_>) -> Result<(), Dis
     Ok(())
 }
 
-pub async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
+async fn post_best_scores_for_new_challenge(pool: &PgPool, bot: &Bot, challenge_id: i32) {
+    let leaderboard = SolutionWithLanguage::get_best_per_language(pool, challenge_id)
+        .await
+        .unwrap();
+
+    let challenge = ChallengeWithAuthorInfo::get_by_id(pool, challenge_id)
+        .await
+        .unwrap()
+        .unwrap();
+
+    bot.on_new_challenge(NewChallengeEvent {
+        challenge_id,
+        challenge_name: challenge.challenge.challenge.name,
+        scores: leaderboard
+            .into_iter()
+            .map(|k| BestScore {
+                author_id: k.author,
+                author_name: k.author_name,
+                language: k.language,
+                score: k.score,
+            })
+            .collect(),
+    })
+    .await;
+}
+
+async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
     let challenge = ChallengeWithAuthorInfo::get_by_id(pool, challenge_id)
         .await
         .unwrap()
@@ -150,7 +183,7 @@ pub async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
     };
 }
 
-pub async fn post_new_golfer(pool: &PgPool, user_id: i32) {
+async fn post_new_golfer(pool: &PgPool, user_id: i32) {
     let Some(account) = Account::get_by_id(pool, user_id).await else {
         eprintln!("Wanted to post a discord message regarding new golfer {user_id} but no such account was found");
         return;
@@ -176,7 +209,7 @@ pub async fn post_new_golfer(pool: &PgPool, user_id: i32) {
     };
 }
 
-pub async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, bot: &Bot) {
+async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, bot: &Bot) {
     let challenge = match ChallengeWithAuthorInfo::get_by_id(pool, challenge_id).await {
         Ok(Some(c)) => c,
         Ok(None) => {
@@ -214,7 +247,7 @@ pub async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i
             }
         };
     if top_solution.is_none_or(|k| k.score == solution.score && k.author_id == solution.author) {
-        bot.send(ScoreImproved {
+        bot.on_score_improved(ScoreImproved {
             challenge_id,
             author: solution.author,
             language: solution.language,

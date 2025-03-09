@@ -9,6 +9,33 @@ pub struct SolutionWithLanguage {
     pub is_post_mortem: bool,
     pub language: String,
     pub author: i32,
+    pub author_name: String,
+}
+
+impl SolutionWithLanguage {
+    pub async fn get_best_per_language(
+        pool: &PgPool,
+        challenge_id: i32,
+    ) -> Result<Vec<Self>, sqlx::Error> {
+        sqlx::query_as!(
+            SolutionWithLanguage,
+            r#"
+                SELECT DISTINCT ON (language)
+                    score,
+                    is_post_mortem,
+                    language,
+                    author,
+                    accounts.username as author_name
+                FROM solutions
+                LEFT JOIN accounts ON solutions.author = accounts.id
+                WHERE valid AND not is_post_mortem AND challenge=$1
+                ORDER BY language ASC, score ASC, solutions.created_at ASC
+            "#,
+            challenge_id
+        )
+        .fetch_all(pool)
+        .await
+    }
 }
 
 impl GetById for SolutionWithLanguage {
@@ -18,10 +45,12 @@ impl GetById for SolutionWithLanguage {
             r#"
                 SELECT
                     score,
-                    is_post_mortem as "is_post_mortem!",
+                    is_post_mortem,
                     language,
-                    author
+                    author,
+                    accounts.username as author_name
                 FROM solutions
+                LEFT JOIN accounts on solutions.author = accounts.id
                 WHERE solutions.id=$1
             "#,
             id

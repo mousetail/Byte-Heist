@@ -92,7 +92,7 @@ pub(crate) async fn save_new_message_info(
     pool: &PgPool,
     last_message: Option<LastMessage>,
     message: ScoreImproved,
-    message_id: MessageId,
+    message_id: Option<MessageId>,
     last_author_id: Option<i32>,
     last_score: Option<i32>,
     final_channel_id: ChannelId,
@@ -112,7 +112,7 @@ pub(crate) async fn save_new_message_info(
                 message.score,
                 last_author_id,
                 last_score,
-                message_id_to_i64(message_id),
+                message_id.map(message_id_to_i64),
                 channel_id_to_i64(final_channel_id),
                 e.id
             )
@@ -147,7 +147,7 @@ pub(crate) async fn save_new_message_info(
                 last_author_id,
                 last_score,
                 message.score,
-                message_id_to_i64(message_id),
+                message_id.map(message_id_to_i64),
                 channel_id_to_i64(final_channel_id)
             )
             .execute(pool)
