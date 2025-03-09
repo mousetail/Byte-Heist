@@ -1,6 +1,7 @@
 use std::borrow::Cow;
+use std::fmt::Write;
 
-use serenity::all::{ChannelId, CreateEmbed, CreateMessage, MessageBuilder};
+use serenity::all::{ChannelId, CreateEmbed, CreateMessage};
 use sqlx::PgPool;
 
 use crate::{get_last_message_for_challenge, save_new_message_info, ScoreImproved};
@@ -27,14 +28,12 @@ fn gen_embed(
 ) -> CreateEmbed {
     let public_url = std::env::var("YQ_PUBLIC_URL").unwrap();
     CreateEmbed::new()
-        .title(&format!("New Challenge {challenge_name}"))
+        .title(format!("New Challenge {challenge_name}"))
         .color(512)
-        .description(
-            scores
-                .iter()
-                .map(|i| format!("- {}: {} by {}\n", i.language, i.score, i.author_name))
-                .collect::<String>(),
-        )
+        .description(scores.iter().fold(String::new(), |mut a, i| {
+            let _ = write!(a, "- {}: {} by {}\n", i.language, i.score, i.author_name);
+            a
+        }))
         .url(format!("{public_url}/challenge/{challenge_id}/solve"))
 }
 
