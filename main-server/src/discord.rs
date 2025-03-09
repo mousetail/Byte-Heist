@@ -15,6 +15,7 @@ use crate::{
     slug::Slug,
 };
 
+#[allow(clippy::enum_variant_names)]
 pub enum DiscordEvent {
     NewGolfer { user_id: i32 },
     NewChallenge { challenge_id: i32 },
@@ -28,7 +29,7 @@ impl DiscordEventSender {
     pub fn new(pool: PgPool, bot: Option<Bot>) -> Self {
         let (sender, receiver) = tokio::sync::mpsc::channel(24);
         tokio::spawn(listen_for_events(receiver, pool, bot));
-        return DiscordEventSender(sender);
+        DiscordEventSender(sender)
     }
 
     pub async fn send(
@@ -53,10 +54,11 @@ async fn listen_for_events(
             DiscordEvent::NewBestScore {
                 challenge_id,
                 solution_id,
-            } => match &bot {
-                Some(bot) => post_updated_score(&pool, challenge_id, solution_id, &bot).await,
-                None => (),
-            },
+            } => {
+                if let Some(bot) = &bot {
+                    post_updated_score(&pool, challenge_id, solution_id, bot).await
+                }
+            }
         }
     }
 }
@@ -204,7 +206,7 @@ pub async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i
     }
 
     let top_solution =
-        match LeaderboardEntry::get_top_entry(&pool, challenge_id, &solution.language).await {
+        match LeaderboardEntry::get_top_entry(pool, challenge_id, &solution.language).await {
             Ok(o) => o,
             Err(e) => {
                 eprintln!("Failed to get top solution: {e:?}");
