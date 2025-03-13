@@ -44,15 +44,18 @@
           <a href="/">
             <img src="/static/favicon.svg" width="30" alt="Byte Heist" />
           Home</a>
+          <a href="/leaderboard/code-golf">Leaderboard</a>
         </div>
         <div>
           {% if account %}
-            {{ account.username }}
-            <img src="{{ account.avatar }}&size=18"
-                 width="18"
-                 alt="{{ account.username }} profile picture" />
+            <a href="/user/{{ account.id }}">
+              {{ account.username }}
+              <img src="{{ account.avatar }}&size=18"
+                   width="18"
+                   alt="{{ account.username }} profile picture" />
+            </a>
           {% else %}
-            <a href="/login/github">Login</a>
+            <a href="/login/github">Join the Heist (with Github)</a>
           {% endif %}
         </div>
       </div>
@@ -63,9 +66,25 @@
     </main>
     <footer>
       <div class="footer-content">
-        <p>Byte Heist.</p>
+        <p>Copyright © 2024-2025 Byte Heist. All rights reserved.</p>
         <p>
-          <a href="https://discord.gg/ugbfdgzpjK">Join The Discord</a>.
+          <a href="https://github.com/mousetail/Byte-Heist"
+             alt="GitHub"
+             title="GitHub"
+             target="_blank"
+             rel="noopener"
+             style="text-decoration:none">
+            <img src="/static/footer-icons/github.svg" alt="GitHub" title="GitHub" />
+          </a>
+          &nbsp;
+          <a href="https://discord.gg/ugbfdgzpjK"
+             alt="Discord"
+             title="Discord"
+             target="_blank"
+             rel="noopener"
+             style="text-decoration:none">
+            <img src="/static/footer-icons/discord.svg" alt="Discord" title="Discord" />
+          </a>
         </p>
       </div>
     </footer>

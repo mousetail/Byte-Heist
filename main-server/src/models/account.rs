@@ -11,7 +11,7 @@ use serde::Serialize;
 use sqlx::{prelude::FromRow, PgPool};
 use tower_sessions::Session;
 
-use crate::controllers::auth::ACCOUNT_ID_KEY;
+use crate::{controllers::auth::ACCOUNT_ID_KEY, error::Error};
 
 #[derive(FromRow, Serialize)]
 pub struct Account {
@@ -32,6 +32,23 @@ impl Account {
         .fetch_optional(pool)
         .await
         .unwrap()
+    }
+
+    pub async fn save_preferred_language(
+        &self,
+        pool: &PgPool,
+        preferred_language: &str,
+    ) -> Result<(), Error> {
+        sqlx::query!(
+            "UPDATE accounts SET preferred_language=$1 WHERE id=$2",
+            preferred_language,
+            self.id
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        Ok(())
     }
 }
 
@@ -60,7 +77,7 @@ impl IntoResponse for AccountFetchError {
             e => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header("Content-Type", "text/plain")
-                .body(Body::from(println!("{e:#?}")))
+                .body(Body::from(format!("{e:#?}")))
                 .unwrap(),
         }
     }
@@ -77,17 +94,20 @@ impl<S: Send + Sync> FromRequestParts<S> for Account {
             .await
             .map_err(|_| AccountFetchError::DatabaseLoadFailed)?;
 
-        if let Some(account_id) = session
+        match session
             .get(ACCOUNT_ID_KEY)
             .await
             .map_err(|_| AccountFetchError::NoSession)?
         {
-            if let Some(account) = Account::get_by_id(&pool, account_id).await {
-                return Ok(account);
+            Some(account_id) => {
+                if let Some(account) = Account::get_by_id(&pool, account_id).await {
+                    return Ok(account);
+                }
+                return Err(AccountFetchError::NoAccountFound);
             }
-            return Err(AccountFetchError::NoAccountFound);
-        } else {
-            return Err(AccountFetchError::NotLoggedIn);
+            _ => {
+                return Err(AccountFetchError::NotLoggedIn);
+            }
         }
     }
 }

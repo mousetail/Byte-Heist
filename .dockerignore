@@ -1,6 +1,7 @@
 postgres-data/.
 .git
 .vscode
+.idea
 .sessions
 node_modules
 .env

@@ -1,74 +1,55 @@
 {% extends "base/base.html.jinja" %}
+{% import "base/home_page_challenge.html.jinja" as home_page_challenge %}
 {% block content %}
   {% if object.invalid_solutions_exist %}
     <div class="warning">
       You have some submissions that have been made invalid by updates to the challenge. Please go to your <a href="/user/{{ account.id }}">profile page</a> for a full list, to resubmit them.
     </div>
   {% endif %}
-  <div class="two-column-description">
-    <div class="content">
-      <h1>Byte Heist</h1>
-      <p>Byte Heist is a site where you can test your coding skills by solving challenges in as few bytes as possible.</p>
-      <p>
-        The site will be similar to sites like code.golf, anarchy golf, and the late week.golf. Some unique features will include:
-      </p>
-      <ul>
-        <li>
-          Challenges will have a finite run time, probably around 6 months. After this time all solutions will be made public.
-        </li>
-        <li>
-          A highly customizable judging system that will allow things like restricted source challenges, alternate scoring systems, self referential challenges etc. Though I also
-          hope to have a good selection of basic code golf challenges too.
-        </li>
-        <li>
-          Easily upload and colaberate on challenges via the interface. Built in ways to vote on challenges, give feedback, suggest test cases etc.
-        </li>
-        <li>
-          There will be curated challenges that contribute to a global leaderboard, but you can also create private challenges to play with your friends,
-          or to use for C.M.C.s etc.
-        </li>
-      </ul>
-      <p>
-        Right now there are already a few challenges you can try. Many things are incomplete. Expect the database to be wiped before 1.0.
-      </p>
-      <h2>Help or keep up with updates</h2>
-      <p>
-        Consider joining <a href="https://discord.gg/ugbfdgzpjK">the Discord</a> or watching the project <a href="https://github.com/mousetail/yq">on GitHub</a>.
-        Pull requests very welcome.
-      </p>
-    </div>
-    <div id="challenges">
-      <h2>Challenges</h2>
-      <ul>
-        {% for challenge in object.public_challenges %}
-          <li>
-            <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve">{{ challenge.name }}</a>
-            <div class="challenge-category">
-              {% if challenge.category == 'code-golf' %}
-                Code Golf
-              {% elif challenge.category == 'restricted-source' %}
-                Restricted Source
-              {% endif %}
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-      <h2>Beta Challenges</h2>
-      <ul>
-        {% for challenge in object.beta_challenges %}
-          <li>
-            <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve">{{ challenge.name }}</a>
-            <div class="challenge-category">
-              {% if challenge.category == 'code-golf' %}
-                Code Golf
-              {% elif challenge.category == 'restricted-source' %}
-                Restricted Source
-              {% endif %}
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-      {% if account %}<a href="/challenge">New Challenge</a>{% endif %}
-    </div>
+  <div class="content">
+    <h1>Byte Heist</h1>
+    <p>Byte Heist is a site where you can test your coding skills by solving challenges in as few bytes as possible.</p>
+    <p>
+      The site will be similar to sites like code.golf, anarchy golf, and the late week.golf. Some unique features will include:
+    </p>
+    <ul>
+      <li>
+        Challenges will have a finite run time, probably around 6 months. After this time all solutions will be made public.
+      </li>
+      <li>
+        A highly customizable judging system that will allow things like restricted source challenges, alternate scoring systems, self referential challenges etc. Though I also
+        hope to have a good selection of basic code golf challenges too.
+      </li>
+      <li>
+        Easily upload and collaborate on challenges via the interface. Built in ways to vote on challenges, give feedback, suggest test cases etc.
+      </li>
+      <li>
+        There will be curated challenges that contribute to a global leaderboard, but you can also create private challenges to play with your friends,
+        or to use for C.M.C.s etc.
+      </li>
+    </ul>
+    <p>
+      Right now there are already a few challenges you can try. Many things are incomplete. Expect the database to be wiped before 1.0.
+    </p>
+    <h2>Help or keep up with updates</h2>
+    <p>
+      Consider joining the <a href="https://discord.gg/ugbfdgzpjK" target="_blank" rel="noopener">Discord</a> or watching the project on <a href="https://github.com/mousetail/Byte-Heist"
+    target="_blank"
+    rel="noopener">GitHub</a>.
+      Pull requests very welcome.
+    </p>
+  </div>
+  <div id="challenges">
+    <h2>Challenges</h2>
+    <ul>
+      {% for challenge in object.public_challenges %}
+        {{ home_page_challenge::challenge_box(challenge=challenge) }}
+      {% endfor %}
+    </ul>
+    <h2>Beta Challenges</h2>
+    <ul>
+      {% for challenge in object.beta_challenges %}{{ home_page_challenge::challenge_box(challenge=challenge) }}{% endfor %}
+    </ul>
+    {% if account %}<a href="/challenge">New Challenge</a>{% endif %}
   </div>
 {% endblock content %}

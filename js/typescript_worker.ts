@@ -23,6 +23,7 @@ export default Comlink.expose(
     const compilerOpts: CompilerOptions = {
       typeRoots: ["/src/types"],
       lib: ["es2021"],
+      target: 99,
     };
     const [declarations, fsMap] = await Promise.all([
       fetchDeclarations(),

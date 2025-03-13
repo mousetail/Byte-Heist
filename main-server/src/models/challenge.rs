@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
-use common::RunLangOutput;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
 
-use crate::error::Error;
+use crate::{error::Error, test_case_display::OutputDisplay};
+
+use super::{account::Account, GetById};
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
@@ -46,10 +47,15 @@ pub struct NewChallenge {
 impl NewChallenge {
     pub fn validate(
         &self,
-        previous: Option<&NewChallenge>,
+        previous: Option<&Challenge>,
         is_admin: bool,
     ) -> Result<(), HashMap<&'static str, &'static str>> {
         let mut errors = HashMap::new();
+
+        if previous.is_some_and(|e| e.is_post_mortem) {
+            errors.insert("status", "Can't edit an ended challenge");
+        }
+
         if self.name.is_empty() {
             errors.insert("name", "name can't be empty");
         }
@@ -58,12 +64,12 @@ impl NewChallenge {
         }
         if self.status == ChallengeStatus::Public
             && !is_admin
-            && previous.is_none_or(|k| k.status == ChallengeStatus::Public)
+            && previous.is_none_or(|k| k.challenge.status == ChallengeStatus::Public)
         {
             errors.insert("status", "you can't make a challenge public");
         } else if self.status != ChallengeStatus::Public
             && !is_admin
-            && previous.is_some_and(|k| k.status == ChallengeStatus::Public)
+            && previous.is_some_and(|k| k.challenge.status == ChallengeStatus::Public)
         {
             errors.insert(
                 "status",
@@ -72,15 +78,17 @@ impl NewChallenge {
         }
 
         if !is_admin
-            && previous
-                .is_some_and(|k| k.status == ChallengeStatus::Public && k.category != self.category)
+            && previous.is_some_and(|k| {
+                k.challenge.status == ChallengeStatus::Public
+                    && k.challenge.category != self.category
+            })
         {
             errors.insert("category", "can't change the category of a live challenge");
         }
         if errors.is_empty() {
-            return Ok(());
+            Ok(())
         } else {
-            return Err(errors);
+            Err(errors)
         }
     }
 }
@@ -95,17 +103,21 @@ impl Default for NewChallenge {
             .to_string(),
             judge: concat!(
                 "(async function*(context: Context): Challenge {\n",
-                "  // Single Test\n",
-                "  yield (await context.run(undefined)).assertEquals('Hello World!');\n\n",
-                "  // Automatically shuffle and deal test cases over multiple runs\n",
-                "  for await (const  value of context.runTestCases(\n",
-                "    [\n",
-                "        [\"Input\", \"Expected Output\"],\n",
-                "    ]\n",
-                "  )) {\n",
-                "    yield value;\n",
-                "  }\n",
-                "  return context.noFailures();\n",
+                "\t// Single Test\n",
+                "\tyield (await context.run(undefined)).assertEquals('Hello World!');\n\n",
+                "\t// Automatically shuffle and deal test cases over multiple runs\n",
+                "\tyield* context.runTestCases(\n",
+                "\t\t[\n",
+                "\t\t\t[\"Input\", \"Expected Output\"],\n",
+                "\t\t]\n",
+                "\t);\n",
+                "\t// For \"Filter\" Style challenges where the goal is to output all inputs that match some condition\n",
+                "\tyield* context.runFilterCases([\n",
+                "\t\t[\"This should be outputted\", true],\n",
+                "\t\t[\"This should not be outputted\", false],\n",
+                "\t]);\n",
+                "\t// Finally, the challenge is passed if no test cases failed\n",
+                "\treturn context.noFailures();\n",
                 "})"
             )
             .to_string(),
@@ -133,7 +145,8 @@ impl NewOrExistingChallenge {
 
     pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, Error> {
         Ok(ChallengeWithAuthorInfo::get_by_id(pool, id)
-            .await?
+            .await
+            .map_err(Error::Database)?
             .map(NewOrExistingChallenge::Existing))
     }
 }
@@ -148,7 +161,7 @@ impl Default for NewOrExistingChallenge {
 pub struct ChallengeWithTests {
     #[serde(flatten)]
     pub challenge: NewOrExistingChallenge,
-    pub tests: Option<RunLangOutput>,
+    pub tests: Option<OutputDisplay>,
     pub validation: Option<HashMap<&'static str, &'static str>>,
 }
 
@@ -159,6 +172,45 @@ pub struct Challenge {
     #[serde(flatten)]
     pub challenge: NewChallenge,
     pub author: i32,
+    pub post_mortem_date: Option<OffsetDateTime>,
+    pub is_post_mortem: bool,
+}
+
+#[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
+pub struct HomePageChallenge {
+    id: i32,
+    name: String,
+    category: ChallengeCategory,
+    score: Option<i64>,
+}
+
+impl HomePageChallenge {
+    pub async fn get_all_by_status(
+        pool: &PgPool,
+        status: ChallengeStatus,
+        user: &Option<Account>,
+    ) -> Result<Vec<HomePageChallenge>, Error> {
+        query_as!(
+            HomePageChallenge,
+            r#"
+            SELECT
+                id,
+                name,
+                category as "category!: ChallengeCategory",
+                scores.score
+            FROM challenges
+            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
+            WHERE status=($1) AND category != 'private'
+            ORDER BY challenges.created_at DESC
+        "#,
+            status as ChallengeStatus,
+            user.as_ref().map(|i| i.id),
+            user.as_ref().map(|i| &i.preferred_language)
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(Error::Database)
+    }
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
@@ -170,8 +222,8 @@ pub struct ChallengeWithAuthorInfo {
     pub author_avatar: String,
 }
 
-impl ChallengeWithAuthorInfo {
-    pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, Error> {
+impl GetById for ChallengeWithAuthorInfo {
+    async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, sqlx::Error> {
         let sql = "SELECT
             challenges.id,
             challenges.name,
@@ -181,6 +233,9 @@ impl ChallengeWithAuthorInfo {
             challenges.author,
             challenges.category,
             challenges.status,
+            challenges.post_mortem_date,
+            (challenges.post_mortem_date IS NOT NULL
+                AND challenges.post_mortem_date < now()) as is_post_mortem,
             accounts.username as author_name,
             accounts.avatar as author_avatar
             FROM challenges LEFT JOIN accounts ON challenges.author = accounts.id
@@ -188,11 +243,8 @@ impl ChallengeWithAuthorInfo {
             "
         .to_string();
 
-        let challenge: Option<ChallengeWithAuthorInfo> = sqlx::query_as(&sql)
-            .bind(id)
-            .fetch_optional(pool)
-            .await
-            .map_err(Error::Database)?;
+        let challenge: Option<ChallengeWithAuthorInfo> =
+            sqlx::query_as(&sql).bind(id).fetch_optional(pool).await?;
 
         Ok(challenge)
     }

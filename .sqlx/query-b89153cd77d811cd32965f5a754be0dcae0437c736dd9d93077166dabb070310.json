@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT code, score, id, valid, last_improved_date from solutions\n                WHERE author=$1 AND challenge=$2 AND language=$3\n                ORDER BY score ASC\n                LIMIT 1\n            ",
+  "query": "\n                SELECT\n                    code, \n                    score,\n                    id,\n                    valid,\n                    last_improved_date,\n                    is_post_mortem as \"is_post_mortem!\" from solutions\n                WHERE author=$1 AND challenge=$2 AND language=$3\n                ORDER BY is_post_mortem DESC, score ASC\n                LIMIT 1\n            ",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,11 @@
         "ordinal": 4,
         "name": "last_improved_date",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_post_mortem!",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -41,8 +46,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "5ebe6f9a644dba7f7da1649c3d1355672329174de3a1f4daff24a0063dcf82b7"
+  "hash": "b89153cd77d811cd32965f5a754be0dcae0437c736dd9d93077166dabb070310"
 }

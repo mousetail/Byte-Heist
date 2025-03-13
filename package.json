@@ -10,6 +10,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@fsegurai/codemirror-theme-basic-light": "^6.1.1",
     "@types/deno": "^2.0.0",
     "@typescript/vfs": "^1.6.0",
     "@valtown/codemirror-ts": "^2.2.0",

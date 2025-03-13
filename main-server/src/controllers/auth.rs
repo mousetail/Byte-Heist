@@ -15,9 +15,8 @@ use sqlx::prelude::FromRow;
 use sqlx::{PgPool, Pool, Postgres};
 use tower_sessions::Session;
 
-use crate::discord::post_new_golfer;
+use crate::discord::DiscordEventSender;
 use crate::error::Error;
-use crate::models::account::Account;
 use crate::models::InsertedId;
 
 const GITHUB_SESSION_CSRF_KEY: &str = "GITHUB_SESSION_CSRF_TOKEN";
@@ -67,7 +66,7 @@ pub async fn github_login(session: Session) -> Redirect {
         .await
         .unwrap();
 
-    return Redirect::temporary(authorize_url.as_str());
+    Redirect::temporary(authorize_url.as_str())
 }
 
 #[derive(Deserialize)]
@@ -86,6 +85,7 @@ pub struct GithubUser {
 pub async fn github_callback(
     session: Session,
     Extension(pool): Extension<PgPool>,
+    Extension(bot): Extension<DiscordEventSender>,
     Query(token): Query<GithubResponse>,
 ) -> Result<Response, Error> {
     let client = create_github_client();
@@ -98,12 +98,12 @@ pub async fn github_callback(
 
     let GithubResponse { code, state } = token;
 
-    if !session
+    if session
         .get(GITHUB_SESSION_CSRF_KEY)
         .await
         .ok()
         .and_then(|b| b)
-        .is_some_and(|d: CsrfToken| d.secret() == state.secret())
+        .is_none_or(|d: CsrfToken| d.secret() != state.secret())
     {
         return Err(Error::Oauth(crate::error::OauthError::CsrfValidation));
     }
@@ -140,7 +140,7 @@ pub async fn github_callback(
             );
         }
 
-        insert_user(&pool, &user_info, &token_res, &session).await?;
+        insert_user(&pool, &user_info, bot, &token_res, &session).await?;
         Ok(Redirect::temporary("/").into_response())
     } else {
         let data = response.bytes().await.unwrap();
@@ -161,6 +161,7 @@ struct UserQueryResponse {
 async fn insert_user(
     pool: &Pool<Postgres>,
     github_user: &GithubUser,
+    bot: DiscordEventSender,
     token: &StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
     session: &Session,
 ) -> Result<(), Error> {
@@ -222,13 +223,11 @@ async fn insert_user(
 
         session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
 
-        tokio::spawn(post_new_golfer(Account {
-            id: new_user_id.0,
-            username: github_user.login.clone(),
-            avatar: github_user.avatar_url.clone(),
-            preferred_language: "python".to_owned(),
-            admin: false,
-        }));
+        bot.send(crate::discord::DiscordEvent::NewGolfer {
+            user_id: new_user_id.0,
+        })
+        .await
+        .unwrap();
 
         Ok(())
     }

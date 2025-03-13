@@ -7,6 +7,7 @@ use common::{
 };
 use futures_util::AsyncWriteExt;
 use serde::Serialize;
+use tokio::time::Instant;
 
 use crate::{
     cachemap::CacheMap,
@@ -16,14 +17,15 @@ use crate::{
 };
 
 const MAX_CONCURRENT_RUNS: usize = 4;
+const TIMEOUT: u64 = 3;
 
 static RUNS_SEMAPHORE: tokio::sync::Semaphore =
     tokio::sync::Semaphore::const_new(MAX_CONCURRENT_RUNS);
 
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
-    println!("Installing language version {}", lang.name);
+    println!("Installing language version {}", lang.display_name);
     let plugin_install_output = Command::new("asdf")
-        .args(["plugin", "add", lang.name, lang.plugin])
+        .args(["plugin", "add", lang.plugin_name, lang.plugin])
         .stderr(Stdio::inherit())
         .status()
         .await?;
@@ -36,12 +38,20 @@ async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessE
 }
 
 async fn install_language_version(lang: &Lang, version: &str) -> Result<(), RunProcessError> {
-    println!("Installing language version {} {}", lang.name, version);
-    let status = Command::new("asdf")
-        .args(["install", lang.name, version])
-        .stderr(Stdio::inherit())
-        .status()
-        .await?;
+    println!(
+        "Installing language version {} {}",
+        lang.display_name, version
+    );
+    let mut command = Command::new("asdf");
+    command
+        .args(["install", lang.plugin_name, version])
+        .stderr(Stdio::inherit());
+
+    for env in lang.install_env {
+        command.env(env.0, env.1);
+    }
+
+    let status = command.status().await?;
 
     if !status.success() {
         return Err(RunProcessError::NonZeroStatusCode(status.code()));
@@ -56,7 +66,7 @@ async fn install_lang(
 ) -> Result<(), RunProcessError> {
     let lang = LANGS.get(&lang_name).unwrap();
 
-    let lang_version_token = versions.get(lang.name.to_owned());
+    let lang_version_token = versions.get(lang.plugin_name.to_owned());
     let lang_versions = lang_version_token
         .get_or_try_init(|| install_plugin(lang))
         .await?;
@@ -72,7 +82,7 @@ async fn install_lang(
 
 async fn get_lang_directory(lang: &Lang, version: &str) -> Result<PathBuf, RunProcessError> {
     let lang_folder = Command::new("asdf")
-        .args(["where", lang.name, version])
+        .args(["where", lang.plugin_name, version])
         .stderr(Stdio::inherit())
         .output()
         .await?;
@@ -104,29 +114,18 @@ async fn run_lang(
     command
         .args([
             "--die-with-parent",
-            // "--ro-bind",
-            // "/proc/self",
-            // "/proc/self",
-            "--ro-bind",
-            "/bin",
-            "/bin",
+            //
             "--chdir",
             "/",
             "--ro-bind",
             "/lib64",
             "/lib64",
             "--ro-bind",
-            "/usr",
-            "/usr",
-            "--ro-bind",
             "/lib",
             "/lib",
             "--ro-bind",
-            "/etc",
-            "/etc",
-            "--ro-bind",
-            "/etc/alternatives",
-            "/etc/alternatives",
+            "/usr/lib",
+            "/usr/lib",
             "--tmpfs",
             "/tmp",
             "--tmpfs",
@@ -141,12 +140,17 @@ async fn run_lang(
         .args(["--ro-bind"])
         .arg(judge_lang_folder)
         .arg("/judge")
-        .args(["--ro-bind", "/scripts", "/scripts"])
-        .args(["--unshare-all", "--new-session"]);
+        .args(["--ro-bind", "/scripts", "/scripts"]);
 
     for (key, value) in judge_lang.env {
         command.args(["--setenv", *key, *value]);
     }
+
+    for (key, value) in judge_lang.extra_mounts.iter().chain(lang.extra_mounts) {
+        command.args(["--ro-bind", key, value]);
+    }
+
+    command.args(["--unshare-all", "--new-session"]);
 
     command
         .args(
@@ -190,21 +194,22 @@ async fn run_lang(
     ));
     let id = child.id();
 
+    let start_time = Instant::now();
+
     let timed_out = tokio::select! {
         _status = child.status() => {
             println!("Child finished normally {id}");
             false
         }
-        _timeout = tokio::time::sleep(Duration::from_secs(3)) => {
+        _timeout = tokio::time::sleep(Duration::from_secs(TIMEOUT + lang.extra_runtime)) => {
             child.kill().unwrap();
             eprintln!("Timed out {id}");
             true
         }
     };
-    eprintln!("Awaiting output");
-    let output = child.output().await?;
 
-    eprintln!("Output Awaited");
+    let end_time = Instant::now();
+    let output = child.output().await?;
 
     let mut stderr = output.stderr;
     stderr.truncate(1000);
@@ -213,6 +218,7 @@ async fn run_lang(
         stderr: String::from_utf8_lossy(&stderr).into_owned(),
         tests: judge_result.await.unwrap(),
         timed_out,
+        runtime: (end_time - start_time).as_secs_f32(),
     })
 }
 
@@ -264,14 +270,14 @@ async fn get_versions_for_language(line: &str) -> (String, CacheMap<String, ()>)
         println!("Finding versions failed");
     }
 
-    return (
+    (
         (*name).to_owned(),
         String::from_utf8(versions.stdout)
             .unwrap()
             .lines()
             .map(|k| (k.trim().to_owned(), ()))
             .collect::<CacheMap<_, ()>>(),
-    );
+    )
 }
 
 pub async fn get_lang_versions() -> CacheMap<String, CacheMap<String, ()>> {

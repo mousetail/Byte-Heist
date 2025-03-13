@@ -15,6 +15,7 @@ pub struct RunLangOutput {
     pub tests: JudgeResult,
     pub stderr: String,
     pub timed_out: bool,
+    pub runtime: f32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -45,13 +46,21 @@ impl TestCase {
     }
 }
 
+fn create_default_sep() -> String {
+    "\n".to_string()
+}
+
 #[derive(Serialize, Deserialize)]
 pub enum ResultDisplay {
     Empty,
     Text(String),
     Diff {
+        #[serde(default)]
+        input: Option<String>,
         output: String,
         expected: String,
+        #[serde(default = "create_default_sep")]
+        sep: String,
     },
     Run {
         #[serde(default)]
@@ -66,9 +75,18 @@ impl ResultDisplay {
         match self {
             ResultDisplay::Empty => {}
             ResultDisplay::Text(e) => e.truncate(length),
-            ResultDisplay::Diff { output, expected } => {
+            ResultDisplay::Diff {
+                output,
+                expected,
+                sep,
+                input,
+            } => {
                 output.truncate(length);
                 expected.truncate(length);
+                if let Some(d) = input.as_mut() {
+                    d.truncate(length)
+                }
+                sep.truncate(5);
             }
             ResultDisplay::Run {
                 input,

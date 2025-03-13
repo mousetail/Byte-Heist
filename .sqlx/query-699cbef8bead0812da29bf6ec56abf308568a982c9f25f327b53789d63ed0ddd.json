@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE discord_messages\n                SET author=$1,\n                score=$2,\n                previous_author=$3,\n                previous_author_score=$4,\n                message_id=$5,\n                channel_id=$6\n                WHERE id=$7",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int8",
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "699cbef8bead0812da29bf6ec56abf308568a982c9f25f327b53789d63ed0ddd"
+}

@@ -41,7 +41,11 @@ pub async fn solution_invalidation_task(pool: PgPool) {
                 }
             };
 
-            let version = LANGS.get(&task.language).unwrap().latest_version;
+            let Some(lang) = LANGS.get(&task.language) else {
+                eprintln!("Skipping solution in non-existant lang {}", task.language);
+                continue;
+            };
+            let version = lang.latest_version;
 
             let result = match test_solution(&task.code, &task.language, version, &task.judge).await
             {
@@ -56,7 +60,8 @@ pub async fn solution_invalidation_task(pool: PgPool) {
 
             if result.tests.pass {
                 query!(
-                    "UPDATE solutions SET validated_at=now() WHERE id=$1",
+                    "UPDATE solutions SET validated_at=now(), runtime=$1 WHERE id=$2",
+                    result.runtime,
                     task.id
                 )
                 .execute(&pool)
@@ -64,8 +69,9 @@ pub async fn solution_invalidation_task(pool: PgPool) {
                 .unwrap();
             } else {
                 println!(
-                    "Solution {} invalidated at {}",
+                    "Solution {} in {} invalidated at {}",
                     task.id,
+                    task.language,
                     OffsetDateTime::now_utc()
                 );
 

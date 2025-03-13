@@ -53,7 +53,8 @@ pub async fn get_user(
         FROM solutions
         LEFT JOIN challenges ON challenges.id = solutions.challenge
         WHERE solutions.author=$1
-        AND solutions.valid=true",
+        AND solutions.valid=true
+        AND challenges.status in ('public', 'beta')",
         id
     ).fetch_all(&pool).await
     .map_err(Error::Database)?;

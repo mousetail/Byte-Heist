@@ -10,15 +10,16 @@ use sqlx::PgPool;
 
 use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format},
-    discord::post_new_challenge,
+    discord::DiscordEventSender,
     error::Error,
     models::{
         account::Account,
         challenge::{
-            Challenge, ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo,
-            ChallengeWithTests, NewChallenge, NewOrExistingChallenge,
+            ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo, ChallengeWithTests,
+            HomePageChallenge, NewChallenge, NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
+        GetById,
     },
     slug::Slug,
     solution_invalidation::notify_challenge_updated,
@@ -27,8 +28,8 @@ use crate::{
 
 #[derive(Serialize)]
 pub struct AllChallengesOutput {
-    public_challenges: Vec<Challenge>,
-    beta_challenges: Vec<Challenge>,
+    public_challenges: Vec<HomePageChallenge>,
+    beta_challenges: Vec<HomePageChallenge>,
     invalid_solutions_exist: bool,
 }
 
@@ -37,17 +38,10 @@ pub async fn all_challenges(
     account: Option<Account>,
     format: Format,
 ) -> Result<AutoOutputFormat<AllChallengesOutput>, Error> {
-    let sql = "SELECT * FROM challenges WHERE status='public' AND category!='private' ORDER BY created_at DESC";
-    let public_challenges = sqlx::query_as::<_, Challenge>(sql)
-        .fetch_all(&pool)
-        .await
-        .map_err(Error::Database)?;
-
-    let sql = "SELECT * FROM challenges WHERE status='beta' AND category!='private' ORDER BY created_at DESC";
-    let beta_challenges = sqlx::query_as::<_, Challenge>(sql)
-        .fetch_all(&pool)
-        .await
-        .map_err(Error::Database)?;
+    let public_challenges =
+        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Public, &account).await?;
+    let beta_challenges =
+        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Beta, &account).await?;
 
     let invalid_solutions_exist = if let Some(account) = account {
         InvalidatedSolution::invalidated_solution_exists(account.id, &pool)
@@ -107,6 +101,7 @@ pub async fn view_challenge(
 pub async fn new_challenge(
     id: Option<Path<(i32, String)>>,
     Extension(pool): Extension<PgPool>,
+    Extension(bot): Extension<DiscordEventSender>,
     account: Account,
     format: Format,
     AutoInput(challenge): AutoInput<NewChallenge>,
@@ -114,7 +109,8 @@ pub async fn new_challenge(
     let (new_challenge, existing_challenge) = match id {
         Some(Path((id, _))) => {
             let existing_challenge = ChallengeWithAuthorInfo::get_by_id(&pool, id)
-                .await?
+                .await
+                .map_err(Error::Database)?
                 .ok_or(Error::NotFound)?;
             let mut new_challenge = existing_challenge.clone();
             new_challenge.challenge.challenge = challenge.clone();
@@ -125,10 +121,11 @@ pub async fn new_challenge(
         }
         None => (NewOrExistingChallenge::New(challenge), None),
     };
+
     let challenge = new_challenge.get_new_challenge();
 
     if let Err(e) = challenge.validate(
-        existing_challenge.as_ref().map(|k| &k.challenge.challenge),
+        existing_challenge.as_ref().map(|k| &k.challenge),
         account.admin,
     ) {
         return Ok(AutoOutputFormat::new(
@@ -158,7 +155,7 @@ pub async fn new_challenge(
         return Ok(AutoOutputFormat::new(
             ChallengeWithTests {
                 challenge: new_challenge,
-                tests: Some(tests),
+                tests: Some(tests.into()),
                 validation: None,
             },
             "submit_challenge.html.jinja",
@@ -191,7 +188,9 @@ pub async fn new_challenge(
                     .into_response();
 
             if challenge.status == ChallengeStatus::Public {
-                tokio::spawn(post_new_challenge(account, new_challenge, row));
+                bot.send(crate::discord::DiscordEvent::NewChallenge { challenge_id: row })
+                    .await
+                    .unwrap();
             }
 
             Ok(redirect)
@@ -226,14 +225,16 @@ pub async fn new_challenge(
                 if existing_challenge.challenge.challenge.status != ChallengeStatus::Public
                     && challenge.status == ChallengeStatus::Public
                 {
-                    tokio::spawn(post_new_challenge(account, new_challenge.clone(), id));
+                    bot.send(crate::discord::DiscordEvent::NewChallenge { challenge_id: id })
+                        .await
+                        .unwrap();
                 }
             }
 
             Ok(AutoOutputFormat::new(
                 ChallengeWithTests {
                     challenge: new_challenge,
-                    tests: Some(tests),
+                    tests: Some(tests.into()),
                     validation: None,
                 },
                 "submit_challenge.html.jinja",

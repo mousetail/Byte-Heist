@@ -2,6 +2,7 @@
 {% extends "base/base.html.jinja" %}
 {% block content %}
   <h1>{{ object.user_name }}</h1>
+  {% set langs = languages() %}
   <table>
     <tr>
       <th>Challenge</th>
@@ -13,7 +14,15 @@
         <td>
           <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.challenge_name }}</a>
         </td>
-        <td>{{ solution.language }}</td>
+        <td>
+          <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">
+            <img src="/static/lang-icons/{{ langs[solution.language].icon }}"
+                 width="32"
+                 alt=""
+                 class="lang-icon">
+            {{ langs[solution.language].displayName }}
+          </a>
+        </td>
         <td>{{ solution.score }}</td>
       </tr>
     {% endfor %}
@@ -28,10 +37,16 @@
       {% for solution in object.invalidated_solutions %}
         <tr>
           <td>
-            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.language }}</a>
+            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.challenge_name }}</a>
           </td>
           <td>
-            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.challenge_name }}</a>
+            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">
+              <img src="/static/lang-icons/{{ langs[solution.language].icon }}"
+                   width="32"
+                   alt=""
+                   class="lang-icon">
+              {{ langs[solution.language].displayName }}
+            </a>
           </td>
         </tr>
       {% endfor %}
