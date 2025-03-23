@@ -206,7 +206,25 @@ pub async fn new_challenge(
 
             if &existing_challenge.challenge.challenge != challenge {
                 sqlx::query!(
-                    r"UPDATE challenges SET name=$1, judge=$2, description=$3, example_code=$4, status=$5::challenge_status, category=$6::challenge_category WHERE id=$7",
+                    r"UPDATE challenges
+                    SET
+                        name=$1,
+                        judge=$2, 
+                        description=$3, 
+                        example_code=$4, 
+                        status=$5::challenge_status, 
+                        category=$6::challenge_category,
+                        post_mortem_date=COALESCE(
+                            challenges.post_mortem_date,
+                            CASE
+                                WHEN $5::challenge_status!='public' THEN NULL
+                                WHEN $6::challenge_category='restricted-source' THEN now() + INTERVAL '2 months'
+                                WHEN $6::challenge_category='code-golf' THEN now() + INTERVAL '6 months'
+                                ELSE NULL
+                            END
+                        )
+
+                    WHERE id=$7",
                     challenge.name,
                     challenge.judge,
                     challenge.description,
