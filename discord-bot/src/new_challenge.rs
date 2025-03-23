@@ -31,7 +31,7 @@ fn gen_embed(
         .title(format!("New Challenge {challenge_name}"))
         .color(512)
         .description(scores.iter().fold(String::new(), |mut a, i| {
-            let _ = write!(a, "- {}: {} by {}\n", i.language, i.score, i.author_name);
+            let _ = writeln!(a, "- {}: {} by {}", i.language, i.score, i.author_name);
             a
         }))
         .url(format!("{public_url}/challenge/{challenge_id}/solve"))
