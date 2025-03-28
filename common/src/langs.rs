@@ -122,7 +122,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         display_name: "APL (TinyAPL)",
         run_command: &["${LANG_LOCATION}/bin/tinyapl", "${FILE_LOCATION}"],
         plugin: "https://github.com/RubenVerg/asdf-tinyapl.git",
-        latest_version: "0.11.1.0",
+        latest_version: "0.12.0.0",
         icon: "tinyapl.svg",
         ..DEFAULT_LANG
     },
