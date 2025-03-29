@@ -102,9 +102,15 @@ const compile_and_run_program = (() => {
       }
     }
 
-    const outputLocation = Object.hasOwn(compiled_programs, code)
-      ? compiled_programs[code]
-      : "/tmp/output";
+    let outputLocation: string;
+
+    if (Object.hasOwn(compiled_programs, code)) {
+      outputLocation = compiled_programs[code];
+      Deno.remove("/tmp/code");
+    } else {
+      outputLocation = "/tmp/output";
+    }
+    console.log(outputLocation);
 
     const { stdout, stderr, exitStatus } = await run(
       replaceTokens(lang.runCommand, outputLocation),
