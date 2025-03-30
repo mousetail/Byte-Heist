@@ -95,17 +95,17 @@ async fn main() -> anyhow::Result<()> {
             "/challenge/{id}/{slug}/edit",
             get(compose_challenge).post(new_challenge),
         )
-        .route("/challenge/:id/:slug/view", get(view_challenge))
+        .route("/challenge/{id}/{slug}/view", get(view_challenge))
         .route(
             "/challenge/{id}/{slug}/solve",
             get(challenge_redirect_with_slug),
         )
         .route(
-            "/challenge/{id}/{slug}/leaderboard/:language",
+            "/challenge/{id}/{slug}/leaderboard/{language}",
             get(get_leaderboard),
         )
         .route(
-            "/challenge/{id}/{slug}/solve/:language",
+            "/challenge/{id}/{slug}/solve/{language}",
             get(all_solutions).post(new_solution),
         )
         .route(
@@ -113,7 +113,7 @@ async fn main() -> anyhow::Result<()> {
             get(post_mortem_view_without_language),
         )
         .route(
-            "/challenge/{id}/{slug}/solutions/:language",
+            "/challenge/{id}/{slug}/solutions/{language}",
             get(post_mortem_view),
         )
         .route("/login/github", get(github_login))
