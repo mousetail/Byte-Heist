@@ -1,7 +1,6 @@
 use axum::{
-    async_trait,
     body::Body,
-    extract::FromRequestParts,
+    extract::{FromRequestParts, OptionalFromRequestParts},
     http::{request::Parts, Response},
     response::IntoResponse,
     Extension,
@@ -83,16 +82,31 @@ impl IntoResponse for AccountFetchError {
     }
 }
 
-#[async_trait]
+impl<S: Send + Sync> OptionalFromRequestParts<S> for Account {
+    type Rejection = AccountFetchError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &S,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        match <Account as FromRequestParts<S>>::from_request_parts(parts, state).await {
+            Ok(e) => Ok(Some(e)),
+            Err(AccountFetchError::NoSession | AccountFetchError::NotLoggedIn) => Ok(None),
+            Err(e) => Err(e),
+        }
+    }
+}
+
 impl<S: Send + Sync> FromRequestParts<S> for Account {
     type Rejection = AccountFetchError;
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let session = Session::from_request_parts(parts, state)
             .await
             .map_err(|_| AccountFetchError::SessionLoadFailed)?;
-        let Extension(pool) = Extension::<PgPool>::from_request_parts(parts, state)
-            .await
-            .map_err(|_| AccountFetchError::DatabaseLoadFailed)?;
+        let Extension(pool) =
+            <Extension<PgPool> as FromRequestParts<S>>::from_request_parts(parts, state)
+                .await
+                .map_err(|_| AccountFetchError::DatabaseLoadFailed)?;
 
         match session
             .get(ACCOUNT_ID_KEY)

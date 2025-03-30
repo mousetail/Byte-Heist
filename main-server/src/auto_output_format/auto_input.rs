@@ -1,11 +1,10 @@
-use axum::{async_trait, extract::FromRequest, Form, Json};
+use axum::{extract::FromRequest, Form, Json};
 use serde::de::DeserializeOwned;
 
 use super::rejection::AutoInputRejection;
 
 pub struct AutoInput<T: DeserializeOwned>(pub T);
 
-#[async_trait]
 impl<T: DeserializeOwned, S: Sync + Send> FromRequest<S> for AutoInput<T> {
     type Rejection = AutoInputRejection;
 

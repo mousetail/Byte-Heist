@@ -11,6 +11,7 @@ mod test_case_display;
 mod test_solution;
 
 use axum::{routing::get, Extension, Router};
+use tower_sessions::session_store::ExpiredDeletion;
 
 use anyhow::Context;
 use controllers::{
@@ -32,7 +33,6 @@ use std::{env, time::Duration};
 use strip_trailing_slashes::strip_trailing_slashes;
 use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};
-use tower_sessions::ExpiredDeletion;
 use tower_sessions::{Expiry, SessionManagerLayer};
 use tower_sessions_file_store::FileSessionStorage;
 
@@ -88,38 +88,38 @@ async fn main() -> anyhow::Result<()> {
         )
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
-        .route("/leaderboard/:category", get(global_leaderboard))
+        .route("/leaderboard/{category}", get(global_leaderboard))
         .route("/challenge", get(compose_challenge).post(new_challenge))
-        .route("/challenge/:id", get(challenge_redirect))
+        .route("/challenge/{id}", get(challenge_redirect))
         .route(
-            "/challenge/:id/:slug/edit",
+            "/challenge/{id}/{slug}/edit",
             get(compose_challenge).post(new_challenge),
         )
         .route("/challenge/:id/:slug/view", get(view_challenge))
         .route(
-            "/challenge/:id/:slug/solve",
+            "/challenge/{id}/{slug}/solve",
             get(challenge_redirect_with_slug),
         )
         .route(
-            "/challenge/:id/:slug/leaderboard/:language",
+            "/challenge/{id}/{slug}/leaderboard/:language",
             get(get_leaderboard),
         )
         .route(
-            "/challenge/:id/:slug/solve/:language",
+            "/challenge/{id}/{slug}/solve/:language",
             get(all_solutions).post(new_solution),
         )
         .route(
-            "/challenge/:id/:slug/solutions",
+            "/challenge/{id}/{slug}/solutions",
             get(post_mortem_view_without_language),
         )
         .route(
-            "/challenge/:id/:slug/solutions/:language",
+            "/challenge/{id}/{slug}/solutions/:language",
             get(post_mortem_view),
         )
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))
-        .route("/user/:id", get(get_user))
-        .route("/:id/:language", get(challenge_redirect_no_slug))
+        .route("/user/{id}", get(get_user))
+        .route("/{id}/{language}", get(challenge_redirect_no_slug))
         .nest_service("/static", ServeDir::new("static"))
         .fallback(get(strip_trailing_slashes))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())

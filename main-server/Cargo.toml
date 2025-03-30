@@ -7,7 +7,7 @@ edition = "2021"
 anyhow = "1.0.89"
 
 async-process = "2.3.0"
-axum = { version = "0.7.6", features = ["macros"] }
+axum = { version = "0.8.3", features = ["macros"] }
 futures-util = "0.3.30"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_bytes = "0.11.15"
@@ -23,11 +23,11 @@ common = { path = "../common" }
 tera = "1.20.0"
 dotenvy = "0.15.7"
 oauth2 = "5.0.0-rc.1"
-tower-sessions = "0.13.0"
+tower-sessions = "0.14.0"
 tower-http = { version = "0.6.1", features = ["catch-panic", "fs"] }
 serde_json = "1.0.128"
 markdown-it = "0.6.1"
-tower-sessions-file-store = "0.1.2"
+tower-sessions-file-store = "0.2.0"
 slug = "0.1.6"
 discord-bot = { path = "../discord-bot" }
 similar = { version = "2.6.0", features = ["serde"] }

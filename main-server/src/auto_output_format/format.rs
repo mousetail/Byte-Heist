@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 
-use axum::{async_trait, extract::FromRequestParts, http::request::Parts};
+use axum::{extract::FromRequestParts, http::request::Parts};
 
 use super::html_context::HtmlContext;
 
@@ -9,7 +9,6 @@ pub enum Format {
     Html(Box<HtmlContext>),
 }
 
-#[async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for Format {
     #[doc = " If the extractor fails it\'ll use this \"rejection\" type. A rejection is"]
     #[doc = " a kind of error that can be converted into a response."]

@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 
-use axum::{async_trait, extract::FromRequestParts, http::request::Parts};
+use axum::{extract::FromRequestParts, http::request::Parts};
 use serde::Serialize;
 
 use crate::models::account::Account;
@@ -10,7 +10,6 @@ pub struct HtmlContext {
     pub(super) account: Option<Account>,
 }
 
-#[async_trait]
 impl<S: Send + Sync> FromRequestParts<S> for HtmlContext {
     type Rejection = Infallible;
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
