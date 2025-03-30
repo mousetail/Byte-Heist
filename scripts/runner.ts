@@ -110,7 +110,6 @@ const compile_and_run_program = (() => {
     } else {
       outputLocation = "/tmp/output";
     }
-    console.log(outputLocation);
 
     const { stdout, stderr, exitStatus } = await run(
       replaceTokens(lang.runCommand, outputLocation),
