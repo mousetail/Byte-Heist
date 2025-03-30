@@ -26,7 +26,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Format {
                 bytes.eq_ignore_ascii_case(b"application/json")
             })
         {
-            return Ok(Format::Json);
+            Ok(Format::Json)
         } else {
             return Ok(Format::Html(Box::new(
                 HtmlContext::from_request_parts(parts, state).await?,

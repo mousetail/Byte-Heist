@@ -117,10 +117,10 @@ impl<S: Send + Sync> FromRequestParts<S> for Account {
                 if let Some(account) = Account::get_by_id(&pool, account_id).await {
                     return Ok(account);
                 }
-                return Err(AccountFetchError::NoAccountFound);
+                Err(AccountFetchError::NoAccountFound)
             }
             _ => {
-                return Err(AccountFetchError::NotLoggedIn);
+                Err(AccountFetchError::NotLoggedIn)
             }
         }
     }

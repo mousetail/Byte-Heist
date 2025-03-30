@@ -16,7 +16,7 @@ impl<T: DeserializeOwned, S: Sync + Send> FromRequest<S> for AutoInput<T> {
 
         if content_type.is_some_and(|b| b.as_bytes().eq_ignore_ascii_case(b"application/json")) {
             let Json(value) = Json::<T>::from_request(request, state).await?;
-            return Ok(AutoInput(value));
+            Ok(AutoInput(value))
         } else if content_type.is_some_and(|b| {
             b.as_bytes()
                 .eq_ignore_ascii_case(b"application/x-www-form-urlencoded")
