@@ -1,18 +1,15 @@
 pub mod format;
 pub mod html_renderer;
 
-use axum::http::StatusCode;
 pub use format::Format;
 use html_renderer::{HtmlRenderer, IntoSerializedResponse};
 
 use axum::response::IntoResponse;
-use serde::Serialize;
 
 pub struct AutoOutputFormat<S, T: IntoSerializedResponse<S, Renderer>, Renderer: HtmlRenderer<S>> {
     data: T,
     format: Format<Renderer::Context>,
     template: &'static str,
-    status: StatusCode,
     renderer: Renderer,
 }
 
@@ -29,7 +26,6 @@ impl<S, T: IntoSerializedResponse<S, Renderer>, Renderer: HtmlRenderer<S>>
             data,
             format,
             template,
-            status: StatusCode::OK,
             renderer,
         }
     }

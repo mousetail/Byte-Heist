@@ -62,7 +62,7 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
             .unwrap()
     }
 
-    fn render_error(&self, err: Self::Err) -> Response {
+    fn render_error(&self, _err: Self::Err) -> Response {
         todo!()
     }
 }

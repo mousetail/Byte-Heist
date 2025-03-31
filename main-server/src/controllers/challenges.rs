@@ -1,8 +1,6 @@
 use axum::{
-    body::Body,
     extract::Path,
-    http::{Response, StatusCode},
-    response::{IntoResponse, Redirect},
+    http::StatusCode,
     Extension,
 };
 use macros::CustomResponseMetadata;

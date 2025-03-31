@@ -1,12 +1,9 @@
 mod auto_output_format;
 
 use auto_output_format::html_renderer::IntoSerializedResponse;
-use axum::body::Body;
-use axum::extract::{FromRequest, FromRequestParts, OptionalFromRequestParts, Request};
+use axum::extract::{FromRequest, FromRequestParts, Request};
 use axum::handler::Handler;
 use axum::response::{IntoResponse, Response};
-use serde::{Serialize, de::DeserializeOwned};
-use std::marker::PhantomData;
 use std::pin::Pin;
 
 pub use auto_output_format::html_renderer::CustomResponseMetadata;

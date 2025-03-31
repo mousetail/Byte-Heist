@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 
 use axum::{extract::FromRequestParts, http::StatusCode, response::Response};
 use serde::Serialize;
