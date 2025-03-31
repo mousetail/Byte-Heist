@@ -77,9 +77,9 @@ pub async fn view_challenge(
     Path((id, _slug)): Path<(i32, String)>,
     pool: Extension<PgPool>,
 ) -> Result<NewOrExistingChallenge, Error> {
-    Ok(NewOrExistingChallenge::get_by_id(&pool, id)
+    NewOrExistingChallenge::get_by_id(&pool, id)
         .await?
-        .ok_or(Error::NotFound)?)
+        .ok_or(Error::NotFound)
 }
 
 pub async fn new_challenge(
@@ -164,7 +164,7 @@ pub async fn new_challenge(
                     .unwrap();
             }
 
-            return Err(Error::Redirect(std::borrow::Cow::Owned(destination)));
+            Err(Error::Redirect(std::borrow::Cow::Owned(destination)))
         }
         Some(Path((id, _slug))) => {
             let existing_challenge = existing_challenge.unwrap(); // This can never fail

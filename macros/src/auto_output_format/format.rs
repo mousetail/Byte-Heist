@@ -27,7 +27,7 @@ impl<C: FromRequestParts<S>, S: Send + Sync> FromRequestParts<S> for Format<C> {
         } else {
             let context = C::from_request_parts(parts, state).await?;
 
-            return Ok(Format::Html(context));
+            Ok(Format::Html(context))
         }
     }
 }

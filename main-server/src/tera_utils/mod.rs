@@ -66,7 +66,7 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
     }
 
     fn render_error(&self, err: Self::Err) -> Response {
-        return err.into_response();
+        err.into_response()
     }
 
     fn render_json(&self, data: impl Serialize, status_code: axum::http::StatusCode) -> Response {
@@ -74,16 +74,14 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
             return Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header("Content-Type", "text/plain")
-                .body(Body::from(format!(
-                    "An error was encountered serializing the response to this route"
-                )))
+                .body(Body::from("An error was encountered serializing the response to this route".to_string()))
                 .unwrap();
         };
 
-        return Response::builder()
+        Response::builder()
             .status(status_code)
             .header("Content-Type", "application/json")
             .body(Body::from(data))
-            .unwrap();
+            .unwrap()
     }
 }
