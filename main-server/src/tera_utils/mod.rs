@@ -1,4 +1,7 @@
-use axum::{body::Body, response::Response};
+use axum::{
+    body::Body,
+    response::{IntoResponse, Response},
+};
 use html_context::HtmlContext;
 use macros::HtmlRenderer;
 use reqwest::StatusCode;
@@ -62,7 +65,25 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
             .unwrap()
     }
 
-    fn render_error(&self, _err: Self::Err) -> Response {
-        todo!()
+    fn render_error(&self, err: Self::Err) -> Response {
+        return err.into_response();
+    }
+
+    fn render_json(&self, data: impl Serialize, status_code: axum::http::StatusCode) -> Response {
+        let Ok(data) = serde_json::to_vec(&data) else {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .header("Content-Type", "text/plain")
+                .body(Body::from(format!(
+                    "An error was encountered serializing the response to this route"
+                )))
+                .unwrap();
+        };
+
+        return Response::builder()
+            .status(status_code)
+            .header("Content-Type", "application/json")
+            .body(Body::from(data))
+            .unwrap();
     }
 }

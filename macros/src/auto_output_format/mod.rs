@@ -29,13 +29,6 @@ impl<S, T: IntoSerializedResponse<S, Renderer>, Renderer: HtmlRenderer<S>>
             renderer,
         }
     }
-
-    fn create_json_response(&self) -> axum::response::Response {
-        todo!()
-        // let mut response = Json(&self.data).into_response();
-        // *response.status_mut() = self.status;
-        // response
-    }
 }
 
 impl<S, T: IntoSerializedResponse<S, Cb>, Cb: HtmlRenderer<S>> IntoResponse
@@ -47,7 +40,7 @@ impl<S, T: IntoSerializedResponse<S, Cb>, Cb: HtmlRenderer<S>> IntoResponse
                 self.data
                     .into_serialized_response(ctx, self.renderer, self.template)
             }
-            Format::Json => self.create_json_response(),
+            Format::Json => self.data.into_json_response(self.renderer),
         }
     }
 }
