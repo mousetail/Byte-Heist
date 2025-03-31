@@ -1,4 +1,3 @@
-mod auto_output_format;
 mod controllers;
 mod discord;
 mod error;
@@ -7,10 +6,13 @@ mod models;
 mod slug;
 mod solution_invalidation;
 mod strip_trailing_slashes;
+mod tera_utils;
 mod test_case_display;
 mod test_solution;
 
 use axum::{routing::get, Extension, Router};
+use macros::OutputWrapperFactory;
+use tera_utils::TeraHtmlRenderer;
 use tower_sessions::session_store::ExpiredDeletion;
 
 use anyhow::Context;
@@ -80,33 +82,52 @@ async fn main() -> anyhow::Result<()> {
 
     start_task_to_refresh_views(pool.clone());
 
+    let route_factory = OutputWrapperFactory {
+        renderer: TeraHtmlRenderer,
+    };
+
     let app = Router::new()
-        .route("/", get(all_challenges))
+        .route(
+            "/",
+            get(route_factory.handler("home.html.jinja", all_challenges)),
+        )
         .nest_service(
             "/ts/runner-lib.d.ts",
             ServeFile::new("scripts/build/runner-lib.d.ts"),
         )
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
-        .route("/leaderboard/{category}", get(global_leaderboard))
-        .route("/challenge", get(compose_challenge).post(new_challenge))
+        .route(
+            "/leaderboard/{category}",
+            get(route_factory.handler("global_leaderboard.html.jinja", global_leaderboard)),
+        )
+        .route(
+            "/challenge",
+            get(route_factory.handler("submit_challenge.html.jinja", compose_challenge))
+                .post(route_factory.handler("submit_challenge.html.jinja", new_challenge)),
+        )
         .route("/challenge/{id}", get(challenge_redirect))
         .route(
             "/challenge/{id}/{slug}/edit",
-            get(compose_challenge).post(new_challenge),
+            get(route_factory.handler("submit_challenge.html.jinja", compose_challenge))
+                .post(route_factory.handler("submit_challenge.html.jinja", new_challenge)),
         )
-        .route("/challenge/{id}/{slug}/view", get(view_challenge))
+        .route(
+            "/challenge/{id}/{slug}/view",
+            get(route_factory.handler("view_challenge.html.jinja", view_challenge)),
+        )
         .route(
             "/challenge/{id}/{slug}/solve",
             get(challenge_redirect_with_slug),
         )
         .route(
             "/challenge/{id}/{slug}/leaderboard/{language}",
-            get(get_leaderboard),
+            get(route_factory.handler("leaderboard.html.jinja", get_leaderboard)),
         )
         .route(
             "/challenge/{id}/{slug}/solve/{language}",
-            get(all_solutions).post(new_solution),
+            get(route_factory.handler("challenge.html.jinja", all_solutions))
+                .post(route_factory.handler("challenge.html.jinja", new_solution)),
         )
         .route(
             "/challenge/{id}/{slug}/solutions",
@@ -114,11 +135,14 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/challenge/{id}/{slug}/solutions/{language}",
-            get(post_mortem_view),
+            get(route_factory.handler("post_mortem_view.html.jinja", post_mortem_view)),
         )
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))
-        .route("/user/{id}", get(get_user))
+        .route(
+            "/user/{id}",
+            get(route_factory.handler("user.html.jinja", get_user)),
+        )
         .route("/{id}/{language}", get(challenge_redirect_no_slug))
         .nest_service("/static", ServeDir::new("static"))
         .fallback(get(strip_trailing_slashes))

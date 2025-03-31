@@ -1,4 +1,10 @@
-use axum::{body::Body, http::Response, response::IntoResponse};
+use std::borrow::Cow;
+
+use axum::{
+    body::Body,
+    http::Response,
+    response::{IntoResponse, Redirect},
+};
 use reqwest::StatusCode;
 
 #[derive(Debug)]
@@ -10,6 +16,7 @@ pub enum Error {
     Oauth(OauthError),
     RunLang(String),
     PermissionDenied(&'static str),
+    Redirect(Cow<'static, str>),
 }
 
 #[derive(Debug)]
@@ -68,6 +75,7 @@ impl IntoResponse for Error {
                     tera::escape_html(e)
                 )))
                 .unwrap(),
+            Error::Redirect(e) => Redirect::temporary(&e).into_response(),
         }
     }
 }

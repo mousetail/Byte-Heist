@@ -5,11 +5,11 @@ use axum::{
     response::{IntoResponse, Redirect},
     Extension,
 };
+use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{
-    auto_output_format::{AutoInput, AutoOutputFormat, Format},
     discord::DiscordEventSender,
     error::Error,
     models::{
@@ -23,6 +23,7 @@ use crate::{
     },
     slug::Slug,
     solution_invalidation::notify_challenge_updated,
+    tera_utils::auto_input::AutoInput,
     test_solution::test_solution,
 };
 
@@ -36,8 +37,7 @@ pub struct AllChallengesOutput {
 pub async fn all_challenges(
     Extension(pool): Extension<PgPool>,
     account: Option<Account>,
-    format: Format,
-) -> Result<AutoOutputFormat<AllChallengesOutput>, Error> {
+) -> Result<AllChallengesOutput, Error> {
     let public_challenges =
         HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Public, &account).await?;
     let beta_challenges =
@@ -51,22 +51,17 @@ pub async fn all_challenges(
         false
     };
 
-    Ok(AutoOutputFormat::new(
-        AllChallengesOutput {
-            public_challenges,
-            beta_challenges,
-            invalid_solutions_exist,
-        },
-        "home.html.jinja",
-        format,
-    ))
+    Ok(AllChallengesOutput {
+        public_challenges,
+        beta_challenges,
+        invalid_solutions_exist,
+    })
 }
 
 pub async fn compose_challenge(
     id: Option<Path<(i32, String)>>,
     pool: Extension<PgPool>,
-    format: Format,
-) -> Result<AutoOutputFormat<NewOrExistingChallenge>, Error> {
+) -> Result<NewOrExistingChallenge, Error> {
     let challenge = match id {
         None => NewOrExistingChallenge::default(),
         Some(Path((id, _))) => {
@@ -77,25 +72,16 @@ pub async fn compose_challenge(
         }
     };
 
-    Ok(AutoOutputFormat::new(
-        challenge,
-        "submit_challenge.html.jinja",
-        format,
-    ))
+    Ok(challenge)
 }
 
 pub async fn view_challenge(
     Path((id, _slug)): Path<(i32, String)>,
     pool: Extension<PgPool>,
-    format: Format,
-) -> Result<AutoOutputFormat<NewOrExistingChallenge>, Error> {
-    Ok(AutoOutputFormat::new(
-        NewOrExistingChallenge::get_by_id(&pool, id)
-            .await?
-            .ok_or(Error::NotFound)?,
-        "view_challenge.html.jinja",
-        format,
-    ))
+) -> Result<NewOrExistingChallenge, Error> {
+    Ok(NewOrExistingChallenge::get_by_id(&pool, id)
+        .await?
+        .ok_or(Error::NotFound)?)
 }
 
 pub async fn new_challenge(
@@ -103,9 +89,8 @@ pub async fn new_challenge(
     Extension(pool): Extension<PgPool>,
     Extension(bot): Extension<DiscordEventSender>,
     account: Account,
-    format: Format,
     AutoInput(challenge): AutoInput<NewChallenge>,
-) -> Result<Response<Body>, Error> {
+) -> Result<CustomResponseMetadata<ChallengeWithTests>, Error> {
     let (new_challenge, existing_challenge) = match id {
         Some(Path((id, _))) => {
             let existing_challenge = ChallengeWithAuthorInfo::get_by_id(&pool, id)
@@ -128,17 +113,12 @@ pub async fn new_challenge(
         existing_challenge.as_ref().map(|k| &k.challenge),
         account.admin,
     ) {
-        return Ok(AutoOutputFormat::new(
-            ChallengeWithTests {
-                challenge: new_challenge,
-                tests: None,
-                validation: Some(e),
-            },
-            "submit_challenge.html.jinja",
-            format,
-        )
-        .with_status(StatusCode::BAD_REQUEST)
-        .into_response());
+        return Ok(CustomResponseMetadata::new(ChallengeWithTests {
+            challenge: new_challenge,
+            tests: None,
+            validation: Some(e),
+        })
+        .with_status(StatusCode::BAD_REQUEST));
     }
 
     let tests = test_solution(
@@ -152,17 +132,12 @@ pub async fn new_challenge(
     .map_err(|_| Error::ServerError)?;
 
     if !tests.tests.pass {
-        return Ok(AutoOutputFormat::new(
-            ChallengeWithTests {
-                challenge: new_challenge,
-                tests: Some(tests.into()),
-                validation: None,
-            },
-            "submit_challenge.html.jinja",
-            format,
-        )
-        .with_status(StatusCode::BAD_REQUEST)
-        .into_response());
+        return Ok(CustomResponseMetadata::new(ChallengeWithTests {
+            challenge: new_challenge,
+            tests: Some(tests.into()),
+            validation: None,
+        })
+        .with_status(StatusCode::BAD_REQUEST));
     }
 
     match id {
@@ -183,9 +158,7 @@ pub async fn new_challenge(
             .await
             .map_err(Error::Database)?;
 
-            let redirect =
-                Redirect::temporary(&format!("/challenge/{row}/{}/edit", Slug(&challenge.name)))
-                    .into_response();
+            let destination = format!("/challenge/{row}/{}/edit", Slug(&challenge.name));
 
             if challenge.status == ChallengeStatus::Public {
                 bot.send(crate::discord::DiscordEvent::NewChallenge { challenge_id: row })
@@ -193,7 +166,7 @@ pub async fn new_challenge(
                     .unwrap();
             }
 
-            Ok(redirect)
+            return Err(Error::Redirect(std::borrow::Cow::Owned(destination)));
         }
         Some(Path((id, _slug))) => {
             let existing_challenge = existing_challenge.unwrap(); // This can never fail
@@ -249,16 +222,11 @@ pub async fn new_challenge(
                 }
             }
 
-            Ok(AutoOutputFormat::new(
-                ChallengeWithTests {
-                    challenge: new_challenge,
-                    tests: Some(tests.into()),
-                    validation: None,
-                },
-                "submit_challenge.html.jinja",
-                format,
-            )
-            .into_response())
+            Ok(CustomResponseMetadata::new(ChallengeWithTests {
+                challenge: new_challenge,
+                tests: Some(tests.into()),
+                validation: None,
+            }))
         }
     }
 }

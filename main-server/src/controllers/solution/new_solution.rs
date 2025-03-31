@@ -3,11 +3,11 @@ use axum::{
     Extension,
 };
 use common::langs::LANGS;
+use macros::CustomResponseMetadata;
 use reqwest::StatusCode;
 use sqlx::{types::time::OffsetDateTime, PgPool};
 
 use crate::{
-    auto_output_format::{AutoInput, AutoOutputFormat, Format},
     discord::DiscordEventSender,
     error::Error,
     models::{
@@ -16,6 +16,7 @@ use crate::{
         solutions::{Code, LeaderboardEntry, NewSolution},
         GetById,
     },
+    tera_utils::auto_input::AutoInput,
     test_solution::test_solution,
 };
 
@@ -141,9 +142,8 @@ pub async fn new_solution(
     account: Account,
     Extension(pool): Extension<PgPool>,
     Extension(bot): Extension<DiscordEventSender>,
-    format: Format,
     AutoInput(solution): AutoInput<NewSolution>,
-) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
+) -> Result<CustomResponseMetadata<AllSolutionsOutput>, Error> {
     let version = LANGS
         .get(&language_name)
         .ok_or(Error::NotFound)?
@@ -224,26 +224,22 @@ pub async fn new_solution(
         .unwrap();
     }
 
-    Ok(AutoOutputFormat::new(
-        AllSolutionsOutput {
-            challenge,
-            leaderboard: LeaderboardEntry::get_leaderboard_near(
-                &pool,
-                challenge_id,
-                &language_name,
-                Some(account.id),
-                ranking,
-            )
-            .await
-            .map_err(Error::Database)?,
-            tests: Some(test_result.into()),
-            code: Some(solution.code),
-            language: language_name,
-            previous_solution_invalid,
+    Ok(CustomResponseMetadata::new(AllSolutionsOutput {
+        challenge,
+        leaderboard: LeaderboardEntry::get_leaderboard_near(
+            &pool,
+            challenge_id,
+            &language_name,
+            Some(account.id),
             ranking,
-        },
-        "challenge.html.jinja",
-        format,
-    )
+        )
+        .await
+        .map_err(Error::Database)?,
+        tests: Some(test_result.into()),
+        code: Some(solution.code),
+        language: language_name,
+        previous_solution_invalid,
+        ranking,
+    })
     .with_status(status))
 }

@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.89"
 
+macros = { path = "../macros" }
 async-process = "2.3.0"
 axum = { version = "0.8.3", features = ["macros"] }
 futures-util = "0.3.30"

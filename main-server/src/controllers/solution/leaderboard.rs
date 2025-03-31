@@ -5,7 +5,6 @@ use axum::{
 use sqlx::PgPool;
 
 use crate::{
-    auto_output_format::{AutoOutputFormat, Format},
     error::Error,
     models::{account::Account, solutions::LeaderboardEntry},
 };
@@ -17,8 +16,7 @@ pub async fn get_leaderboard(
     Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
     account: Account,
     Extension(pool): Extension<PgPool>,
-    format: Format,
-) -> Result<AutoOutputFormat<Vec<LeaderboardEntry>>, Error> {
+) -> Result<Vec<LeaderboardEntry>, Error> {
     let leaderbaord = LeaderboardEntry::get_leaderboard_near(
         &pool,
         challenge_id,
@@ -29,9 +27,5 @@ pub async fn get_leaderboard(
     .await
     .map_err(Error::Database)?;
 
-    Ok(AutoOutputFormat::new(
-        leaderbaord,
-        "leaderboard.html.jinja",
-        format,
-    ))
+    Ok(leaderbaord)
 }

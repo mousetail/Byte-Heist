@@ -3,7 +3,6 @@ use serde::Serialize;
 use sqlx::{query_as, query_scalar, PgPool};
 
 use crate::{
-    auto_output_format::{AutoOutputFormat, Format},
     error::Error,
     models::{account::Account, solutions::InvalidatedSolution},
 };
@@ -27,9 +26,8 @@ pub struct UserInfo {
 pub async fn get_user(
     Path(id): Path<i32>,
     account: Option<Account>,
-    format: Format,
     Extension(pool): Extension<PgPool>,
-) -> Result<AutoOutputFormat<UserInfo>, Error> {
+) -> Result<UserInfo, Error> {
     let user_name = query_scalar!("SELECT username FROM accounts WHERE id=$1", id)
         .fetch_optional(&pool)
         .await
@@ -59,14 +57,10 @@ pub async fn get_user(
     ).fetch_all(&pool).await
     .map_err(Error::Database)?;
 
-    Ok(AutoOutputFormat::new(
-        UserInfo {
-            solutions,
-            user_name,
-            id,
-            invalidated_solutions,
-        },
-        "user.html.jinja",
-        format,
-    ))
+    Ok(UserInfo {
+        solutions,
+        user_name,
+        id,
+        invalidated_solutions,
+    })
 }

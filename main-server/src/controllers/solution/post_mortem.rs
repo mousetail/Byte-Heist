@@ -3,7 +3,6 @@ use serde::Serialize;
 use sqlx::{query_as, PgPool};
 
 use crate::{
-    auto_output_format::{AutoOutputFormat, Format},
     error::Error,
     models::{account::Account, challenge::ChallengeWithAuthorInfo, GetById},
 };
@@ -41,10 +40,9 @@ pub async fn post_mortem_view_without_language(
 
 pub async fn post_mortem_view(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
-    format: Format,
     _account: Account,
     Extension(pool): Extension<PgPool>,
-) -> Result<AutoOutputFormat<PostMortemViewOutput>, Error> {
+) -> Result<PostMortemViewOutput, Error> {
     let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
         .await
         .map_err(Error::Database)?
@@ -59,17 +57,13 @@ pub async fn post_mortem_view(
     }
     .map_err(Error::Database)?;
 
-    Ok(AutoOutputFormat::new(
-        PostMortemViewOutput {
-            solutions,
-            id: challenge_id,
-            name: challenge.challenge.challenge.name,
-            author: challenge.challenge.author,
-            language: language_name,
-        },
-        "post_mortem_view.html.jinja",
-        format,
-    ))
+    Ok(PostMortemViewOutput {
+        solutions,
+        id: challenge_id,
+        name: challenge.challenge.challenge.name,
+        author: challenge.challenge.author,
+        language: language_name,
+    })
 }
 
 async fn post_mortem_query(

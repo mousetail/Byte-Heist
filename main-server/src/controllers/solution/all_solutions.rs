@@ -6,7 +6,6 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{
-    auto_output_format::{AutoOutputFormat, Format},
     error::Error,
     models::{
         account::Account,
@@ -33,10 +32,9 @@ pub struct AllSolutionsOutput {
 pub async fn all_solutions(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
     Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
-    format: Format,
     account: Option<Account>,
     Extension(pool): Extension<PgPool>,
-) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
+) -> Result<AllSolutionsOutput, Error> {
     let leaderboard = LeaderboardEntry::get_leaderboard_near(
         &pool,
         challenge_id,
@@ -58,17 +56,13 @@ pub async fn all_solutions(
         None => None,
     };
 
-    Ok(AutoOutputFormat::new(
-        AllSolutionsOutput {
-            challenge,
-            leaderboard,
-            tests: None,
-            previous_solution_invalid: code.as_ref().is_some_and(|e| !e.valid),
-            code: code.map(|d| d.code),
-            language: language_name,
-            ranking,
-        },
-        "challenge.html.jinja",
-        format,
-    ))
+    Ok(AllSolutionsOutput {
+        challenge,
+        leaderboard,
+        tests: None,
+        previous_solution_invalid: code.as_ref().is_some_and(|e| !e.valid),
+        code: code.map(|d| d.code),
+        language: language_name,
+        ranking,
+    })
 }
