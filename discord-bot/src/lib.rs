@@ -1,3 +1,4 @@
+#[deny(clippy::print_stdout)]
 mod checks;
 pub mod new_challenge;
 mod queries;

@@ -160,7 +160,7 @@ async fn main() -> anyhow::Result<()> {
     .unwrap();
 
     if let Ok(addr) = listener.local_addr() {
-        println!("Listening on http://{addr:?}");
+        eprintln!("Listening on http://{addr:?}");
     }
 
     axum::serve(listener, app)

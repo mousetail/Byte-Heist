@@ -68,7 +68,7 @@ pub async fn solution_invalidation_task(pool: PgPool) {
                 .await
                 .unwrap();
             } else {
-                println!(
+                eprintln!(
                     "Solution {} in {} invalidated at {}",
                     task.id,
                     task.language,

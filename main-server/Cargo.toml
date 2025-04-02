@@ -33,3 +33,6 @@ slug = "0.1.6"
 discord-bot = { path = "../discord-bot" }
 similar = { version = "2.6.0", features = ["serde"] }
 num-format = "0.4.4"
+
+[lints.clippy]
+print_stdout = "deny"
