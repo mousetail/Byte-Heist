@@ -173,9 +173,7 @@ async fn handle_message(
         &score_improved_event,
         &last_message_for_challenge,
     );
-    println!(
-        "{message_id:?} {latest_message:?} {score_improved_event:?} {last_message_for_challenge:?}"
-    );
+
     let posted_message = post_or_edit_message(
         message_id,
         last_message_for_challenge
