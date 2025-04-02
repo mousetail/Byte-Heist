@@ -80,7 +80,7 @@ pub(crate) async fn get_last_posted_message_id(pool: &PgPool) -> Result<Option<i
         r#"
         SELECT id
         FROM discord_messages
-        ORDER BY message_id DESC
+        ORDER BY message_id DESC NULLS LAST
         LIMIT 1
     "#
     )

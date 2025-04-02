@@ -14,6 +14,7 @@ use serenity::all::{
 };
 use sqlx::PgPool;
 
+#[derive(Debug)]
 pub struct ScoreImproved {
     pub challenge_id: i32,
     pub author: i32,
@@ -22,6 +23,7 @@ pub struct ScoreImproved {
     pub is_post_mortem: bool,
 }
 
+#[derive(Debug)]
 struct LastMessage {
     id: i32,
     #[allow(unused)]
@@ -153,6 +155,13 @@ async fn handle_message(
         },
     );
 
+    if last_message_for_challenge.as_ref().is_some_and(|message| {
+        message.score == score_improved_event.score
+            && message.author_id == score_improved_event.author
+    }) {
+        return Ok(());
+    }
+
     let formatted_message = format_message(
         &score_improved_event,
         &challenge_name,
@@ -163,6 +172,9 @@ async fn handle_message(
         latest_message,
         &score_improved_event,
         &last_message_for_challenge,
+    );
+    println!(
+        "{message_id:?} {latest_message:?} {score_improved_event:?} {last_message_for_challenge:?}"
     );
     let posted_message = post_or_edit_message(
         message_id,
