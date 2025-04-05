@@ -54,8 +54,16 @@ impl TestCaseDisplay {
 
                 for value in diff_generator
                     .diff_slices(
-                        output.split(&sep).collect::<Vec<_>>().as_slice(),
-                        expected.split(&sep).collect::<Vec<_>>().as_slice(),
+                        output
+                            .split(&sep)
+                            .map(|k| k.trim_end())
+                            .collect::<Vec<_>>()
+                            .as_slice(),
+                        expected
+                            .split(&sep)
+                            .map(|k| k.trim_end())
+                            .collect::<Vec<_>>()
+                            .as_slice(),
                     )
                     .iter_all_changes()
                 {
