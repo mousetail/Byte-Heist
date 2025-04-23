@@ -108,6 +108,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         plugin: "https://github.com/lyxal/vyxasd3f.git",
         env: &[
             ("LD_LIBRARY_PATH", "/java/lib:/lib"),
+            ("JAVA_TOOL_OPTIONS", "-Dfile.encoding=UTF-8")
         ],
         latest_version: "3.7.0",
         icon: "vyxal3.svg",
