@@ -62,10 +62,11 @@ function getTheme() {
 
 function editorFromTextArea(
   textarea: HTMLTextAreaElement,
+  content: string,
   extensions: typeof minimalSetup,
   swapOnSubmit: boolean
 ): EditorView {
-  let view = new EditorView({ doc: textarea.value, extensions });
+  let view = new EditorView({ doc: content, extensions });
   textarea.parentNode?.insertBefore(view.dom, textarea);
   if (swapOnSubmit) {
     textarea.style.display = "none";
@@ -104,6 +105,7 @@ export function createCodemirrorFromTextAreas(): EditorView | undefined {
     console.log("Replacing textarea with codemirror");
     let view = editorFromTextArea(
       textarea,
+      window.originalSource,
       plugins,
       textarea.id !== "main-code"
     );
