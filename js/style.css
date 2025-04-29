@@ -182,6 +182,10 @@ textarea:focus-within {
   border: 1px solid #27534a;
 }
 
+.cm-panels {
+  margin-top: auto;
+}
+
 .test-pass {
   background-color: #7dca8c;
 }

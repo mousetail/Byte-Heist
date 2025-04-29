@@ -1,7 +1,7 @@
 import { basicSetup, EditorView, minimalSetup } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { indentWithTab } from "@codemirror/commands";
-import { Compartment } from "@codemirror/state";
+import { Compartment, Prec } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { indentUnit } from "@codemirror/language";
 import { autocompletion } from "@codemirror/autocomplete";
@@ -10,6 +10,8 @@ import * as Comlink from "comlink";
 import { StateEffect } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { basicLight } from "@fsegurai/codemirror-theme-basic-light";
+
+import { carriageReturn, insertChar, insertCharState, showUnprintables } from './code_editor_plugins';
 
 let typeScriptEnvironment: WorkerShape | undefined = undefined;
 
@@ -93,6 +95,11 @@ export function createCodemirrorFromTextAreas(): EditorView | undefined {
       indentUnit.of("\t"),
       editorTheme.of(getTheme()),
       EditorView.lineWrapping,
+
+      insertChar,
+      insertCharState,
+      Prec.high(showUnprintables), // Increased precedence to override unprintable char printing in basicSetup
+      Prec.high(carriageReturn), // Increased precedence to override shift-enter key binding in basicSetup
     ];
     console.log("Replacing textarea with codemirror");
     let view = editorFromTextArea(
