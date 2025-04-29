@@ -11,7 +11,7 @@ import { StateEffect } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { basicLight } from "@fsegurai/codemirror-theme-basic-light";
 
-import { carriageReturn, insertChar, insertCharState } from './code_editor_plugins'; 
+import { carriageReturn, insertChar, insertCharState, showUnprintables } from './code_editor_plugins';
 
 let typeScriptEnvironment: WorkerShape | undefined = undefined;
 
@@ -95,9 +95,11 @@ export function createCodemirrorFromTextAreas(): EditorView | undefined {
       indentUnit.of("\t"),
       editorTheme.of(getTheme()),
       EditorView.lineWrapping,
+
       insertChar,
       insertCharState,
-      Prec.high(carriageReturn), // Increased precedence so it overrides the default shift-enter keybinding
+      Prec.high(showUnprintables), // Increased precedence to override unprintable char printing in basicSetup
+      Prec.high(carriageReturn), // Increased precedence to override shift-enter key binding in basicSetup
     ];
     console.log("Replacing textarea with codemirror");
     let view = editorFromTextArea(

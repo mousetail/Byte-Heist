@@ -2,6 +2,7 @@
 
 import { Decoration, EditorView, keymap, MatchDecorator, Panel, ViewPlugin, WidgetType, showPanel } from '@codemirror/view';
 import { EditorState, StateEffect, StateField } from '@codemirror/state';
+import UnprintableElement from './unprintable';
 
 export const carriageReturn = [
     EditorState.lineSeparator.of('\n'), // Prevent CM from treating carriage return as newline
@@ -124,3 +125,37 @@ export const insertChar = EditorView.domEventHandlers({
         );
     },
 });
+
+class UnprintableWidget extends WidgetType {
+    value;
+
+    constructor(value: number) {
+        super();
+        this.value = value;
+    }
+    toDOM() {
+        const el = new UnprintableElement();
+        el.setAttribute('c', String.fromCharCode(this.value));
+        return el;
+    }
+}
+
+const unprintableDecorator = new MatchDecorator({
+    regexp: UnprintableElement.PATTERN,
+    decoration: match => Decoration.replace({
+        widget: new UnprintableWidget(match[0].charCodeAt(0)),
+    }),
+});
+
+export const showUnprintables = ViewPlugin.fromClass(
+    class {
+        decorations;
+        constructor(view: any) {
+            this.decorations = unprintableDecorator.createDeco(view);
+        }
+        update(update: any) {
+            this.decorations = unprintableDecorator.updateDeco(update, this.decorations);
+        }
+    },
+    { decorations: plugin => plugin.decorations },
+);
