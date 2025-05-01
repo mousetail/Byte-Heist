@@ -6,6 +6,16 @@
   <link rel="canonical"
         href="https://byte-heist.com/challenge/{{ object.challenge.id }}/{{ object.challenge.name | slugify }}/solve/python">
 {% endblock head %}
+{% block scripts %}
+  <script>
+    {% if object.code %}
+      window.originalSource = decodeURIComponent("{{ object.code | urlencode_strict }}");
+    {% else %}
+      window.originalSource = "";
+    {% endif %}
+  </script>
+  {{ super() }}
+{% endblock scripts %}
 {% block content %}
   {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.name, author=object.challenge.author) }}
   <h1>{{ object.challenge.name }}</h1>
