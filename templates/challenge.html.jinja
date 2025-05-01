@@ -9,7 +9,7 @@
 {% block scripts %}
   <script>
     {% if object.code %}
-      window.originalSource = {{ object.code | json_encode | safe }};
+      window.originalSource = decodeURIComponent("{{ object.code | urlencode_strict }}");
     {% else %}
       window.originalSource = "";
     {% endif %}
