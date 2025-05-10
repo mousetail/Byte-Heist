@@ -116,7 +116,7 @@
         <button type="button" id="restore-solution-button">Restore solution</button>
       </div>
     </div>
-    <textarea name="code" class="codemirror" id="main-code" data-encoded-source="{{ object.code | urlencode_strict }}">
+    <textarea name="code" class="codemirror" id="main-code" data-encoded-source="{% if object.code %}{{ object.code | urlencode_strict }}{% endif %}">
         {%- if object.code -%}
           {{- object.code | prepend_linebreak -}}
         {%- endif -%}
