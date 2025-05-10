@@ -1,15 +1,11 @@
 mod view_challenge;
 
-use axum::{
-    extract::Path,
-    http::StatusCode,
-    Extension,
-};
+use axum::{extract::Path, http::StatusCode, Extension};
 use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
 
-pub use view_challenge::{view_challenge, post_comment, post_reaction};
+pub use view_challenge::{post_comment, post_reaction, view_challenge};
 
 use crate::{
     discord::DiscordEventSender,

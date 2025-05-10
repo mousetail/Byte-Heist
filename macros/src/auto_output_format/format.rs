@@ -1,4 +1,3 @@
-
 use axum::{extract::FromRequestParts, http::request::Parts};
 
 pub enum Format<HtmlRendererContext> {

@@ -19,13 +19,18 @@ pub struct Account {
     pub avatar: String,
     pub preferred_language: String,
     pub admin: bool,
+    pub has_solved_a_challenge: bool,
 }
 
 impl Account {
     pub async fn get_by_id(pool: &PgPool, id: i32) -> Option<Self> {
         sqlx::query_as!(
             Account,
-            "SELECT id, username, avatar, preferred_language, admin from accounts where id=$1",
+            r#"SELECT
+                id, username, avatar, preferred_language, admin,
+                EXISTS(SELECT * FROM solutions WHERE author=$1) as "has_solved_a_challenge!"
+            FROM accounts
+            WHERE id=$1"#,
             id
         )
         .fetch_optional(pool)
@@ -119,9 +124,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Account {
                 }
                 Err(AccountFetchError::NoAccountFound)
             }
-            _ => {
-                Err(AccountFetchError::NotLoggedIn)
-            }
+            _ => Err(AccountFetchError::NotLoggedIn),
         }
     }
 }

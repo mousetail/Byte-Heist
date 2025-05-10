@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, username, avatar, preferred_language, admin from accounts where id=$1",
+  "query": "SELECT\n                id, username, avatar, preferred_language, admin,\n                EXISTS(SELECT * FROM solutions WHERE author=$1) as \"has_solved_a_challenge!\"\n            FROM accounts\n            WHERE id=$1",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,11 @@
         "ordinal": 4,
         "name": "admin",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "has_solved_a_challenge!",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -39,8 +44,9 @@
       false,
       false,
       false,
-      false
+      false,
+      null
     ]
   },
-  "hash": "ac00775cb4e286d391a70c7b56bd470363a9dac9e9e4758ee0c51c3a0ed9e1fc"
+  "hash": "e5429f7f1ad256b7a8da8acd56c594f758d70240c10d0aff2ca02af52e4a8025"
 }

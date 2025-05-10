@@ -74,7 +74,9 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
             return Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .header("Content-Type", "text/plain")
-                .body(Body::from("An error was encountered serializing the response to this route".to_string()))
+                .body(Body::from(
+                    "An error was encountered serializing the response to this route".to_string(),
+                ))
                 .unwrap();
         };
 

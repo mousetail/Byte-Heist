@@ -54,6 +54,7 @@ impl IntoResponse for Error {
                 .unwrap(),
             Error::Database(e) => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .header("Content-Type", "text/html")
                 .body(Body::from(format!(
                     "Database Error: <pre>{}</pre>",
                     tera::escape_html(&format!("{e:#?}"))
