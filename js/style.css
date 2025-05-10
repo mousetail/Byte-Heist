@@ -476,7 +476,7 @@ button {
 
 .comment {
   display: grid;
-  grid-template-columns: 1rem 6rem 1fr;
+  grid-template-columns: 1rem 9rem 1fr;
 
   margin-bottom: 1rem;;
   margin-top: 1rem;

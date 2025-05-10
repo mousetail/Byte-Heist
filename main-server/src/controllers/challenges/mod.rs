@@ -9,7 +9,7 @@ use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
 
-pub use view_challenge::{view_challenge, post_comment};
+pub use view_challenge::{view_challenge, post_comment, post_reaction};
 
 use crate::{
     discord::DiscordEventSender,

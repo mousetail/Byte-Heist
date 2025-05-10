@@ -10,7 +10,7 @@ mod tera_utils;
 mod test_case_display;
 mod test_solution;
 
-use axum::{routing::get, Extension, Router};
+use axum::{routing::{get, post}, Extension, Router};
 use macros::OutputWrapperFactory;
 use tera_utils::TeraHtmlRenderer;
 use tower_sessions::session_store::ExpiredDeletion;
@@ -18,7 +18,7 @@ use tower_sessions::session_store::ExpiredDeletion;
 use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
-    challenges::{all_challenges, compose_challenge, new_challenge, post_comment, view_challenge},
+    challenges::{all_challenges, compose_challenge, new_challenge, post_comment, post_reaction, view_challenge},
     global_leaderboard::global_leaderboard,
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
@@ -116,6 +116,10 @@ async fn main() -> anyhow::Result<()> {
             "/challenge/{id}/{slug}/view",
             get(route_factory.handler("view_challenge.html.jinja", view_challenge))
             .post(route_factory.handler("view_challenge.html.jinja", post_comment)),
+        )
+        .route(
+            "/challenge/{id}/{slug}/view/vote",
+            post(route_factory.handler("view_challenge.html.jinja", post_reaction))
         )
         .route(
             "/challenge/{id}/{slug}/solve",

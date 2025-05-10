@@ -11,6 +11,21 @@
           {{ com.author_username }}
         </div>
       </a>
+      <form class="comment-reactions" method="post" action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view/vote">
+        <input type="hidden" name="comment_id" value="{{ com.id }}">
+        <button type="submit" name="is_upvote" value="true"
+          title="{%- for reaction in com.up_reactions -%}
+            {{- reaction.author_username -}}, 
+            {%- endfor -%}">
+          {{ com.up_reactions | length }} 👍
+        </button>
+        <button type="submit" name="is_upvote" value="false"
+          title="{%- for reaction in com.down_reactions -%}
+            {{- reaction.author_username -}}, 
+            {%- endfor -%}">
+          {{ com.down_reactions | length }} 👎
+        </button>
+      </form>
     </div>
 
     <div class="comment-content">

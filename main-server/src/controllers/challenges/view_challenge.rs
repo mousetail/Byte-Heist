@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use axum::{extract::Path, Extension};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_as, query_scalar, PgPool};
@@ -28,6 +30,36 @@ impl Ord for RawComment {
     }
 }
 
+struct RawReaction {
+    #[allow(unused)]
+    id: i32,
+    comment_id: i32,
+    author_id: i32,
+    author_username: String,
+    is_upvote: bool
+}
+
+
+impl RawReaction {
+    async fn get_reactions_for_challenge(pool: &PgPool, comments: &[RawComment]) -> Result<Vec<RawReaction>, sqlx::Error> {
+        query_as!(
+            RawReaction,
+            "
+                SELECT challenge_comment_votes.id,
+                    comment as comment_id,
+                    author as author_id,
+                    is_upvote,
+                    accounts.username as author_username
+                FROM challenge_comment_votes
+                INNER JOIN accounts ON accounts.id = challenge_comment_votes.author
+                WHERE challenge_comment_votes.comment = ANY($1)
+                ORDER BY comment ASC
+            ",
+            &comments.iter().map(|i|i.id).collect::<Vec<_>>()
+        ).fetch_all(pool).await
+    }
+}
+
 impl RawComment {
     async fn get_raw_comments_for_challenge(pool: &PgPool, challenge_id: i32) -> Result<Vec<RawComment>, sqlx::Error> {
         query_as!(
@@ -52,7 +84,7 @@ impl RawComment {
     }
 }
 
-#[derive(Serialize, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Serialize, Eq, PartialEq)]
 struct ProcessedComment {
     id: i32,
     parent: Option<i32>,
@@ -61,7 +93,48 @@ struct ProcessedComment {
     children: Vec<ProcessedComment>,
     author_id: i32,
     author_username: String,
-    author_avatar: String
+    author_avatar: String,
+
+    up_reactions: HashSet<Reaction>,
+    down_reactions: HashSet<Reaction>
+}
+
+impl Ord for ProcessedComment {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+
+impl PartialOrd for ProcessedComment {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[derive(Serialize, PartialEq, Eq, Hash)]
+struct Reaction {
+    author_id: i32,
+    author_username: String
+}
+
+impl Reaction {
+    /// Assumes reactions is sorted by comment id
+    /// Assumes comments is sorted by id
+    fn apply_reactions_to_comments(comments: &mut [ProcessedComment], reactions: Vec<RawReaction>) {
+        let mut first_index = 0;
+        for reaction in reactions {
+            let index = comments[first_index..].binary_search_by_key(&reaction.comment_id, |e| e.id).unwrap() + first_index;
+
+            let set = match reaction.is_upvote { true => &mut comments[index].up_reactions,
+            false => &mut comments[index].down_reactions };
+            set.insert(Reaction {
+                author_id: reaction.author_id,
+                author_username: reaction.author_username
+            });
+
+            first_index = index;
+        }
+    }
 }
 
 impl ProcessedComment {
@@ -73,7 +146,7 @@ impl ProcessedComment {
         }
     }
 
-    fn from_raw_comments(comments: Vec<RawComment>) -> Vec<ProcessedComment> {
+    fn from_raw_comments(comments: Vec<RawComment>, reactions: Vec<RawReaction>) -> Vec<ProcessedComment> {
         let mut output: Vec<_> = comments.into_iter().map(
             |e| ProcessedComment {
                 id: e.id,
@@ -84,9 +157,14 @@ impl ProcessedComment {
 
                 author_id: e.author_id,
                 author_avatar: e.author_avatar,
-                author_username: e.author_username
+                author_username: e.author_username,
+
+                up_reactions: HashSet::new(),
+                down_reactions: HashSet::new()
             }
         ).collect();
+
+        Reaction::apply_reactions_to_comments(&mut output, reactions);
 
         let mut index = output.len();
 
@@ -120,10 +198,15 @@ pub async fn view_challenge(
     Path((id, _slug)): Path<(i32, String)>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<ViewChallengeOutput, Error> {
+    let raw_comments = RawComment::get_raw_comments_for_challenge(&pool, id).await.map_err(
+        Error::Database
+    )?;
+    let reactions = RawReaction::get_reactions_for_challenge(&pool, &raw_comments).await.map_err(
+        Error::Database
+    )?;
     let comments = ProcessedComment::from_raw_comments(
-        RawComment::get_raw_comments_for_challenge(&pool, id).await.map_err(
-            Error::Database
-        )?
+        raw_comments,
+        reactions
     );
 
     Ok(ViewChallengeOutput {
@@ -166,5 +249,41 @@ pub async fn post_comment(
 ) -> Result<ViewChallengeOutput, Error> {
     let _result = data.0.submit(id    , account.id, &pool).await.map_err(Error::Database)?;
 
+    view_challenge(Path((id, slug)), Extension(pool)).await
+}
+
+#[derive(Deserialize)]
+pub struct NewReaction {
+    comment_id: i32,
+    is_upvote: bool
+}
+
+impl NewReaction {
+    async fn submit(&self, author: i32, pool: &PgPool) -> Result<i32, sqlx::Error> {
+        query_scalar!(
+            "
+            INSERT INTO challenge_comment_votes(
+                author,
+                comment,
+                is_upvote
+            )
+            VALUES ($1, $2, $3)
+            ON CONFLICT(author, comment) DO UPDATE SET is_upvote=$3
+            RETURNING id
+            ",
+            author,
+            self.comment_id,
+            self.is_upvote
+        ).fetch_one(pool).await
+    }
+}
+
+pub async fn post_reaction(
+    Path((id, slug)): Path<(i32, String)>,
+    account: Account,
+    Extension(pool): Extension<PgPool>,
+    AutoInput(reaction): AutoInput<NewReaction>
+) -> Result<ViewChallengeOutput, Error> {
+    reaction.submit(account.id, &pool).await.map_err(Error::Database)?;
     view_challenge(Path((id, slug)), Extension(pool)).await
 }
