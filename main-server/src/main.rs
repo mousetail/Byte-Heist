@@ -18,7 +18,7 @@ use tower_sessions::session_store::ExpiredDeletion;
 use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
-    challenges::{all_challenges, compose_challenge, new_challenge, view_challenge},
+    challenges::{all_challenges, compose_challenge, new_challenge, post_comment, view_challenge},
     global_leaderboard::global_leaderboard,
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
@@ -114,7 +114,8 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/challenge/{id}/{slug}/view",
-            get(route_factory.handler("view_challenge.html.jinja", view_challenge)),
+            get(route_factory.handler("view_challenge.html.jinja", view_challenge))
+            .post(route_factory.handler("view_challenge.html.jinja", post_comment)),
         )
         .route(
             "/challenge/{id}/{slug}/solve",

@@ -162,6 +162,10 @@ textarea {
   height: 8rem;
   font-family: monospace;
   border: 1px solid var(--light-border);
+
+  &.textarea-small {
+    height: 4rem;
+  }
 }
 
 textarea:focus-within {
@@ -468,4 +472,44 @@ button {
       }
     }
   }
+}
+
+.comment {
+  display: grid;
+  grid-template-columns: 1rem 6rem 1fr;
+
+  margin-bottom: 1rem;;
+  margin-top: 1rem;
+}
+
+.comment-content {
+  padding: 1rem;
+  border: 2px solid var(--light-border);
+  margin-bottom: 1rem;
+  min-height: 6rem;
+
+  transition: background-color ease 0.5s;
+}
+
+.comment-author {
+  grid-column: 1/3;
+  text-align: center;
+}
+
+.comment-children {
+  grid-column: 2/4;
+}
+
+.comment .comment-reply {
+  grid-column: 2/4;
+}
+
+blockquote {
+  margin-left: 0.5rem;
+  border-left: 5px solid var(--light-border);
+  padding: 0.25rem 0 0.25rem 1rem;
+}
+
+.comment-content:has(~.comment-reply:hover) {
+  background-color: var(--light-border);
 }

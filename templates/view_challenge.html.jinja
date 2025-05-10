@@ -1,6 +1,38 @@
 {% extends "base/base.html.jinja" %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% import "base/test_cases.html.jinja" as test_cases %}
+
+{% macro comment(com) %}
+  <div class="comment">
+    <div class="comment-author">
+      <a href="/users/{{ com.author_id }}">
+        <img src="{{ com.author_avatar }}" width="64" alt="{{ com.author_username }}">
+        <div class="comment-author-name">
+          {{ com.author_username }}
+        </div>
+      </a>
+    </div>
+
+    <div class="comment-content">
+      {{ com.message | markdown }}
+    </div>
+
+    <div class="comment-children">
+      {% for child in com.children %}
+        {{ self::comment(com=child) }}
+      {% endfor %}
+    </div>
+
+    {% if account %}
+      <form class="comment-reply" method="post">
+        <input type="hidden" name="parent" value="{{ com.id }}">
+        <textarea name="message" placeholder="reply" class="textarea-small"></textarea>
+        <button type="submit">Submit</button>
+      </form>
+    {% endif %}
+  </div>
+{% endmacro %}
+
 {% block content %}
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author) }}
@@ -15,4 +47,18 @@
       object.example_code
     -}}
   </pre>
+
+  <h2>Comments</h2>
+
+  {% for comment in object.comments %}
+    {{ self::comment(com=comment) }}
+  {% endfor %}
+
+  {% if account %}
+    <form class="comment-reply" method="post">
+      <textarea name="message"></textarea>
+      <button type="submit">Submit</button>
+    </form>
+  {% endif %}
+
 {% endblock content %}

@@ -1,3 +1,5 @@
+mod view_challenge;
+
 use axum::{
     extract::Path,
     http::StatusCode,
@@ -6,6 +8,8 @@ use axum::{
 use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
+
+pub use view_challenge::{view_challenge, post_comment};
 
 use crate::{
     discord::DiscordEventSender,
@@ -71,15 +75,6 @@ pub async fn compose_challenge(
     };
 
     Ok(challenge)
-}
-
-pub async fn view_challenge(
-    Path((id, _slug)): Path<(i32, String)>,
-    pool: Extension<PgPool>,
-) -> Result<NewOrExistingChallenge, Error> {
-    NewOrExistingChallenge::get_by_id(&pool, id)
-        .await?
-        .ok_or(Error::NotFound)
 }
 
 pub async fn new_challenge(
