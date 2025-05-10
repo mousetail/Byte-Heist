@@ -37,6 +37,7 @@
       <textarea id="challenge-judge"
                 name="judge"
                 class="codemirror lang-typescript"
+                data-encoded-source="{{ object.judge | urlencode_strict }}"
                 {% if object.is_post_mortem %}
                   disabled
                 {% endif %}>{{- object.judge -}}</textarea>
@@ -48,6 +49,7 @@
       <textarea id="example-code"
                 name="example_code"
                 class="codemirror"
+                data-encoded-source="{{ object.example_code | urlencode_strict }}"
                 {% if object.is_post_mortem %}
                   disabled
                 {% endif %}>{{- object.example_code -}}</textarea>

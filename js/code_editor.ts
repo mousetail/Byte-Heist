@@ -105,7 +105,7 @@ export function createCodemirrorFromTextAreas(): EditorView | undefined {
     console.log("Replacing textarea with codemirror");
     let view = editorFromTextArea(
       textarea,
-      window.originalSource,
+      decodeURIComponent(textarea.dataset.encodedSource),
       plugins,
       textarea.id !== "main-code"
     );
