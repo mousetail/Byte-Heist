@@ -39,7 +39,7 @@
     </div>
 
     {% if account and account.has_solved_a_challenge %}
-      <form class="comment-reply" method="post">
+      <form class="comment-reply" method="post" action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
         <input type="hidden" name="parent" value="{{ com.id }}">
         <textarea name="message" placeholder="reply" class="textarea-small"></textarea>
         <button type="submit">Submit</button>
@@ -70,7 +70,7 @@
   {% endfor %}
 
   {% if account and account.has_solved_a_challenge %}
-    <form class="comment-reply" method="post">
+    <form class="comment-reply" method="post" action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
       <textarea name="message"></textarea>
       <button type="submit">Submit</button>
     </form>
