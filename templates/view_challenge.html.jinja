@@ -2,6 +2,25 @@
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% import "base/test_cases.html.jinja" as test_cases %}
 
+{% macro vote_button(is_upvote, reactions) %}
+  <button type="submit" name="is_upvote" value="{{ is_upvote }}"
+    title="{%- for reaction in reactions -%}
+      {{- reaction.author_username -}}, 
+      {%- endfor -%}"
+      {% if account %}
+        {% for reaction in reactions %}
+          {% if account.id == reaction.author_id %}
+            disabled
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        disabled
+      {% endif %}
+      >
+    {{ reactions | length }} {% if is_upvote %}👍{% else %}👎{% endif %}
+  </button>
+{% endmacro %}
+
 {% macro comment(com) %}
   <div class="comment">
     <div class="comment-author">
@@ -13,18 +32,9 @@
       </a>
       <form class="comment-reactions" method="post" action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view/vote">
         <input type="hidden" name="comment_id" value="{{ com.id }}">
-        <button type="submit" name="is_upvote" value="true"
-          title="{%- for reaction in com.up_reactions -%}
-            {{- reaction.author_username -}}, 
-            {%- endfor -%}">
-          {{ com.up_reactions | length }} 👍
-        </button>
-        <button type="submit" name="is_upvote" value="false"
-          title="{%- for reaction in com.down_reactions -%}
-            {{- reaction.author_username -}}, 
-            {%- endfor -%}">
-          {{ com.down_reactions | length }} 👎
-        </button>
+
+        {{ self::vote_button(is_upvote=true, reactions=com.up_reactions) }}
+        {{ self::vote_button(is_upvote=false, reactions=com.down_reactions) }}
       </form>
     </div>
 
@@ -77,3 +87,7 @@
   {% endif %}
 
 {% endblock content %}
+
+{% block post_content %}
+  {{ modules(modules="js/comments.ts") | safe }}
+{% endblock post_content %}

@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{borrow::Cow, collections::HashSet};
 
 use axum::{extract::Path, Extension};
 use serde::{Deserialize, Serialize};
@@ -280,7 +280,7 @@ pub async fn post_comment(
     account: Account,
     Extension(pool): Extension<PgPool>,
     AutoInput(data): AutoInput<NewComment>,
-) -> Result<ViewChallengeOutput, Error> {
+) -> Result<(), Error> {
     if !account.has_solved_a_challenge {
         return Err(Error::PermissionDenied(
             "Can't post a comment until your account has solved at least one challenge",
@@ -307,7 +307,7 @@ pub async fn post_comment(
         .await
         .map_err(Error::Database)?;
 
-    view_challenge(Path((id, slug)), Extension(pool)).await
+    return Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
 }
 
 #[derive(Deserialize)]
@@ -343,10 +343,11 @@ pub async fn post_reaction(
     account: Account,
     Extension(pool): Extension<PgPool>,
     AutoInput(reaction): AutoInput<NewReaction>,
-) -> Result<ViewChallengeOutput, Error> {
+) -> Result<(), Error> {
     reaction
         .submit(account.id, &pool)
         .await
         .map_err(Error::Database)?;
-    view_challenge(Path((id, slug)), Extension(pool)).await
+    
+    return Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
 }

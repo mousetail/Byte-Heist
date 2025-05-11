@@ -76,7 +76,7 @@ impl IntoResponse for Error {
                     tera::escape_html(e)
                 )))
                 .unwrap(),
-            Error::Redirect(e) => Redirect::temporary(&e).into_response(),
+            Error::Redirect(e) => Redirect::to(&e).into_response(),
         }
     }
 }

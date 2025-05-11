@@ -6,7 +6,10 @@ export default defineConfig({
         manifest: true,
         rollupOptions: {
             // overwrite default .html entry
-            input: 'js/index.ts',
+            input: [
+                'js/index.ts',
+                'js/comments.ts'
+            ],
             treeshake: 'smallest'
         },
         outDir: 'static/target'

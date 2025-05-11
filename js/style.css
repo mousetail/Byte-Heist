@@ -261,6 +261,11 @@ button {
   padding: 0.5rem 1rem;
   border: 1px solid black;
   border-radius: 0;
+
+  &:disabled {
+    border: 1px solid var(--light-border);
+    background: transparent;
+  }
 }
 
 .hidden {
