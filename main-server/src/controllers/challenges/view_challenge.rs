@@ -307,7 +307,7 @@ pub async fn post_comment(
         .await
         .map_err(Error::Database)?;
 
-    return Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
+    Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
 }
 
 #[derive(Deserialize)]
@@ -349,5 +349,5 @@ pub async fn post_reaction(
         .await
         .map_err(Error::Database)?;
     
-    return Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
+    Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
 }
