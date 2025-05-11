@@ -80,6 +80,8 @@ pub async fn new_challenge(
     account: Account,
     AutoInput(challenge): AutoInput<NewChallenge>,
 ) -> Result<CustomResponseMetadata<ChallengeWithTests>, Error> {
+    account.rate_limit(&pool).await?;
+
     let (new_challenge, existing_challenge) = match id {
         Some(Path((id, _))) => {
             let existing_challenge = ChallengeWithAuthorInfo::get_by_id(&pool, id)

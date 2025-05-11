@@ -287,6 +287,8 @@ pub async fn post_comment(
         ));
     }
 
+    account.rate_limit(&pool).await?;
+
     if data.message.is_empty() || data.message.len() > 5000 {
         return Err(Error::PermissionDenied("Message can't be empty of more than 5kb"))
     }

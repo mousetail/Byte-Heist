@@ -17,6 +17,7 @@ pub enum Error {
     RunLang(String),
     PermissionDenied(&'static str),
     Redirect(Cow<'static, str>),
+    RateLimit
 }
 
 #[derive(Debug)]
@@ -77,6 +78,13 @@ impl IntoResponse for Error {
                 )))
                 .unwrap(),
             Error::Redirect(e) => Redirect::to(&e).into_response(),
+            Error::RateLimit => Response::builder()
+            .status(StatusCode::TOO_MANY_REQUESTS)
+            .header("Content-Type", "text/html")
+            .body(
+                Body::from("<h1>Rate Limit Exceeded</h1><p>Please wait one minute</p>"),
+                )
+            .unwrap()
         }
     }
 }

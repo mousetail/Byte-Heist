@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use axum::{
     body::Body,
     extract::{FromRequestParts, OptionalFromRequestParts},
@@ -7,7 +9,7 @@ use axum::{
 };
 use reqwest::StatusCode;
 use serde::Serialize;
-use sqlx::{prelude::FromRow, PgPool};
+use sqlx::{prelude::FromRow, types::time::OffsetDateTime, PgPool};
 use tower_sessions::Session;
 
 use crate::{controllers::auth::ACCOUNT_ID_KEY, error::Error};
@@ -20,6 +22,7 @@ pub struct Account {
     pub preferred_language: String,
     pub admin: bool,
     pub has_solved_a_challenge: bool,
+    pub last_creation_action: OffsetDateTime
 }
 
 impl Account {
@@ -27,7 +30,7 @@ impl Account {
         sqlx::query_as!(
             Account,
             r#"SELECT
-                id, username, avatar, preferred_language, admin,
+                id, username, avatar, preferred_language, admin, last_creation_action,
                 EXISTS(SELECT * FROM solutions WHERE author=$1) as "has_solved_a_challenge!"
             FROM accounts
             WHERE id=$1"#,
@@ -51,6 +54,18 @@ impl Account {
         .execute(pool)
         .await
         .map_err(Error::Database)?;
+
+        Ok(())
+    }
+
+    pub async fn rate_limit(&self, pool: &PgPool) -> Result<(), Error> {
+        if (OffsetDateTime::now_utc() - self.last_creation_action) < Duration::from_secs(60) {
+            return Err(Error::RateLimit)
+        }
+        sqlx::query!(
+            "UPDATE accounts SET last_creation_action=NOW() WHERE id=$1",
+            self.id
+        ).execute(pool).await.map_err(Error::Database)?;
 
         Ok(())
     }
