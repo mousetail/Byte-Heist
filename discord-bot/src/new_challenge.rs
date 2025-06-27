@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::fmt::Write;
 
+use common::urls::get_url_for_challenge;
 use serenity::all::{ChannelId, CreateEmbed, CreateMessage};
 use sqlx::PgPool;
 
@@ -34,7 +35,14 @@ fn gen_embed(
             let _ = writeln!(a, "- {}: {} by {}", i.language, i.score, i.author_name);
             a
         }))
-        .url(format!("{public_url}/challenge/{challenge_id}/solve"))
+        .url(format!(
+            "{public_url}{}",
+            get_url_for_challenge(
+                *challenge_id,
+                Some(challenge_name),
+                common::urls::ChallengePage::Solve { language: None }
+            )
+        ))
 }
 
 pub(crate) async fn on_new_challenge(

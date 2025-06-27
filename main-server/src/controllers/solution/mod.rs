@@ -4,6 +4,7 @@ mod new_solution;
 pub mod post_mortem;
 
 pub use all_solutions::all_solutions;
+use common::urls::get_url_for_challenge;
 pub use leaderboard::get_leaderboard;
 pub use new_solution::new_solution;
 
@@ -14,7 +15,6 @@ use sqlx::{query_scalar, PgPool};
 use crate::{
     error::Error,
     models::{account::Account, solutions::RankingMode},
-    slug::Slug,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -52,7 +52,7 @@ pub async fn challenge_redirect_no_slug(
         },
     };
 
-    let Some(slug) = query_scalar!("SELECT name FROM challenges WHERE id=$1", id)
+    let Some(challenge_name) = query_scalar!("SELECT name FROM challenges WHERE id=$1", id)
         .fetch_optional(&pool)
         .await
         .map_err(Error::Database)?
@@ -61,7 +61,13 @@ pub async fn challenge_redirect_no_slug(
     };
 
     Ok(Redirect::temporary(&format!(
-        "/challenge/{id}/{}/solve/{language}",
-        Slug(&slug)
+        "{}",
+        get_url_for_challenge(
+            id,
+            Some(&challenge_name),
+            common::urls::ChallengePage::Solve {
+                language: Some(language)
+            }
+        )
     )))
 }

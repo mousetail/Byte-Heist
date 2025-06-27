@@ -3,7 +3,6 @@ mod discord;
 mod error;
 mod markdown;
 mod models;
-mod slug;
 mod solution_invalidation;
 mod strip_trailing_slashes;
 mod tera_utils;

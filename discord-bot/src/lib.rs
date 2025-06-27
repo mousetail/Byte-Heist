@@ -4,7 +4,10 @@ pub mod new_challenge;
 mod queries;
 
 use checks::{get_last_best_score_fields, should_edit_message};
-use common::langs::LANGS;
+use common::{
+    langs::LANGS,
+    urls::{get_url_for_challenge, ChallengePage},
+};
 use new_challenge::{on_new_challenge, NewChallengeEvent};
 use queries::{
     get_challenge_name_by_id, get_last_message_for_challenge, get_last_posted_message_id,
@@ -68,16 +71,20 @@ fn format_message(
                 .url(format!("{public_url}/user/{}", &new_message.author)),
         )
         .url(format!(
-            "{}/challenge/{}/{}/{}/{}",
-            public_url,
-            new_message.challenge_id,
-            slug::slugify(challenge_name),
-            if new_message.is_post_mortem {
-                "solutions"
-            } else {
-                "solve"
-            },
-            new_message.language
+            "{public_url}{}",
+            get_url_for_challenge(
+                new_message.challenge_id,
+                Some(challenge_name),
+                if new_message.is_post_mortem {
+                    ChallengePage::Solutions {
+                        language: Some(&new_message.language),
+                    }
+                } else {
+                    ChallengePage::Solve {
+                        language: Some(&new_message.language),
+                    }
+                }
+            )
         ))
         .field(
             &last_best_score.username,

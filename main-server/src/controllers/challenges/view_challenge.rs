@@ -290,7 +290,9 @@ pub async fn post_comment(
     account.rate_limit(&pool).await?;
 
     if data.message.is_empty() || data.message.len() > 5000 {
-        return Err(Error::PermissionDenied("Message can't be empty of more than 5kb"))
+        return Err(Error::PermissionDenied(
+            "Message can't be empty of more than 5kb",
+        ));
     }
 
     // Sanity check if you are reacting to a comment that exists and is under the correct challenge
@@ -309,7 +311,9 @@ pub async fn post_comment(
         .await
         .map_err(Error::Database)?;
 
-    Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
+    Err(Error::Redirect(Cow::Owned(format!(
+        "/challenge/{id}/{slug}/view"
+    ))))
 }
 
 #[derive(Deserialize)]
@@ -350,6 +354,8 @@ pub async fn post_reaction(
         .submit(account.id, &pool)
         .await
         .map_err(Error::Database)?;
-    
-    Err(Error::Redirect(Cow::Owned(format!("/challenge/{id}/{slug}/view"))))
+
+    Err(Error::Redirect(Cow::Owned(format!(
+        "/challenge/{id}/{slug}/view"
+    ))))
 }

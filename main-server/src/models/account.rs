@@ -22,7 +22,7 @@ pub struct Account {
     pub preferred_language: String,
     pub admin: bool,
     pub has_solved_a_challenge: bool,
-    pub last_creation_action: OffsetDateTime
+    pub last_creation_action: OffsetDateTime,
 }
 
 impl Account {
@@ -60,12 +60,15 @@ impl Account {
 
     pub async fn rate_limit(&self, pool: &PgPool) -> Result<(), Error> {
         if (OffsetDateTime::now_utc() - self.last_creation_action) < Duration::from_secs(60) {
-            return Err(Error::RateLimit)
+            return Err(Error::RateLimit);
         }
         sqlx::query!(
             "UPDATE accounts SET last_creation_action=NOW() WHERE id=$1",
             self.id
-        ).execute(pool).await.map_err(Error::Database)?;
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
 
         Ok(())
     }

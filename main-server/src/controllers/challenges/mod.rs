@@ -1,6 +1,7 @@
 mod view_challenge;
 
 use axum::{extract::Path, http::StatusCode, Extension};
+use common::urls::get_url_for_challenge;
 use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -19,7 +20,6 @@ use crate::{
         solutions::InvalidatedSolution,
         GetById,
     },
-    slug::Slug,
     solution_invalidation::notify_challenge_updated,
     tera_utils::auto_input::AutoInput,
     test_solution::test_solution,
@@ -149,7 +149,14 @@ pub async fn new_challenge(
             .await
             .map_err(Error::Database)?;
 
-            let destination = format!("/challenge/{row}/{}/edit", Slug(&challenge.name));
+            let destination = format!(
+                "{}",
+                get_url_for_challenge(
+                    row,
+                    Some(&challenge.name),
+                    common::urls::ChallengePage::Edit
+                )
+            );
 
             if challenge.status == ChallengeStatus::Public {
                 bot.send(crate::discord::DiscordEvent::NewChallenge { challenge_id: row })

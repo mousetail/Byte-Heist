@@ -1,5 +1,6 @@
 use std::env::VarError;
 
+use common::urls::get_url_for_challenge;
 use discord_bot::{
     new_challenge::{BestScore, NewChallengeEvent},
     Bot, ScoreImproved,
@@ -8,14 +9,11 @@ use reqwest::StatusCode;
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::{
-    models::{
-        account::Account,
-        challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
-        solutions::{LeaderboardEntry, SolutionWithLanguage},
-        GetById,
-    },
-    slug::Slug,
+use crate::models::{
+    account::Account,
+    challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
+    solutions::{LeaderboardEntry, SolutionWithLanguage},
+    GetById,
 };
 
 #[allow(clippy::enum_variant_names)]
@@ -168,8 +166,12 @@ async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
                     [..100.min(challenge.challenge.challenge.description.len())],
             ),
             url: Some(&format!(
-                "https://byte-heist.com/challenge/{challenge_id}/{}/solve",
-                Slug(&challenge.challenge.challenge.name)
+                "https://byte-heist.com/{}",
+                get_url_for_challenge(
+                    challenge_id,
+                    Some(&challenge.challenge.challenge.name),
+                    common::urls::ChallengePage::Solve { language: None }
+                ),
             )),
             color: Some(255),
         }]),

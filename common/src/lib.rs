@@ -1,4 +1,7 @@
 pub mod langs;
+pub mod slug;
+pub mod urls;
+
 
 use serde::{Deserialize, Serialize};
 
