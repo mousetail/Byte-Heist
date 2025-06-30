@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::OnceLock};
 
-use axum::response::Response;
+use axum::response::{IntoResponse, Response};
 use common::langs::LANGS;
 use sqlx::types::time::OffsetDateTime;
 use tera::{to_value, Tera, Value};
@@ -12,7 +12,21 @@ use super::{render_html_error, vite::load_assets};
 
 static TERA: OnceLock<tera::Result<Tera>> = OnceLock::new();
 
-pub fn get_tera() -> Result<&'static Tera, Response> {
+pub enum GetTerraError {
+    Initalizing(&'static tera::Error),
+}
+
+impl IntoResponse for GetTerraError {
+    fn into_response(self) -> Response {
+        match self {
+            GetTerraError::Initalizing(error) => {
+                render_html_error("Error initializing Tera", error)
+            }
+        }
+    }
+}
+
+pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
     let value = TERA.get_or_init(|| {
         Tera::new("templates/**/*.jinja").map(|mut tera| {
             tera.autoescape_on(vec![".html.jinja", ".xml.jinja", ".html", ".xml"]);
@@ -27,10 +41,10 @@ pub fn get_tera() -> Result<&'static Tera, Response> {
         })
     });
 
-    let tera = match value.as_ref() {
+    let tera = match value {
         Ok(tera) => tera,
         Err(e) => {
-            return Err(render_html_error("Error initializing Tera", e));
+            return Err(GetTerraError::Initalizing(e));
         }
     };
 

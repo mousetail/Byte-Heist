@@ -46,7 +46,7 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
     ) -> Response {
         let tera = match get_tera::get_tera() {
             Ok(tera) => tera,
-            Err(e) => return e,
+            Err(e) => return e.into_response(),
         };
 
         let mut context = Context::new();
