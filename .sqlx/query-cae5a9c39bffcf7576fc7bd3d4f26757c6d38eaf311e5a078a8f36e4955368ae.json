@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE account_oauth_codes SET access_token=$1, refresh_token=$2 WHERE id=$3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cae5a9c39bffcf7576fc7bd3d4f26757c6d38eaf311e5a078a8f36e4955368ae"
+}
