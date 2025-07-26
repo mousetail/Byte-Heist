@@ -1756,7 +1756,6 @@ dependencies = [
  "serde_bytes",
  "serde_json",
  "similar",
- "slug",
  "sqlx",
  "tera",
  "tokio",

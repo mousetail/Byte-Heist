@@ -119,7 +119,7 @@ pub async fn new_challenge(
         &challenge.judge,
     )
     .await
-    .inspect_err(|e| eprintln!("{:?}", e))
+    .inspect_err(|e| eprintln!("{e:?}"))
     .map_err(|_| Error::ServerError)?;
 
     if !tests.tests.pass {

@@ -12,12 +12,11 @@ use oauth2::{
 use reqwest::StatusCode;
 use serde::Deserialize;
 use sqlx::prelude::FromRow;
-use sqlx::{PgPool, Pool, Postgres};
+use sqlx::{Executor, PgPool, Pool, Postgres};
 use tower_sessions::Session;
 
 use crate::discord::DiscordEventSender;
 use crate::error::Error;
-use crate::models::InsertedId;
 
 const GITHUB_SESSION_CSRF_KEY: &str = "GITHUB_SESSION_CSRF_TOKEN";
 pub const ACCOUNT_ID_KEY: &str = "ACCOUNT_ID";
@@ -45,7 +44,8 @@ fn create_github_client(
         .set_redirect_uri(
             RedirectUrl::new(format!(
                 "{}/callback/github",
-                env::var("YQ_PUBLIC_URL").expect("Missing the YQ_PUBLIC_URL environment variable")
+                env::var("BYTE_HEIST_PUBLIC_URL")
+                    .expect("Missing the BYTE_HEIST_PUBLIC_URL environment variable")
             ))
             .expect("Invalid redirect URL"),
         )
@@ -120,7 +120,10 @@ pub async fn github_callback(
         .get("https://api.github.com/user")
         .header("Accept", "application/vnd.github+json")
         .header("X-GitHub-Api-Version", "2022-11-28")
-        .header("User-Agent", "Rust-Reqwest (YQ)")
+        .header(
+            "User-Agent",
+            "Rust-Reqwest (Byte Heist https://byte-heist.com)",
+        )
         .bearer_auth(token.secret())
         .send()
         .await
@@ -140,7 +143,7 @@ pub async fn github_callback(
             );
         }
 
-        insert_user(&pool, &user_info, bot, &token_res, &session).await?;
+        update_or_insert_user(&pool, &user_info, bot, &token_res, &session).await?;
         Ok(Redirect::temporary("/").into_response())
     } else {
         let data = response.bytes().await.unwrap();
@@ -158,7 +161,7 @@ struct UserQueryResponse {
     account: i32,
 }
 
-async fn insert_user(
+async fn update_or_insert_user(
     pool: &Pool<Postgres>,
     github_user: &GithubUser,
     bot: DiscordEventSender,
@@ -174,61 +177,101 @@ async fn insert_user(
         .map_err(Error::Database)?;
 
     if let Some(user) = user {
-        let sql: &str =
-            "UPDATE account_oauth_codes SET access_token=$1, refresh_token=$2 WHERE id=$3";
-
-        sqlx::query_as::<_, UserQueryResponse>(sql)
-            .bind(token.access_token().secret())
-            .bind(
-                token
-                    .refresh_token()
-                    .map(|d| d.secret().as_str())
-                    .unwrap_or(""),
-            )
-            .bind(user.id)
-            .fetch_optional(pool)
-            .await
-            .map_err(Error::Database)?;
+        update_account_oauth_codes(
+            pool,
+            user.id,
+            token.access_token().secret(),
+            token
+                .refresh_token()
+                .map(|d| d.secret().as_str())
+                .unwrap_or(""),
+        )
+        .await
+        .map_err(Error::Database)?;
 
         session.insert(ACCOUNT_ID_KEY, user.account).await.unwrap();
 
         Ok(())
     } else {
-        let sql: &str = "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id";
+        let mut transaction = pool.begin().await.map_err(Error::Database)?;
 
-        let new_user_id: InsertedId = sqlx::query_as(sql)
-            .bind(&github_user.login)
-            .bind(&github_user.avatar_url)
-            .fetch_one(pool)
-            .await
-            .map_err(Error::Database)?;
+        let new_user_id = create_account(
+            &mut *transaction,
+            &github_user.login,
+            &github_user.avatar_url,
+        )
+        .await
+        .map_err(Error::Database)?;
 
-        let sql: &str =
-            "INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
-        ($1, $2, $3, $4)";
+        create_account_oauth_codes(
+            &mut *transaction,
+            new_user_id,
+            token.access_token().secret(),
+            token
+                .refresh_token()
+                .map(|d| d.secret().as_str())
+                .unwrap_or(""),
+            github_user.id,
+        )
+        .await
+        .map_err(Error::Database)?;
 
-        sqlx::query(sql)
-            .bind(new_user_id.0)
-            .bind(token.access_token().secret())
-            .bind(
-                token
-                    .refresh_token()
-                    .map(|d| d.secret().as_str())
-                    .unwrap_or(""),
-            )
-            .bind(github_user.id)
-            .execute(pool)
-            .await
-            .map_err(Error::Database)?;
-
-        session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
+        session.insert(ACCOUNT_ID_KEY, new_user_id).await.unwrap();
 
         bot.send(crate::discord::DiscordEvent::NewGolfer {
-            user_id: new_user_id.0,
+            user_id: new_user_id,
         })
         .await
         .unwrap();
 
+        transaction.commit().await.map_err(Error::Database)?;
+
         Ok(())
     }
+}
+
+async fn update_account_oauth_codes(
+    pool: &PgPool,
+    id: i32,
+    access_token: &str,
+    refresh_token: &str,
+) -> Result<(), sqlx::Error> {
+    return sqlx::query!(
+        "UPDATE account_oauth_codes SET access_token=$1, refresh_token=$2 WHERE id=$3",
+        access_token,
+        refresh_token,
+        id
+    )
+    .execute(pool)
+    .await
+    .map(|_| ());
+}
+
+async fn create_account_oauth_codes<'c>(
+    pool: impl Executor<'c, Database = Postgres>,
+    id: i32,
+    access_token: &str,
+    refresh_token: &str,
+    id_on_provider: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(r"INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
+        ($1, $2, $3, $4)", id, access_token, refresh_token, id_on_provider)
+        .execute(pool)
+        .await.map(|_|())
+}
+
+async fn create_account<'c>(
+    pool: impl Executor<'c, Database = Postgres>,
+    username: &str,
+    avatar: &str,
+) -> Result<i32, sqlx::Error> {
+    let value = sqlx::query_scalar!(
+        "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id",
+        username,
+        avatar
+    )
+    .fetch_one(pool)
+    .await;
+
+    value
 }

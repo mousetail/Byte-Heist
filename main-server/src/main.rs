@@ -70,7 +70,7 @@ async fn main() -> anyhow::Result<()> {
     let session_layer = SessionManagerLayer::new(session_store.clone())
         .with_secure(false)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
-        .with_name("yq_session_store_id")
+        .with_name("byte_heist_session_store_id")
         .with_expiry(Expiry::OnInactivity(
             tower_sessions::cookie::time::Duration::days(360),
         ));
@@ -167,8 +167,8 @@ async fn main() -> anyhow::Result<()> {
 
     let listener = tokio::net::TcpListener::bind(&format!(
         "{}:{}",
-        env::var("YQ_HOST").expect("Expcted YQ_HOST var to be set"),
-        env::var("YQ_PORT").expect("Excpected YQ_PORT var to be set")
+        env::var("BYTE_HEIST_HOST").expect("Expcted BYTE_HEIST_HOST var to be set"),
+        env::var("BYTE_HEIST_PORT").expect("Excpected BYTE_HEIST_PORT var to be set")
     ))
     .await
     .unwrap();
