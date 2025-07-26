@@ -103,6 +103,10 @@ async fn main() -> anyhow::Result<()> {
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
         .route(
+            "/heists",
+            get(route_factory.handler("heists.html.jinja", all_challenges)),
+        )
+        .route(
             "/leaderboard/{category}",
             get(route_factory.handler("global_leaderboard.html.jinja", global_leaderboard)),
         )
