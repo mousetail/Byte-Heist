@@ -27,22 +27,22 @@ RUN apt-get update -y && apt-get install -y \
   # Vyxal Dependencies
   openjdk-17-jdk
 
-RUN adduser yq
+RUN adduser byte_heist
 
-USER yq
+USER byte_heist
 
 # Install asdf
 #RUN git clone --depth 1 https://github.com/asdf-vm/asdf.git ~/.asdf
-RUN curl -L https://github.com/asdf-vm/asdf/releases/download/v0.16.4/asdf-v0.16.4-linux-amd64.tar.gz -o /home/yq/asdf.tar.gz
+RUN curl -L https://github.com/asdf-vm/asdf/releases/download/v0.16.4/asdf-v0.16.4-linux-amd64.tar.gz -o /home/byte_heist/asdf.tar.gz
 RUN ls
 RUN mkdir -p ~/.bin
-RUN tar -xzf /home/yq/asdf.tar.gz -C ~/.bin
+RUN tar -xzf /home/byte_heist/asdf.tar.gz -C ~/.bin
 
 # Add asdf to PATH, so it can be run in this Dockerfile
-ENV PATH="$PATH:/home/yq/.bin"
+ENV PATH="$PATH:/home/byte_heist/.bin"
 
 # Add asdf shims to PATH, so installed executables can be run in this Dockerfile
-ENV PATH=$PATH:/home/yq/.asdf/shims
+ENV PATH=$PATH:/home/byte_heist/.asdf/shims
 
 COPY --from=rust-build /usr/src/myapp/target/release/lang-runner /lang-runner
 COPY ./scripts /scripts
