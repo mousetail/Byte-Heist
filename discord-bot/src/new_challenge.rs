@@ -27,7 +27,7 @@ fn gen_embed(
         scores,
     }: &NewChallengeEvent,
 ) -> CreateEmbed {
-    let public_url = std::env::var("YQ_PUBLIC_URL").unwrap();
+    let public_url = std::env::var("BYTE_HEIST_PUBLIC_URL").unwrap();
     CreateEmbed::new()
         .title(format!("New Challenge {challenge_name}"))
         .color(512)
