@@ -45,7 +45,8 @@ fn create_github_client(
         .set_redirect_uri(
             RedirectUrl::new(format!(
                 "{}/callback/github",
-                env::var("YQ_PUBLIC_URL").expect("Missing the YQ_PUBLIC_URL environment variable")
+                env::var("BYTE_HEIST_PUBLIC_URL")
+                    .expect("Missing the BYTE_HEIST_PUBLIC_URL environment variable")
             ))
             .expect("Invalid redirect URL"),
         )
@@ -120,7 +121,10 @@ pub async fn github_callback(
         .get("https://api.github.com/user")
         .header("Accept", "application/vnd.github+json")
         .header("X-GitHub-Api-Version", "2022-11-28")
-        .header("User-Agent", "Rust-Reqwest (YQ)")
+        .header(
+            "User-Agent",
+            "Rust-Reqwest (Byte Heist https://byte-heist.com)",
+        )
         .bearer_auth(token.secret())
         .send()
         .await

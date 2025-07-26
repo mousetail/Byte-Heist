@@ -129,10 +129,10 @@ async fn run_lang(
             "--tmpfs",
             "/tmp",
             "--tmpfs",
-            "/home/yq",
+            "/home/byte_heist",
             "--setenv",
             "HOME",
-            "/home/yq",
+            "/home/byte_heist",
         ])
         .args(["--ro-bind"])
         .arg(code_lang_folder)

@@ -85,6 +85,20 @@ pub struct Embed<'a> {
     pub color: Option<i32>,
 }
 
+pub enum DiscordWebhookChannel {
+    NewGolfer,
+    NewChallenge,
+}
+
+impl DiscordWebhookChannel {
+    fn get_env_var_name(self) -> &'static str {
+        match self {
+            DiscordWebhookChannel::NewGolfer => "DISCORD_NEW_GOLFER_WEBHOOK_URL",
+            DiscordWebhookChannel::NewChallenge => "DISCORD_NEW_CHALLENGE_WEBHOOK_URL",
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum DiscordError {
     EnvVarNotValidUnicode,
@@ -93,8 +107,11 @@ pub enum DiscordError {
     BadStatusCode(#[allow(unused)] StatusCode),
 }
 
-async fn post_discord_webhook(request: WebHookRequest<'_>) -> Result<(), DiscordError> {
-    let webhook_url = match std::env::var("DISCORD_WEBHOOK_URL") {
+async fn post_discord_webhook(
+    channel: DiscordWebhookChannel,
+    request: WebHookRequest<'_>,
+) -> Result<(), DiscordError> {
+    let webhook_url = match std::env::var(channel.get_env_var_name()) {
         Ok(value) => value,
         Err(VarError::NotPresent) => return Ok(()),
         Err(VarError::NotUnicode(_)) => return Err(DiscordError::EnvVarNotValidUnicode),
@@ -151,31 +168,34 @@ async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
         .unwrap()
         .unwrap();
 
-    match post_discord_webhook(WebHookRequest {
-        content: None,
-        username: Some(&challenge.author_name),
-        avatar_url: Some(&challenge.author_avatar),
-        tts: None,
-        embeds: Some(vec![Embed {
-            title: Some(&format!(
-                "New Challenge: {}",
-                challenge.challenge.challenge.name
-            )),
-            description: Some(
-                &challenge.challenge.challenge.description
-                    [..100.min(challenge.challenge.challenge.description.len())],
-            ),
-            url: Some(&format!(
-                "https://byte-heist.com/{}",
-                get_url_for_challenge(
-                    challenge_id,
-                    Some(&challenge.challenge.challenge.name),
-                    common::urls::ChallengePage::Solve { language: None }
+    match post_discord_webhook(
+        DiscordWebhookChannel::NewChallenge,
+        WebHookRequest {
+            content: None,
+            username: Some(&challenge.author_name),
+            avatar_url: Some(&challenge.author_avatar),
+            tts: None,
+            embeds: Some(vec![Embed {
+                title: Some(&format!(
+                    "New Challenge: {}",
+                    challenge.challenge.challenge.name
+                )),
+                description: Some(
+                    &challenge.challenge.challenge.description
+                        [..100.min(challenge.challenge.challenge.description.len())],
                 ),
-            )),
-            color: Some(255),
-        }]),
-    })
+                url: Some(&format!(
+                    "https://byte-heist.com/{}",
+                    get_url_for_challenge(
+                        challenge_id,
+                        Some(&challenge.challenge.challenge.name),
+                        common::urls::ChallengePage::Solve { language: None }
+                    ),
+                )),
+                color: Some(255),
+            }]),
+        },
+    )
     .await
     {
         Ok(()) => (),
@@ -190,18 +210,21 @@ async fn post_new_golfer(pool: &PgPool, user_id: i32) {
         eprintln!("Wanted to post a discord message regarding new golfer {user_id} but no such account was found");
         return;
     };
-    match post_discord_webhook(WebHookRequest {
-        content: None,
-        username: Some(&account.username),
-        avatar_url: Some(&account.avatar),
-        tts: None,
-        embeds: Some(vec![Embed {
-            title: Some(&format!("New Golfer: {}", account.username)),
-            description: None,
-            url: Some(&format!("https://byte-heist.com/user/{}", account.id)),
-            color: Some(0xff00),
-        }]),
-    })
+    match post_discord_webhook(
+        DiscordWebhookChannel::NewGolfer,
+        WebHookRequest {
+            content: None,
+            username: Some(&account.username),
+            avatar_url: Some(&account.avatar),
+            tts: None,
+            embeds: Some(vec![Embed {
+                title: Some(&format!("New Golfer: {}", account.username)),
+                description: None,
+                url: Some(&format!("https://byte-heist.com/user/{}", account.id)),
+                color: Some(0xff00),
+            }]),
+        },
+    )
     .await
     {
         Ok(()) => (),
