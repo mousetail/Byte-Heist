@@ -121,7 +121,10 @@ pub async fn github_callback(
         .get("https://api.github.com/user")
         .header("Accept", "application/vnd.github+json")
         .header("X-GitHub-Api-Version", "2022-11-28")
-        .header("User-Agent", "Rust-Reqwest (Byte-Heist)")
+        .header(
+            "User-Agent",
+            "Rust-Reqwest (Byte Heist https://byte-heist.com)",
+        )
         .bearer_auth(token.secret())
         .send()
         .await
