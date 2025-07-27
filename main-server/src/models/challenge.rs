@@ -189,6 +189,7 @@ impl HomePageChallenge {
         pool: &PgPool,
         status: ChallengeStatus,
         user: &Option<Account>,
+        limit: i64,
     ) -> Result<Vec<HomePageChallenge>, Error> {
         query_as!(
             HomePageChallenge,
@@ -202,10 +203,12 @@ impl HomePageChallenge {
             LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
             WHERE status=($1) AND category != 'private'
             ORDER BY challenges.created_at DESC
+            LIMIT $4
         "#,
             status as ChallengeStatus,
             user.as_ref().map(|i| i.id),
-            user.as_ref().map(|i| &i.preferred_language)
+            user.as_ref().map(|i| &i.preferred_language),
+            limit
         )
         .fetch_all(pool)
         .await

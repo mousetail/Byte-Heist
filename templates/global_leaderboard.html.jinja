@@ -1,263 +1,298 @@
 {% extends "base/base.html.jinja" %}
-
 {% block content %}
-<div class="flex min-h-screen flex-col bg-byte-brown-950">
-  <main class="flex-1">
-    <div class="container mx-auto py-8 px-4 md:px-6">
-      <div class="flex flex-col gap-4">
-        <h1 class="text-3xl font-bold text-white">Leaderboard</h1>
-        <p class="text-byte-brown-200">
-          The most skilled code crackers who've pulled off the perfect heist with minimal code.
-        </p>
-
-        <div class="flex flex-col sm:flex-row gap-4 mt-4">
-          <div class="relative flex-grow">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2" class="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400">
-              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none" />
-              <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-            <input type="search" placeholder="Search users..."
-              class="w-full pl-8 pr-4 py-2 bg-byte-brown-700 border border-byte-brown-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-byte-green-700" />
-          </div>
-        </div>
-
-        <!-- Top 3 Cards -->
-        {% if object.entries and object.entries | length >= 3 %}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <!-- First Place -->
-          <div class="bg-amber-100 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
-            <div class="text-center">
-              <div class="flex justify-center items-center gap-2 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2" class="text-amber-600">
-                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M6 2v3a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M6 15H4.5a2.5 2.5 0 0 0 0 5H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                  <path d="M6 22v-3a2 2 0 0 0-2-2H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" />
-                </svg>
-                <span class="font-bold text-amber-600">Top Heister</span>
-              </div>
-              <div class="h-20 w-20 mx-auto border-4 border-amber-300 rounded-full overflow-hidden">
-                <img src="{{ object.entries[0].author_avatar }}&size=80" alt="{{ object.entries[0].author_name }}"
-                  class="w-full h-full object-cover" />
-              </div>
-              <h3 class="mt-4 text-xl font-bold text-slate-900 dark:text-white">{{ object.entries[0].author_name }}</h3>
-              <p class="text-slate-600 dark:text-slate-400">{{ object.entries[0].total_score | format_number }} points
-              </p>
-              <div class="flex justify-center gap-2 mt-2">
-                <span
-                  class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
-                  {{ object.entries[0].solutions }} heists
-                </span>
-                <span
-                  class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
-                  {{ object.entries[0].first_places or 0 }} first places
-                </span>
-              </div>
+  <div class="flex min-h-screen flex-col bg-byte-brown-950">
+    <main class="flex-1">
+      <div class="container mx-auto py-8 px-4 md:px-6">
+        <div class="flex flex-col gap-4">
+          <h1 class="text-3xl font-bold text-white">Leaderboard</h1>
+          <p class="text-byte-brown-200">
+            The most skilled code crackers who've pulled off the perfect heist with minimal code.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 mt-4">
+            <div class="relative flex-grow">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   width="16"
+                   height="16"
+                   fill="none"
+                   viewBox="0 0 24 24"
+                   stroke="currentColor"
+                   stroke-width="2"
+                   class="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none" />
+                <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <input type="search"
+                     placeholder="Search users..."
+                     class="w-full pl-8 pr-4 py-2 bg-byte-brown-700 border border-byte-brown-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-byte-green-700" />
             </div>
           </div>
-
-          <!-- Second Place -->
-          <div class="bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg p-6">
-            <div class="text-center">
-              <div class="flex justify-center items-center gap-2 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2" class="text-green-600">
-                  <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <span class="font-bold text-green-600">Runner Up</span>
+          <!-- Top 3 Cards -->
+          {% if object.entries and object.entries | length >= 3 %}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <!-- First Place -->
+              <div class="bg-amber-100 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+                <div class="text-center">
+                  <div class="flex justify-center items-center gap-2 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="20"
+                         height="20"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         class="text-amber-600">
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M6 2v3a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M6 15H4.5a2.5 2.5 0 0 0 0 5H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M6 22v-3a2 2 0 0 0-2-2H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="font-bold text-amber-600">Top Heister</span>
+                  </div>
+                  <div class="h-20 w-20 mx-auto border-4 border-amber-300 rounded-full overflow-hidden">
+                    <img src="{{ object.entries[0].author_avatar }}&size=80"
+                         alt="{{ object.entries[0].author_name }}"
+                         class="w-full h-full object-cover" />
+                  </div>
+                  <h3 class="mt-4 text-xl font-bold text-slate-900 dark:text-white">{{ object.entries[0].author_name }}</h3>
+                  <p class="text-slate-600 dark:text-slate-400">{{ object.entries[0].total_score | format_number }} points</p>
+                  <div class="flex justify-center gap-2 mt-2">
+                    <span class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
+                      {{ object.entries[0].solutions }} heists
+                    </span>
+                    <span class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
+                      {{ object.entries[0].first_places or 0 }} first places
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div class="h-20 w-20 mx-auto border-4 border-green-300 rounded-full overflow-hidden">
-                <img src="{{ object.entries[1].author_avatar }}&size=80" alt="{{ object.entries[1].author_name }}"
-                  class="w-full h-full object-cover" />
+              <!-- Second Place -->
+              <div class="bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 rounded-lg p-6">
+                <div class="text-center">
+                  <div class="flex justify-center items-center gap-2 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="20"
+                         height="20"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         class="text-green-600">
+                      <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="font-bold text-green-600">Runner Up</span>
+                  </div>
+                  <div class="h-20 w-20 mx-auto border-4 border-green-300 rounded-full overflow-hidden">
+                    <img src="{{ object.entries[1].author_avatar }}&size=80"
+                         alt="{{ object.entries[1].author_name }}"
+                         class="w-full h-full object-cover" />
+                  </div>
+                  <h3 class="mt-4 text-xl font-bold text-slate-900 dark:text-white">{{ object.entries[1].author_name }}</h3>
+                  <p class="text-slate-600 dark:text-slate-400">{{ object.entries[1].total_score | format_number }} points</p>
+                  <div class="flex justify-center gap-2 mt-2">
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded border border-green-200 dark:border-green-800">
+                      {{ object.entries[1].solutions }} heists
+                    </span>
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded border border-green-200 dark:border-green-800">
+                      {{ object.entries[1].first_places or 0 }} first places
+                    </span>
+                  </div>
+                </div>
               </div>
-              <h3 class="mt-4 text-xl font-bold text-slate-900 dark:text-white">{{ object.entries[1].author_name }}</h3>
-              <p class="text-slate-600 dark:text-slate-400">{{ object.entries[1].total_score | format_number }} points
-              </p>
-              <div class="flex justify-center gap-2 mt-2">
-                <span
-                  class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded border border-green-200 dark:border-green-800">
-                  {{ object.entries[1].solutions }} heists
-                </span>
-                <span
-                  class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs px-2 py-1 rounded border border-green-200 dark:border-green-800">
-                  {{ object.entries[1].first_places or 0 }} first places
-                </span>
+              <!-- Third Place -->
+              <div class="bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+                <div class="text-center">
+                  <div class="flex justify-center items-center gap-2 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="20"
+                         height="20"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         class="text-amber-600">
+                      <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="font-bold text-amber-600">Third Place</span>
+                  </div>
+                  <div class="h-20 w-20 mx-auto border-4 border-amber-300 rounded-full overflow-hidden">
+                    <img src="{{ object.entries[2].author_avatar }}&size=80"
+                         alt="{{ object.entries[2].author_name }}"
+                         class="w-full h-full object-cover" />
+                  </div>
+                  <h3 class="mt-4 text-xl font-bold text-slate-900 dark:text-white">{{ object.entries[2].author_name }}</h3>
+                  <p class="text-slate-600 dark:text-slate-400">{{ object.entries[2].total_score | format_number }} points</p>
+                  <div class="flex justify-center gap-2 mt-2">
+                    <span class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
+                      {{ object.entries[2].solutions }} heists
+                    </span>
+                    <span class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
+                      {{ object.entries[2].first_places or 0 }} first places
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- Third Place -->
-          <div class="bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
-            <div class="text-center">
-              <div class="flex justify-center items-center gap-2 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2" class="text-amber-600">
-                  <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <span class="font-bold text-amber-600">Third Place</span>
-              </div>
-              <div class="h-20 w-20 mx-auto border-4 border-amber-300 rounded-full overflow-hidden">
-                <img src="{{ object.entries[2].author_avatar }}&size=80" alt="{{ object.entries[2].author_name }}"
-                  class="w-full h-full object-cover" />
-              </div>
-              <h3 class="mt-4 text-xl font-bold text-slate-900 dark:text-white">{{ object.entries[2].author_name }}</h3>
-              <p class="text-slate-600 dark:text-slate-400">{{ object.entries[2].total_score | format_number }} points
-              </p>
-              <div class="flex justify-center gap-2 mt-2">
-                <span
-                  class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
-                  {{ object.entries[2].solutions }} heists
-                </span>
-                <span
-                  class="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-2 py-1 rounded border border-amber-200 dark:border-amber-800">
-                  {{ object.entries[2].first_places or 0 }} first places
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Tabs -->
-        <div class="mt-8">
-          <div class="bg-byte-brown-700 border border-byte-brown-500 rounded-lg p-1 flex">
-            <a href="/leaderboard/code-golf"
-              class="flex-1 px-4 py-2 text-sm font-medium {% if object.category=='code-golf' %}text-white bg-byte-green-900{% else %}text-byte-brown-200 hover:text-white hover:bg-byte-brown-500{% endif %} rounded-md transition-colors">
-              Code Golf
-            </a>
-            <a href="/leaderboard/restricted-source"
-              class="flex-1 px-4 py-2 text-sm font-medium {% if object.category=='restricted-source' %}text-white bg-byte-green-900{% else %}text-byte-brown-200 hover:text-white hover:bg-byte-brown-500{% endif %} rounded-md transition-colors">
-              Restricted Source
-            </a>
-            <button
-              class="flex-1 px-4 py-2 text-sm font-medium text-byte-brown-200 hover:text-white hover:bg-byte-brown-500 rounded-md transition-colors">
-              Monthly
-            </button>
-            <button
-              class="flex-1 px-4 py-2 text-sm font-medium text-byte-brown-200 hover:text-white hover:bg-byte-brown-500 rounded-md transition-colors">
-              Weekly
-            </button>
-          </div>
-        </div>
-
-        <!-- Leaderboard Table -->
-        <div class="mt-4">
-          <div class="bg-byte-brown-700 border border-byte-brown-500 rounded-lg overflow-hidden">
-            <div class="overflow-auto">
-              <table class="w-full">
-                <thead>
-                  <tr class="border-b border-byte-brown-500">
-                    <th class="text-left p-4 font-medium text-white">Rank</th>
-                    <th class="text-left p-4 font-medium text-white">User</th>
-                    <th class="text-left p-4 font-medium text-white">Points</th>
-                    <th class="text-left p-4 font-medium text-white">Heists</th>
-                    <th class="text-left p-4 font-medium text-white">First Places</th>
-                    <th class="text-left p-4 font-medium text-white">Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for solution in object.entries %}
-                  <tr class="border-b border-byte-brown-500 hover:bg-byte-brown-500/50 transition-colors">
-                    <td class="p-4">
-                      <div class="flex items-center gap-2">
-                        {% if loop.index == 1 %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                          stroke="currentColor" stroke-width="2" class="text-amber-600">
-                          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                          <path d="M6 2v3a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                          <path d="M6 15H4.5a2.5 2.5 0 0 0 0 5H6" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                          <path d="M6 22v-3a2 2 0 0 0-2-2H3" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        {% elif loop.index == 2 %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                          stroke="currentColor" stroke-width="2" class="text-green-600">
-                          <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        {% elif loop.index == 3 %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                          stroke="currentColor" stroke-width="2" class="text-amber-600">
-                          <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
+          {% endif %}
+          <!-- Tabs -->
+          <div class="mt-8">
+            <div class="bg-byte-brown-700 border border-byte-brown-500 rounded-lg p-1 flex">
+              <a href="/leaderboard/code-golf"
+                 class="flex-1 px-4 py-2 text-sm font-medium
+                        {% if object.category=='code-golf' %}
+                          text-white bg-byte-green-900
                         {% else %}
-                        <span class="text-white">{{ loop.index }}</span>
+                          text-byte-brown-200 hover:text-white hover:bg-byte-brown-500
                         {% endif %}
-                      </div>
-                    </td>
-                    <td class="p-4">
-                      <div class="flex items-center gap-2">
-                        <div class="h-8 w-8 rounded-full overflow-hidden">
-                          <img src="{{ solution.author_avatar }}&size=32" alt="{{ solution.author_name }}"
-                            class="w-full h-full object-cover" />
-                        </div>
-                        <div>
-                          <div class="font-medium text-white">
-                            <a href="/user/{{ solution.author_id }}"
-                              class="hover:text-byte-green-400 transition-colors">
-                              {{ solution.author_name }}
-                            </a>
-                          </div>
-                          <div class="text-xs text-byte-brown-200">Joined {{ solution.joined_date or 'Unknown' }}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="p-4 text-white">{{ solution.total_score | format_number }}</td>
-                    <td class="p-4 text-white">{{ solution.solutions }}</td>
-                    <td class="p-4 text-white">{{ solution.first_places or 0 }}</td>
-                    <td class="p-4">
-                      {% if solution.change == "up" %}
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2" class="text-green-500">
-                        <path d="m5 12 7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                        <path d="M12 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                      </svg>
-                      {% elif solution.change == "down" %}
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2" class="text-red-500">
-                        <path d="m19 12-7 7-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                        <path d="M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                      </svg>
-                      {% else %}
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2" class="text-slate-400">
-                        <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                      </svg>
-                      {% endif %}
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+                        rounded-md transition-colors">Code Golf</a>
+              <a href="/leaderboard/restricted-source"
+                 class="flex-1 px-4 py-2 text-sm font-medium
+                        {% if object.category=='restricted-source' %}
+                          text-white bg-byte-green-900
+                        {% else %}
+                          text-byte-brown-200 hover:text-white hover:bg-byte-brown-500
+                        {% endif %}
+                        rounded-md transition-colors">Restricted Source</a>
+              <button class="flex-1 px-4 py-2 text-sm font-medium text-byte-brown-200 hover:text-white hover:bg-byte-brown-500 rounded-md transition-colors">
+                Monthly
+              </button>
+              <button class="flex-1 px-4 py-2 text-sm font-medium text-byte-brown-200 hover:text-white hover:bg-byte-brown-500 rounded-md transition-colors">
+                Weekly
+              </button>
             </div>
           </div>
+          <!-- Leaderboard Table -->
+          <div class="mt-4">
+            <div class="bg-byte-brown-700 border border-byte-brown-500 rounded-lg overflow-hidden">
+              <div class="overflow-auto">
+                <table class="w-full">
+                  <thead>
+                    <tr class="border-b border-byte-brown-500">
+                      <th class="text-left p-4 font-medium text-white">Rank</th>
+                      <th class="text-left p-4 font-medium text-white">User</th>
+                      <th class="text-left p-4 font-medium text-white">Points</th>
+                      <th class="text-left p-4 font-medium text-white">Heists</th>
+                      <th class="text-left p-4 font-medium text-white">First Places</th>
+                      <th class="text-left p-4 font-medium text-white">Change</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for solution in object.entries %}
+                      <tr class="border-b border-byte-brown-500 hover:bg-byte-brown-500/50 transition-colors">
+                        <td class="p-4">
+                          <div class="flex items-center gap-2">
+                            {% if loop.index == 1 %}
+                              <svg xmlns="http://www.w3.org/2000/svg"
+                                   width="16"
+                                   height="16"
+                                   fill="none"
+                                   viewBox="0 0 24 24"
+                                   stroke="currentColor"
+                                   stroke-width="2"
+                                   class="text-amber-600">
+                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M6 2v3a2 2 0 0 0 2 2h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M6 15H4.5a2.5 2.5 0 0 0 0 5H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M6 22v-3a2 2 0 0 0-2-2H3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            {% elif loop.index == 2 %}
+                              <svg xmlns="http://www.w3.org/2000/svg"
+                                   width="16"
+                                   height="16"
+                                   fill="none"
+                                   viewBox="0 0 24 24"
+                                   stroke="currentColor"
+                                   stroke-width="2"
+                                   class="text-green-600">
+                                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            {% elif loop.index == 3 %}
+                              <svg xmlns="http://www.w3.org/2000/svg"
+                                   width="16"
+                                   height="16"
+                                   fill="none"
+                                   viewBox="0 0 24 24"
+                                   stroke="currentColor"
+                                   stroke-width="2"
+                                   class="text-amber-600">
+                                <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            {% else %}
+                              <span class="text-white">{{ loop.index }}</span>
+                            {% endif %}
+                          </div>
+                        </td>
+                        <td class="p-4">
+                          <div class="flex items-center gap-2">
+                            <div class="h-8 w-8 rounded-full overflow-hidden">
+                              <img src="{{ solution.author_avatar }}&size=32"
+                                   alt="{{ solution.author_name }}"
+                                   class="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                              <div class="font-medium text-white">
+                                <a href="/user/{{ solution.author_id }}"
+                                   class="hover:text-byte-green-400 transition-colors">{{ solution.author_name }}</a>
+                              </div>
+                              <div class="text-xs text-byte-brown-200">Joined {{ solution.joined_date | default(value='Unknown') }}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="p-4 text-white">{{ solution.total_score | format_number }}</td>
+                        <td class="p-4 text-white">{{ solution.solutions }}</td>
+                        <td class="p-4 text-white">{{ solution.first_places or 0 }}</td>
+                        <td class="p-4">
+                          {% if not solution.change %}
+                          {% elif solution.change == "up" %}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 width="16"
+                                 height="16"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 class="text-green-500">
+                              <path d="m5 12 7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M12 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          {% elif solution.change == "down" %}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 width="16"
+                                 height="16"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 class="text-red-500">
+                              <path d="m19 12-7 7-7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                              <path d="M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          {% else %}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 width="16"
+                                 height="16"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke="currentColor"
+                                 stroke-width="2"
+                                 class="text-slate-400">
+                              <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {% if not object.entries %}
+            <div class="text-center py-12">
+              <div class="text-byte-brown-200 text-lg">No leaderboard data available yet.</div>
+            </div>
+          {% endif %}
         </div>
-
-        {% if not object.entries %}
-        <div class="text-center py-12">
-          <div class="text-byte-brown-200 text-lg">No leaderboard data available yet.</div>
-        </div>
-        {% endif %}
       </div>
-    </div>
-  </main>
-</div>
+    </main>
+  </div>
 {% endblock content %}

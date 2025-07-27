@@ -1,55 +1,51 @@
 {% extends "base/base.html.jinja" %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% import "base/test_cases.html.jinja" as test_cases %}
-
 {% macro vote_button(is_upvote, reactions) %}
-  <button type="submit" name="is_upvote" value="{{ is_upvote }}"
-    title="{%- for reaction in reactions -%}
-      {{- reaction.author_username -}}, 
-      {%- endfor -%}"
-      {% if account %}
-        {% for reaction in reactions %}
-          {% if account.id == reaction.author_id %}
-            disabled
-          {% endif %}
-        {% endfor %}
-      {% else %}
-        disabled
-      {% endif %}
-      >
-    {{ reactions | length }} {% if is_upvote %}👍{% else %}👎{% endif %}
+  <button type="submit"
+          name="is_upvote"
+          value="{{ is_upvote }}"
+          title="{%- for reaction in reactions -%} {{- reaction.author_username -}}, {%- endfor -%}"
+          {% if account %}
+            {% for reaction in reactions %}
+              {% if account.id == reaction.author_id %}disabled{% endif %}
+          {% endfor %}
+          {% else %}
+          disabled
+          {% endif %}>
+    {{ reactions | length }}
+    {% if is_upvote %}
+      👍
+    {% else %}
+      👎
+    {% endif %}
   </button>
 {% endmacro %}
-
 {% macro comment(com) %}
   <div class="comment">
     <div class="comment-author">
       <a href="/users/{{ com.author_id }}">
-        <img src="{{ com.author_avatar }}" width="64" alt="{{ com.author_username }}">
-        <div class="comment-author-name">
-          {{ com.author_username }}
-        </div>
+        <img src="{{ com.author_avatar }}"
+             width="64"
+             alt="{{ com.author_username }}">
+        <div class="comment-author-name">{{ com.author_username }}</div>
       </a>
-      <form class="comment-reactions" method="post" action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view/vote">
+      <form class="comment-reactions"
+            method="post"
+            action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view/vote">
         <input type="hidden" name="comment_id" value="{{ com.id }}">
-
         {{ self::vote_button(is_upvote=true, reactions=com.up_reactions) }}
         {{ self::vote_button(is_upvote=false, reactions=com.down_reactions) }}
       </form>
     </div>
-
-    <div class="comment-content">
-      {{ com.message | markdown }}
-    </div>
-
+    <div class="comment-content">{{ com.message | markdown }}</div>
     <div class="comment-children">
-      {% for child in com.children %}
-        {{ self::comment(com=child) }}
-      {% endfor %}
+      {% for child in com.children %}{{ self::comment(com=child) }}{% endfor %}
     </div>
-
     {% if account and account.has_solved_a_challenge %}
-      <form class="comment-reply" method="post" action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
+      <form class="comment-reply"
+            method="post"
+            action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
         <input type="hidden" name="parent" value="{{ com.id }}">
         <textarea name="message" placeholder="reply" class="textarea-small"></textarea>
         <button type="submit">Submit</button>
@@ -57,7 +53,10 @@
     {% endif %}
   </div>
 {% endmacro %}
-
+{% block scripts %}
+  {{ super() }}
+  {{ modules(modules="js/old-style.css") | safe }}
+{% endblock scripts %}
 {% block content %}
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author) }}
@@ -71,23 +70,18 @@
     {{-
       object.example_code
     -}}
-  </pre>
-
+</pre>
   <h2>Comments</h2>
-
-  {% for comment in object.comments %}
-    {{ self::comment(com=comment) }}
-  {% endfor %}
-
+  {% for comment in object.comments %}{{ self::comment(com=comment) }}{% endfor %}
   {% if account and account.has_solved_a_challenge %}
-    <form class="comment-reply" method="post" action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
+    <form class="comment-reply"
+          method="post"
+          action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
       <textarea name="message"></textarea>
       <button type="submit">Submit</button>
     </form>
   {% endif %}
-
 {% endblock content %}
-
 {% block post_content %}
   {{ modules(modules="js/comments.ts") | safe }}
 {% endblock post_content %}

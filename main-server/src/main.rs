@@ -21,8 +21,8 @@ use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
     challenges::{
-        all_challenges, compose_challenge, new_challenge, post_comment, post_reaction,
-        view_challenge,
+        all_challenges, compose_challenge, get_homepage, new_challenge, post_comment,
+        post_reaction, view_challenge,
     },
     global_leaderboard::global_leaderboard,
     solution::{
@@ -94,7 +94,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route(
             "/",
-            get(route_factory.handler("home.html.jinja", all_challenges)),
+            get(route_factory.handler("home.html.jinja", get_homepage)),
         )
         .nest_service(
             "/ts/runner-lib.d.ts",

@@ -1,6 +1,10 @@
 {% extends "base/base.html.jinja" %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% import "base/test_cases.html.jinja" as test_cases %}
+{% block scripts %}
+  {{ super() }}
+  {{ modules(modules="js/old-style.css") | safe }}
+{% endblock scripts %}
 {% block content %}
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="post-mortem", id=object.id, name=object.name, author=object.author) }}
@@ -19,7 +23,8 @@
     {% endfor %}
   </div>
   {% for solution in object.solutions %}
-    <div class="post-mortem-solution {% if solution.is_post_mortem %}post-mortem{% endif %}">
+    <div class="post-mortem-solution
+                {% if solution.is_post_mortem %}post-mortem{% endif %}">
       <div class="solution-metadata">
         <dl>
           <dt>Author</dt>

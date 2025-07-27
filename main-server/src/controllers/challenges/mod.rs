@@ -25,6 +25,40 @@ use crate::{
     test_solution::test_solution,
 };
 
+async fn do_invalid_solutions_exist(
+    pool: &PgPool,
+    account: &Option<Account>,
+) -> Result<bool, Error> {
+    Ok(if let Some(account) = account {
+        InvalidatedSolution::invalidated_solution_exists(account.id, &pool)
+            .await
+            .map_err(Error::Database)?
+    } else {
+        false
+    })
+}
+
+#[derive(Serialize)]
+pub struct HomePageChallengesOutput {
+    public_challenges: Vec<HomePageChallenge>,
+    invalid_solutions_exist: bool,
+}
+
+pub async fn get_homepage(
+    Extension(pool): Extension<PgPool>,
+    account: Option<Account>,
+) -> Result<HomePageChallengesOutput, Error> {
+    let public_challenges =
+        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Public, &account, 8).await?;
+
+    let invalid_solutions_exist = do_invalid_solutions_exist(&pool, &account).await?;
+
+    Ok(HomePageChallengesOutput {
+        public_challenges,
+        invalid_solutions_exist,
+    })
+}
+
 #[derive(Serialize)]
 pub struct AllChallengesOutput {
     public_challenges: Vec<HomePageChallenge>,
@@ -37,17 +71,12 @@ pub async fn all_challenges(
     account: Option<Account>,
 ) -> Result<AllChallengesOutput, Error> {
     let public_challenges =
-        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Public, &account).await?;
+        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Public, &account, 1000)
+            .await?;
     let beta_challenges =
-        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Beta, &account).await?;
+        HomePageChallenge::get_all_by_status(&pool, ChallengeStatus::Beta, &account, 1000).await?;
 
-    let invalid_solutions_exist = if let Some(account) = account {
-        InvalidatedSolution::invalidated_solution_exists(account.id, &pool)
-            .await
-            .map_err(Error::Database)?
-    } else {
-        false
-    };
+    let invalid_solutions_exist = do_invalid_solutions_exist(&pool, &account).await?;
 
     Ok(AllChallengesOutput {
         public_challenges,

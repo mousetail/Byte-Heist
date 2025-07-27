@@ -13,7 +13,8 @@ export default defineConfig(({ command }) => ({
       // overwrite default .html entry
       input: [
         'js/index.ts',
-        'js/comments.ts'
+        'js/comments.ts',
+        'js/old-style.css',
       ],
       treeshake: 'smallest'
     },

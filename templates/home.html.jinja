@@ -1,174 +1,135 @@
 {% extends "base/base.html.jinja" %}
 {% import "base/home_page_challenge.html.jinja" as home_page_challenge %}
 {% block content %}
-{% if object.invalid_solutions_exist %}
-<div class="warning">
-    You have some submissions that have been made invalid by updates to the challenge. Please go to your <a
-        href="/user/{{ account.id }}">profile page</a> for a full list, to resubmit them.
-</div>
-{% endif %}
-<div class="bg-byte-green-900 text-byte-green-700">
-    <section class="w-full py-12 md:py-24 lg:py-32 bg-green-900 text-white">
-        <div class="container mx-auto px-4 md:px-6">
-            <div class="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-                <div class="flex flex-col justify-center space-y-4">
+    {% if object.invalid_solutions_exist %}
+        <div class="warning">
+            You have some submissions that have been made invalid by updates to the challenge. Please go to your <a href="/user/{{ account.id }}">profile page</a> for a full list, to resubmit them.
+        </div>
+    {% endif %}
+    <div class="bg-byte-green-900 text-byte-green-700">
+        <section class="w-full py-12 md:py-24 lg:py-32 bg-green-900 text-white">
+            <div class="container mx-auto px-4 md:px-6">
+                <div class="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+                    <div class="flex flex-col justify-center space-y-4">
+                        <div class="space-y-2">
+                            <span class="bg-green-600 hover:bg-green-700 text-white">Now Open</span>
+                            <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+                                Crack the Code.
+                                <br />
+                                Pull Off the Perfect Heist.
+                            </h1>
+                            <p class="max-w-[600px] text-gray-300 md:text-xl">
+                                ByteHeist challenges you to solve coding problems with the fewest characters possible. With
+                                time-limited challenges, customizable judging, and collaborative features, it's the ultimate
+                                code
+                                golf platform.
+                            </p>
+                        </div>
+                        <div class="flex flex-col gap-2 min-[400px]:flex-row">
+                            <a href="/challenges"
+                               class="inline-flex h-10 items-center justify-center rounded-md bg-green-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-1">
+                                Start Heisting
+                            </a>
+                            <a href="/challenge"
+                               class="inline-flex h-10 items-center justify-center rounded-md border border-green-700 bg-transparent px-8 text-sm font-medium shadow-sm transition-colors hover:bg-green-900 text-white">
+                                Create Challenge
+                            </a>
+                        </div>
+                    </div>
+                    <img src="/placeholder.svg?height=550&width=550"
+                         width="550"
+                         height="550"
+                         alt="Vault with code"
+                         class="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last" />
+                </div>
+            </div>
+        </section>
+        <section class="w-full py-12 md:py-24 lg:py-32 bg-byte-brown-950">
+            <div class="container mx-auto px-4 md:px-6">
+                <div class="flex flex-col items-center justify-center space-y-4 text-center">
                     <div class="space-y-2">
-                        <span class="bg-green-600 hover:bg-green-700 text-white">Now Open</span>
-                        <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                            Crack the Code. <br />
-                            Pull Off the Perfect Heist.
-                        </h1>
-                        <p class="max-w-[600px] text-gray-300 md:text-xl">
-                            ByteHeist challenges you to solve coding problems with the fewest characters possible. With
-                            time-limited challenges, customizable judging, and collaborative features, it's the ultimate
-                            code
-                            golf platform.
+                        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">Featured Heists</h2>
+                        <p class="max-w-[900px] text-byte-brown-200 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                            Choose your target. Each heist requires precision, skill, and the most efficient code possible.
                         </p>
                     </div>
-                    <div class="flex flex-col gap-2 min-[400px]:flex-row">
-                        <a href="/challenges"
-                            class="inline-flex h-10 items-center justify-center rounded-md bg-green-600 px-8 text-sm font-medium text-white shadow transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-1">
-                            Start Heisting
-                        </a>
-                        <a href="/challenge"
-                            class="inline-flex h-10 items-center justify-center rounded-md border border-green-700 bg-transparent px-8 text-sm font-medium shadow-sm transition-colors hover:bg-green-900 text-white">
-                            Create Challenge
-                        </a>
-                    </div>
                 </div>
-                <img src="/placeholder.svg?height=550&width=550" width="550" height="550" alt="Vault with code"
-                    class="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last" />
-            </div>
-        </div>
-    </section>
-    <section class="w-full py-12 md:py-24 lg:py-32 bg-byte-brown-950">
-        <div class="container mx-auto px-4 md:px-6">
-            <div class="flex flex-col items-center justify-center space-y-4 text-center">
-                <div class="space-y-2">
-                    <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">Featured Heists</h2>
-                    <p
-                        class="max-w-[900px] text-byte-brown-200 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                        Choose your target. Each heist requires precision, skill, and the most efficient code possible.
-                    </p>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-8">
-                {% for challenge in object.public_challenges %}
-                {% if loop.index <= 8 %} <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve"
-                    class="h-full transition-all hover:shadow-md hover:border-byte-green-700 border border-byte-brown-500 bg-byte-brown-700 rounded-lg flex flex-col">
-                    <div class="p-4 flex flex-col h-full">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="font-bold text-white">{{ challenge.name }}</h3>
-                            {# Optionally, add an icon here if available: <img src="..." alt="..." /> #}
-                        </div>
-                        <p class="text-sm text-byte-brown-200 flex-grow">{{ challenge.description or "No description
-                            provided." }}</p>
-                        <div class="flex flex-col gap-2 mt-4">
-                            <div class="flex items-center justify-between text-xs">
-                                <span
-                                    class="bg-byte-brown-500 text-white border border-byte-brown-200 rounded px-2 py-0.5">{{
-                                    challenge.difficulty or 'Normal' }}</span>
-                                <span class="text-byte-brown-200">{{ challenge.submissions or 0 }} submissions</span>
-                            </div>
-                            <div class="flex items-center gap-1 text-xs text-amber-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="inline-block">
-                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
-                                    <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                                <span>{{ challenge.time_remaining or 'N/A' }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    </a>
-                    {% endif %}
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-8">
+                    {% for challenge in object.public_challenges %}
+                        {{ home_page_challenge::challenge_box(challenge=challenge) }}
                     {% endfor %}
+                </div>
+                <div class="flex justify-center mt-8">
+                    <a href="/heists"
+                       class="border border-byte-green-700 text-byte-green-700 hover:text-white hover:bg-byte-brown-700 px-4 py-2 rounded flex items-center gap-1 transition-all">
+                        View All Heists
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="16"
+                             height="16"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke="currentColor"
+                             stroke-width="2"
+                             class="inline-block">
+                            <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                </div>
             </div>
-            <div class="flex justify-center mt-8">
-                <a href="/challenges"
-                    class="border border-byte-green-700 text-byte-green-700 hover:text-white hover:bg-byte-brown-700 px-4 py-2 rounded flex items-center gap-1 transition-all">
-                    View All Heists
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2" class="inline-block">
-                        <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                </a>
-            </div>
-        </div>
-    </section>
-    <section class="w-full py-12 md:py-24 lg:py-32 bg-byte-brown-950">
-        <div class="container mx-auto px-4 md:px-6">
-            <div class="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-                <img src="/placeholder.svg?height=550&width=550" width="550" height="550" alt="Hacker typing code"
-                    class="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full" />
-                <div class="flex flex-col justify-center space-y-4">
-                    <div class="space-y-2">
-                        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">How ByteHeist Works</h2>
-                        <p class="max-w-[600px] text-byte-brown-200 md:text-xl">
-                            ByteHeist is all about solving coding challenges with the fewest characters possible. The
-                            shorter
-                            your code, the higher your score.
-                        </p>
-                    </div>
-                    <ul class="grid gap-6">
-                        <li class="flex gap-2">
-                            <div
-                                class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">
-                                1
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-white">Choose Your Heist</h3>
-                                <p class="text-byte-brown-200">
-                                    Browse our collection of coding challenges across different difficulty levels.
-                                </p>
-                            </div>
-                        </li>
-                        <li class="flex gap-2">
-                            <div
-                                class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">
-                                2
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-white">Crack the Code</h3>
-                                <p class="text-byte-brown-200">
-                                    Write the most efficient solution with the fewest characters possible.
-                                </p>
-                            </div>
-                        </li>
-                        <li class="flex gap-2">
-                            <div
-                                class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">
-                                3
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-white">Beat the Clock</h3>
-                                <p class="text-byte-brown-200">
-                                    All challenges are time-limited. After they expire, all solutions become public.
-                                </p>
-                            </div>
-                        </li>
-                        <li class="flex gap-2">
-                            <div
-                                class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">
-                                4
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-white">Collaborate & Improve</h3>
-                                <p class="text-byte-brown-200">
-                                    Suggest test cases, provide feedback, and help improve challenges.
-                                </p>
-                            </div>
-                        </li>
-                    </ul>
-                    <div>
-                        <a href="/register" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">Join
-                            the Crew</a>
+        </section>
+        <section class="w-full py-12 md:py-24 lg:py-32 bg-byte-brown-950">
+            <div class="container mx-auto px-4 md:px-6">
+                <div class="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+                    <img src="/placeholder.svg?height=550&width=550"
+                         width="550"
+                         height="550"
+                         alt="Hacker typing code"
+                         class="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full" />
+                    <div class="flex flex-col justify-center space-y-4">
+                        <div class="space-y-2">
+                            <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">How ByteHeist Works</h2>
+                            <p class="max-w-[600px] text-byte-brown-200 md:text-xl">
+                                ByteHeist is all about solving coding challenges with the fewest characters possible. The
+                                shorter your code, the higher your score.
+                            </p>
+                        </div>
+                        <ul class="grid gap-6">
+                            <li class="flex gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">1</div>
+                                <div>
+                                    <h3 class="font-bold text-white">Choose Your Heist</h3>
+                                    <p class="text-byte-brown-200">Browse our collection of coding challenges across different difficulty levels.</p>
+                                </div>
+                            </li>
+                            <li class="flex gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">2</div>
+                                <div>
+                                    <h3 class="font-bold text-white">Crack the Code</h3>
+                                    <p class="text-byte-brown-200">Write the most efficient solution with the fewest characters possible.</p>
+                                </div>
+                            </li>
+                            <li class="flex gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">3</div>
+                                <div>
+                                    <h3 class="font-bold text-white">Beat the Clock</h3>
+                                    <p class="text-byte-brown-200">All challenges are time-limited. After they expire, all solutions become public.</p>
+                                </div>
+                            </li>
+                            <li class="flex gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-byte-brown-700 text-byte-brown-200">4</div>
+                                <div>
+                                    <h3 class="font-bold text-white">Collaborate & Improve</h3>
+                                    <p class="text-byte-brown-200">Suggest test cases, provide feedback, and help improve challenges.</p>
+                                </div>
+                            </li>
+                        </ul>
+                        <div>
+                            <a href="/register"
+                               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">Join the Crew</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-</div>
+        </section>
+    </div>
 {% endblock content %}
