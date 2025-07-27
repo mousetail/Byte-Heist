@@ -1,6 +1,6 @@
 use axum::{extract::Path, Extension};
 use serde::Serialize;
-use sqlx::{query_as, query_scalar, PgPool};
+use sqlx::{query_as, PgPool};
 
 use crate::{
     error::Error,

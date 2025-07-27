@@ -1,11 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT username FROM accounts WHERE id=$1",
+  "query": "SELECT username, avatar FROM accounts WHERE id=$1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
         "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "avatar",
         "type_info": "Varchar"
       }
     ],
@@ -15,8 +20,9 @@
       ]
     },
     "nullable": [
+      false,
       false
     ]
   },
-  "hash": "40e82ab6968bf1d2d773e24f36fcb70718c201917b354cf2d4133e6c601c8534"
+  "hash": "70d12b476fc59aa6e977cf808c46bbaf0b887d2d5d568ab1832c787623c52c02"
 }
