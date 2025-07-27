@@ -3,7 +3,7 @@
 {% import "base/test_cases.html.jinja" as test_cases %}
 {% block scripts %}
   {{ super() }}
-  {{ modules(modules="js/old-style.css") | safe }}
+  {{ modules(modules="js/old-style.ts") | safe }}
 {% endblock scripts %}
 {% block content %}
   {% if object.id %}

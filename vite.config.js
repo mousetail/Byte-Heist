@@ -14,7 +14,7 @@ export default defineConfig(({ command }) => ({
       input: [
         'js/index.ts',
         'js/comments.ts',
-        'js/old-style.css',
+        'js/old-style.ts',
       ],
       treeshake: 'smallest'
     },
