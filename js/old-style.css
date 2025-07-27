@@ -27,7 +27,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--background);
+  background: var(--background) !important;
   color: var(--body-text);
   font-size: 18px;
 }

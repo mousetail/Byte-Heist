@@ -140,23 +140,23 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "c.svg",
         ..DEFAULT_LANG
     },
-    // "kotlin" => Lang {
-    //     plugin_name: "kotlin",
-    //     display_name: "Kotlin",
-    //     compile_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"],
-    //     run_command: &["/java/bin/java", "-jar", "${OUTPUT_LOCATION}.jar"],
-    //     plugin: "https://github.com/asdf-community/asdf-kotlin.git",
-    //     env: &[
-    //         ("LD_LIBRARY_PATH", "/java/lib:/lib"),
-    //         ("JAVA_HOME", "/java")
-    //     ],
-    //     latest_version: "2.1.10",
-    //     icon: "kotlin.svg",
-    //     extra_mounts: &[
-    //         ("/usr/lib/jvm/java-17-openjdk-amd64", "/java")
-    //     ],
-    //     extension: ".kt",
-    //     extra_runtime: 2,
-    //     ..DEFAULT_LANG
-    // }
+    "kotlin" => Lang {
+        plugin_name: "kotlin",
+        display_name: "Kotlin",
+        compile_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"],
+        run_command: &["/java/bin/java", "-jar", "${OUTPUT_LOCATION}.jar"],
+        plugin: "https://github.com/asdf-community/asdf-kotlin.git",
+        env: &[
+            ("LD_LIBRARY_PATH", "/java/lib:/lib"),
+            ("JAVA_HOME", "/java")
+        ],
+        latest_version: "2.1.10",
+        icon: "kotlin.svg",
+        extra_mounts: &[
+            ("/usr/lib/jvm/java-17-openjdk-amd64", "/java")
+        ],
+        extension: ".kt",
+        extra_runtime: 2,
+        ..DEFAULT_LANG
+    }
 };
