@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.created_at DESC\n            LIMIT $4\n        ",
+  "query": "\n            SELECT\n                id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score,\n                CAST(description AS varchar(60)) as \"description!\",\n                post_mortem_date\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.created_at DESC\n            LIMIT $4\n        ",
   "describe": {
     "columns": [
       {
@@ -33,6 +33,16 @@
         "ordinal": 3,
         "name": "score",
         "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "description!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "post_mortem_date",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -59,8 +69,10 @@
       false,
       false,
       true,
+      true,
+      null,
       true
     ]
   },
-  "hash": "0c6034c91239c817169ec3b3032e7f5ce20e0cb82b1bad09c77ecfeaa8dee7d2"
+  "hash": "6a1ddc36aa46e80fa6b012fd28ea22a001c23c7c309ba3831cc05b92a6268ade"
 }

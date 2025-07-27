@@ -26,7 +26,13 @@
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
                         <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <span>{{ challenge.time_remaining | default(value="N/A") }}</span>
+                    <span>
+                        {% if challenge.post_mortem_date %}
+                            {{ challenge.post_mortem_date | format_date }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
                 </div>
             </div>
         </div>

@@ -182,6 +182,8 @@ pub struct HomePageChallenge {
     name: String,
     category: ChallengeCategory,
     score: Option<i64>,
+    description: String,
+    post_mortem_date: Option<OffsetDateTime>,
 }
 
 impl HomePageChallenge {
@@ -198,7 +200,9 @@ impl HomePageChallenge {
                 id,
                 name,
                 category as "category!: ChallengeCategory",
-                scores.score
+                scores.score,
+                CAST(description AS varchar(60)) as "description!",
+                post_mortem_date
             FROM challenges
             LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
             WHERE status=($1) AND category != 'private'
