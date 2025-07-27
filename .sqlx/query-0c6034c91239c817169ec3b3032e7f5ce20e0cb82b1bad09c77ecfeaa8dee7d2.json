@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.created_at DESC\n        ",
+  "query": "\n            SELECT\n                id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.created_at DESC\n            LIMIT $4\n        ",
   "describe": {
     "columns": [
       {
@@ -51,7 +51,8 @@
           }
         },
         "Int4",
-        "Text"
+        "Text",
+        "Int8"
       ]
     },
     "nullable": [
@@ -61,5 +62,5 @@
       true
     ]
   },
-  "hash": "c29f04a50d5e8b41d0bbaf2c96917cd5a85a90b2b1830c553878232b45693392"
+  "hash": "0c6034c91239c817169ec3b3032e7f5ce20e0cb82b1bad09c77ecfeaa8dee7d2"
 }

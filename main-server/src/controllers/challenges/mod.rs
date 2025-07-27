@@ -30,7 +30,7 @@ async fn do_invalid_solutions_exist(
     account: &Option<Account>,
 ) -> Result<bool, Error> {
     Ok(if let Some(account) = account {
-        InvalidatedSolution::invalidated_solution_exists(account.id, &pool)
+        InvalidatedSolution::invalidated_solution_exists(account.id, pool)
             .await
             .map_err(Error::Database)?
     } else {
