@@ -11,15 +11,15 @@
               <div class="flex flex-col md:flex-row gap-6 items-start">
                 <div class="flex flex-col items-center gap-4">
                   <div class="h-24 w-24 border-4 border-green-500 rounded-full overflow-hidden bg-byte-brown-500 flex items-center justify-center">
-                    <img src="{{ account.avatar }}&size=96"
-                         alt="{{ object.user_name }}"
+                    <img src="{{ object.account_info.avatar }}&size=96"
+                         alt="{{ object.account_info.username }}"
                          class="w-full h-full object-cover" />
                   </div>
                 </div>
                 <div class="flex-1 space-y-4">
                   <div>
-                    <h1 class="text-3xl font-bold text-white">{{ object.user_name }}</h1>
-                    <p class="text-byte-brown-200">Elite Code Golfer • Joined January 2023</p>
+                    <h1 class="text-3xl font-bold text-white">{{ object.account_info.username }}</h1>
+                    <p class="text-byte-brown-200">Elite Code Golfer [Placholder] • Joined January 2023 [Not implemented]</p>
                   </div>
                   <div class="flex flex-wrap gap-2">
                     <span class="bg-amber-900 text-amber-100 border border-amber-700 text-xs px-2 py-1 rounded flex items-center gap-1">
@@ -40,7 +40,7 @@
                         <path d="M12 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         <path d="M12 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                       </svg>
-                      Rank #1
+                      Rank #1 [Not implemented]
                     </span>
                     <span class="bg-green-900 text-green-100 border border-green-700 text-xs px-2 py-1 rounded flex items-center gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg"

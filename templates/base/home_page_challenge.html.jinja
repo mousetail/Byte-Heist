@@ -7,9 +7,7 @@
                 {# Optionally, add an icon here if available: <img src="..." alt="..." /> #}
             </div>
             <p class="text-sm text-byte-brown-200 flex-grow">
-                {{ challenge.description | default(value="No description < provided.") }}
-                {{ "No < description" }}
-                {{ challenge | get(key="description", default="no description < provided") }}
+                {{ challenge.description | default(value="No description provided.") }}
             </p>
             <div class="flex flex-col gap-2 mt-4">
                 <div class="flex items-center justify-between text-xs">

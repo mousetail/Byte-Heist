@@ -16,8 +16,14 @@ pub struct UserPageLeaderboardEntry {
 }
 
 #[derive(Serialize)]
+pub struct AccountBasicInfo {
+    username: String,
+    avatar: String,
+}
+
+#[derive(Serialize)]
 pub struct UserInfo {
-    user_name: String,
+    account_info: AccountBasicInfo,
     solutions: Vec<UserPageLeaderboardEntry>,
     invalidated_solutions: Option<Vec<InvalidatedSolution>>,
     id: i32,
@@ -28,11 +34,15 @@ pub async fn get_user(
     account: Option<Account>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<UserInfo, Error> {
-    let user_name = query_scalar!("SELECT username FROM accounts WHERE id=$1", id)
-        .fetch_optional(&pool)
-        .await
-        .map_err(Error::Database)?;
-    let Some(user_name) = user_name else {
+    let account_info = query_as!(
+        AccountBasicInfo,
+        "SELECT username, avatar FROM accounts WHERE id=$1",
+        id
+    )
+    .fetch_optional(&pool)
+    .await
+    .map_err(Error::Database)?;
+    let Some(account_info) = account_info else {
         return Err(Error::NotFound);
     };
 
@@ -59,7 +69,7 @@ pub async fn get_user(
 
     Ok(UserInfo {
         solutions,
-        user_name,
+        account_info,
         id,
         invalidated_solutions,
     })
