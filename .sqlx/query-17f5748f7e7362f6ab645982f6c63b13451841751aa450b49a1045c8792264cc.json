@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score,\n                CAST(description AS varchar(60)) as \"description!\",\n                post_mortem_date\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.created_at DESC\n            LIMIT $4\n        ",
+  "query": "\n            SELECT\n                id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score,\n                CAST(description AS varchar(120)) as \"description!\",\n                post_mortem_date\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.created_at DESC\n            LIMIT $4\n        ",
   "describe": {
     "columns": [
       {
@@ -74,5 +74,5 @@
       true
     ]
   },
-  "hash": "6a1ddc36aa46e80fa6b012fd28ea22a001c23c7c309ba3831cc05b92a6268ade"
+  "hash": "17f5748f7e7362f6ab645982f6c63b13451841751aa450b49a1045c8792264cc"
 }
