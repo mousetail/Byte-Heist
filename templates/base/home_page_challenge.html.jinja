@@ -6,7 +6,7 @@
                 <h3 class="font-bold text-white">{{ challenge.name }}</h3>
                 {# Optionally, add an icon here if available: <img src="..." alt="..." /> #}
             </div>
-            <p class="text-sm text-byte-brown-200 flex-grow">
+            <p class="text-sm text-byte-brown-200 flex-grow line-clamp-2">
                 {{ challenge.description | default(value="No description provided.") }}
             </p>
             <div class="flex flex-col gap-2 mt-4">
