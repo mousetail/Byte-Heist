@@ -201,7 +201,7 @@ impl HomePageChallenge {
                 name,
                 category as "category!: ChallengeCategory",
                 scores.score,
-                CAST(description AS varchar(60)) as "description!",
+                CAST(description AS varchar(120)) as "description!",
                 post_mortem_date
             FROM challenges
             LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
