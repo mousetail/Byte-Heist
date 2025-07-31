@@ -184,6 +184,9 @@ pub struct HomePageChallenge {
     score: Option<i64>,
     description: String,
     post_mortem_date: Option<OffsetDateTime>,
+    is_post_mortem: bool,
+    submission_count: i64,
+    user_has_submitted: bool,
 }
 
 impl HomePageChallenge {
@@ -202,9 +205,23 @@ impl HomePageChallenge {
                 category as "category!: ChallengeCategory",
                 scores.score,
                 CAST(description AS varchar(120)) as "description!",
-                post_mortem_date
+                post_mortem_date,
+                COALESCE((challenges.post_mortem_date IS NOT NULL AND challenges.post_mortem_date < now()), false) as "is_post_mortem!",
+                COALESCE(submission_counts.count, 0) as "submission_count!",
+                COALESCE(user_submissions.has_submitted, false) as "user_has_submitted!"
             FROM challenges
             LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
+            LEFT JOIN (
+                SELECT challenge, COUNT(*) as count 
+                FROM solutions 
+                GROUP BY challenge
+            ) submission_counts ON submission_counts.challenge = challenges.id
+            LEFT JOIN (
+                SELECT challenge, true as has_submitted
+                FROM solutions 
+                WHERE author = $2
+                GROUP BY challenge
+            ) user_submissions ON user_submissions.challenge = challenges.id
             WHERE status=($1) AND category != 'private'
             ORDER BY challenges.created_at DESC
             LIMIT $4

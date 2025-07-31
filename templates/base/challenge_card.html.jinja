@@ -1,0 +1,116 @@
+{% macro challenge_box(challenge, beta=false) %}
+<a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve" data-challenge-card
+    data-challenge-id="{{ challenge.id }}" data-challenge-category="{{ challenge.category }}" {% if beta
+    %}data-challenge-beta{% endif %}
+    class="h-full transition-all hover:shadow-md hover:border-byte-green-700 border border-byte-brown-500 bg-byte-brown-700 rounded-lg flex flex-col">
+    <div class="p-5 flex flex-col h-full">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-white text-lg" data-challenge-name>{{ challenge.name }}</h3>
+            <div class="flex items-center gap-1">
+                {% if challenge.user_has_submitted %}
+                <!-- Unlocked lock when user has submitted -->
+                <div class="text-byte-green-700">
+                    <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        id="Lock-Open-Alt--Streamline-Unicons" height="18" width="18">
+                        <path
+                            d="M12.75 6.75H6.75V5.25c0 -0.6000000000000001 0.22499999999999998 -1.125 0.675 -1.5750000000000002 0.8999999999999999 -0.8999999999999999 2.325 -0.8999999999999999 3.1500000000000004 0 0.30000000000000004 0.30000000000000004 0.44999999999999996 0.675 0.6000000000000001 1.0499999999999998 0.07500000000000001 0.375 0.5249999999999999 0.6000000000000001 0.8999999999999999 0.5249999999999999 0.375 -0.07500000000000001 0.675 -0.5249999999999999 0.5249999999999999 -0.8999999999999999 -0.15000000000000002 -0.675 -0.5249999999999999 -1.275 -0.9750000000000001 -1.7249999999999999 -0.675 -0.75 -1.6500000000000001 -1.125 -2.625 -1.125 -2.0999999999999996 0 -3.75 1.6500000000000001 -3.75 3.75v1.5c-1.275 0 -2.25 0.9750000000000001 -2.25 2.25v5.25c0 1.275 0.9750000000000001 2.25 2.25 2.25h7.5c1.275 0 2.25 -0.9750000000000001 2.25 -2.25v-5.25c0 -1.275 -0.9750000000000001 -2.25 -2.25 -2.25Zm-2.925 4.875 -0.07500000000000001 0.07500000000000001V12.75c0 0.44999999999999996 -0.30000000000000004 0.75 -0.75 0.75s-0.75 -0.30000000000000004 -0.75 -0.75v-1.0499999999999998c-0.44999999999999996 -0.44999999999999996 -0.5249999999999999 -1.125 -0.07500000000000001 -1.5750000000000002 0.44999999999999996 -0.44999999999999996 1.125 -0.5249999999999999 1.5750000000000002 -0.07500000000000001 0.44999999999999996 0.375 0.5249999999999999 1.125 0.07500000000000001 1.5750000000000002Z"
+                            fill="currentColor" stroke-width="0.75"></path>
+                    </svg>
+                </div>
+                {% else %}
+                <!-- Locked lock when user hasn't submitted -->
+                <div class="text-yellow-300">
+                    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        id="Lock-Alt--Streamline-Unicons" height="18" width="18">
+                        <path
+                            d="M11.333333333333332 6V4.666666666666666c0 -1.8666666666666665 -1.4666666666666668 -3.333333333333333 -3.333333333333333 -3.333333333333333S4.666666666666666 2.8 4.666666666666666 4.666666666666666v1.3333333333333333c-1.1333333333333333 0 -2 0.8666666666666667 -2 2v4.666666666666666c0 1.1333333333333333 0.8666666666666667 2 2 2h6.666666666666666c1.1333333333333333 0 2 -0.8666666666666667 2 -2v-4.666666666666666c0 -1.1333333333333333 -0.8666666666666667 -2 -2 -2ZM6 4.666666666666666c0 -1.1333333333333333 0.8666666666666667 -2 2 -2s2 0.8666666666666667 2 2v1.3333333333333333H6V4.666666666666666Zm2.6666666666666665 6.666666666666666c0 0.39999999999999997 -0.26666666666666666 0.6666666666666666 -0.6666666666666666 0.6666666666666666s-0.6666666666666666 -0.26666666666666666 -0.6666666666666666 -0.6666666666666666v-2c0 -0.39999999999999997 0.26666666666666666 -0.6666666666666666 0.6666666666666666 -0.6666666666666666s0.6666666666666666 0.26666666666666666 0.6666666666666666 0.6666666666666666v2Z"
+                            fill="currentColor" stroke-width="0.6667"></path>
+                    </svg>
+                </div>
+
+                {% endif %}
+                {% if beta %}
+                <span class="bg-yellow-900 text-yellow-300 text-xs px-2 py-1 rounded">BETA</span>
+                {% endif %}
+            </div>
+        </div>
+
+
+        <!-- Description -->
+        <p class="text-sm text-byte-brown-200 flex-grow line-clamp-2" data-challenge-description>
+            {{ challenge.description | default(value="Challenge description will be loaded when you click to solve.") }}
+        </p>
+
+        <!-- Category Badge -->
+        <div class="flex items-center gap-2 mt-4">
+            <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded-full">
+                {% if challenge.category == 'code-golf' %}
+                Code Golf
+                {% elif challenge.category == 'restricted-source' %}
+                Restricted Source
+                {% else %}
+                {{ challenge.category }}
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="flex flex-col gap-2 mt-4">
+            <!-- Score and Time Info -->
+            <div class="flex items-center justify-between text-xs">
+                {% if challenge.user_has_submitted %}
+                <!-- User has submitted - show green checkmark -->
+                <span class="text-byte-green-200 font-medium flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2" class="inline-block">
+                        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    Submitted
+                </span>
+                {% else %}
+                <!-- User hasn't submitted - show time info -->
+                {% if challenge.is_post_mortem %}
+                <span class="text-byte-brown-200 flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2" class="inline-block">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+                        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    Ended
+                </span>
+                {% elif challenge.post_mortem_date %}
+                <span class="text-amber-500 flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2" class="inline-block">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" />
+                        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    {{ challenge.post_mortem_date | format_date }}
+                </span>
+                {% else %}
+                <span class="text-byte-brown-200 flex items-center gap-1">
+                    N/A
+                </span>
+                {% endif %}
+
+                {% endif %}
+
+                <!-- Submission count -->
+                <span class="text-byte-brown-200">
+                    {% if challenge.submission_count > 0 %}
+                    {{ challenge.submission_count }} submission{% if challenge.submission_count != 1 %}s{% endif %}
+                    {% else %}
+                    No submissions yet
+                    {% endif %}
+                </span>
+                <!-- Score (hidden temporarily, for filtering) -->
+                {% if challenge.score %}
+                <span class="hidden" data-challenge-score>{{ challenge.score }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</a>
+{% endmacro %}
