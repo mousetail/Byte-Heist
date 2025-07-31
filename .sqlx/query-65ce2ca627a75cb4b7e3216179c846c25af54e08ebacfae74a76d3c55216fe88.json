@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT username, avatar FROM accounts WHERE id=$1",
+  "query": "SELECT username, avatar, created_at as join_date FROM accounts WHERE id=$1",
   "describe": {
     "columns": [
       {
@@ -12,6 +12,11 @@
         "ordinal": 1,
         "name": "avatar",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "join_date",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -21,8 +26,9 @@
     },
     "nullable": [
       false,
+      false,
       false
     ]
   },
-  "hash": "70d12b476fc59aa6e977cf808c46bbaf0b887d2d5d568ab1832c787623c52c02"
+  "hash": "65ce2ca627a75cb4b7e3216179c846c25af54e08ebacfae74a76d3c55216fe88"
 }

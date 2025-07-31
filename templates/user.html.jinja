@@ -19,7 +19,9 @@
                 <div class="flex-1 space-y-4">
                   <div>
                     <h1 class="text-3xl font-bold text-white">{{ object.account_info.username }}</h1>
-                    <p class="text-byte-brown-200">Elite Code Golfer [Placholder] • Joined January 2023 [Not implemented]</p>
+                    <p class="text-byte-brown-200">
+                      Elite Code Golfer [Placholder] • Joined {{ object.account_info.join_date | format_date }}
+                    </p>
                   </div>
                   <div class="flex flex-wrap gap-2">
                     <span class="bg-amber-900 text-amber-100 border border-amber-700 text-xs px-2 py-1 rounded flex items-center gap-1">

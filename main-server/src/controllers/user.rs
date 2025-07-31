@@ -1,6 +1,6 @@
 use axum::{extract::Path, Extension};
 use serde::Serialize;
-use sqlx::{query_as, PgPool};
+use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
 
 use crate::{
     error::Error,
@@ -19,6 +19,7 @@ pub struct UserPageLeaderboardEntry {
 pub struct AccountBasicInfo {
     username: String,
     avatar: String,
+    join_date: OffsetDateTime,
 }
 
 #[derive(Serialize)]
@@ -36,7 +37,7 @@ pub async fn get_user(
 ) -> Result<UserInfo, Error> {
     let account_info = query_as!(
         AccountBasicInfo,
-        "SELECT username, avatar FROM accounts WHERE id=$1",
+        "SELECT username, avatar, created_at as join_date FROM accounts WHERE id=$1",
         id
     )
     .fetch_optional(&pool)
