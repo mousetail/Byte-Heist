@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    code, \n                    score,\n                    id,\n                    valid,\n                    last_improved_date,\n                    is_post_mortem as \"is_post_mortem!\" from solutions\n                WHERE author=$1 AND challenge=$2 AND language=$3\n                ORDER BY is_post_mortem DESC, score ASC\n                LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "valid",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_improved_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_post_mortem!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b89153cd77d811cd32965f5a754be0dcae0437c736dd9d93077166dabb070310"
+}
