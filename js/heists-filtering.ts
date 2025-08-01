@@ -1,3 +1,14 @@
+enum ChallengeCategory {
+    ALL = 'all',
+    BETA = 'beta',
+    CODE_GOLF = 'code-golf',
+    RESTRICTED_SOURCE = 'restricted-source',
+    ALGORITHMS = 'algorithms',
+    MATHEMATICAL = 'mathematical',
+    STRING_MANIPULATION = 'string-manipulation',
+    PATTERNS = 'patterns'
+}
+
 interface Challenge {
     id: number;
     name: string;
@@ -26,7 +37,7 @@ class HeistsFilter {
                 id: parseInt(card.getAttribute('data-challenge-id') || '0'),
                 name: card.querySelector('[data-challenge-name]')?.textContent?.trim() || '',
                 category: card.getAttribute('data-challenge-category') || '',
-                score: this.parseScore(card.querySelector('[data-challenge-score]')?.textContent),
+                score: this.parseScore(card),
                 description: card.querySelector('[data-challenge-description]')?.textContent?.trim() || '',
                 isBeta: card.hasAttribute('data-challenge-beta')
             };
@@ -36,9 +47,8 @@ class HeistsFilter {
 
     private parseScore(scoreElement: Element | null): number | undefined {
         if (!scoreElement) return undefined;
-        const text = scoreElement.textContent || '';
-        const match = text.match(/(\d+)/);
-        return match ? parseInt(match[1]) : undefined;
+        const score = scoreElement.getAttribute('data-challenge-score');
+        return score ? parseInt(score) : undefined;
     }
 
     private setupEventListeners(): void {
@@ -122,22 +132,17 @@ class HeistsFilter {
 
     private matchesFilter(challenge: Challenge): boolean {
         switch (this.currentFilter) {
-            case 'all':
+            case ChallengeCategory.ALL:
                 return true;
-            case 'beta':
+            case ChallengeCategory.BETA:
                 return challenge.isBeta === true;
-            case 'code-golf':
-                return challenge.category === 'code-golf';
-            case 'restricted-source':
-                return challenge.category === 'restricted-source';
-            case 'algorithms':
-                return challenge.category === 'algorithms';
-            case 'mathematical':
-                return challenge.category === 'mathematical';
-            case 'string-manipulation':
-                return challenge.category === 'string-manipulation';
-            case 'patterns':
-                return challenge.category === 'patterns';
+            case ChallengeCategory.CODE_GOLF:
+            case ChallengeCategory.RESTRICTED_SOURCE:
+            case ChallengeCategory.ALGORITHMS:
+            case ChallengeCategory.MATHEMATICAL:
+            case ChallengeCategory.STRING_MANIPULATION:
+            case ChallengeCategory.PATTERNS:
+                return challenge.category === this.currentFilter;
             default:
                 return true;
         }
@@ -172,21 +177,18 @@ class HeistsFilter {
         const emptyState = document.querySelector('[data-empty-state]');
         const grid = document.querySelector('[data-challenges-grid]');
         
-        if (visibleCount === 0) {
-            if (emptyState) {
-                emptyState.classList.remove('hidden');
-            }
-            if (grid) {
-                grid.classList.add('hidden');
-            }
-        } else {
-            if (emptyState) {
-                emptyState.classList.add('hidden');
-            }
-            if (grid) {
-                grid.classList.remove('hidden');
-            }
+        // These elements should always exist in the heists page
+        if (!grid) {
+            throw new Error('Challenges grid element not found. Expected element with data-challenges-grid attribute.');
         }
+        
+        // Empty state is optional - only show error if we expect it to exist
+        if (visibleCount === 0 && !emptyState) {
+            console.warn('Empty state element not found. Expected element with data-empty-state attribute.');
+        }
+        
+        emptyState?.classList.toggle('hidden', visibleCount !== 0);
+        grid.classList.toggle('hidden', visibleCount === 0);
     }
 }
 

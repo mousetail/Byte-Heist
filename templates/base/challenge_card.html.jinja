@@ -1,7 +1,7 @@
 {% macro challenge_box(challenge, beta=false) %}
 <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve" data-challenge-card
     data-challenge-id="{{ challenge.id }}" data-challenge-category="{{ challenge.category }}" {% if beta
-    %}data-challenge-beta{% endif %}
+    %}data-challenge-beta{% endif %}{% if challenge.score %} data-challenge-score="{{ challenge.score }}" {% endif %}
     class="h-full transition-all hover:shadow-md hover:border-byte-green-700 border border-byte-brown-500 bg-byte-brown-700 rounded-lg flex flex-col">
     <div class="p-5 flex flex-col h-full">
         <div class="flex items-center justify-between mb-3">
@@ -105,10 +105,6 @@
                     No submissions yet
                     {% endif %}
                 </span>
-                <!-- Score (hidden temporarily, for filtering) -->
-                {% if challenge.score %}
-                <span class="hidden" data-challenge-score>{{ challenge.score }}</span>
-                {% endif %}
             </div>
         </div>
     </div>
