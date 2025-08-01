@@ -133,7 +133,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         run_command: &["${LANG_LOCATION}/bin/tcc", "-run", "-B", "${LANG_LOCATION}/lib/tcc", "${FILE_LOCATION}"],
         plugin: "https://github.com/mousetail/asdf-plugin-tcc.git",
         env: &[
-            ("C_INCLUDE_PATH", "{LANG_LOCATION}/include"),
+            ("C_INCLUDE_PATH", "${LANG_LOCATION}/include"),
             ("LIBRARY_PATH", "${LANG_LOCATION}/lib")
         ],
         latest_version: "0.9.27",
@@ -143,17 +143,25 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     "kotlin" => Lang {
         plugin_name: "kotlin",
         display_name: "Kotlin",
-        compile_command: &["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"],
-        run_command: &["/java/bin/java", "-jar", "${OUTPUT_LOCATION}.jar"],
+        compile_command:&["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"],
+        run_command: &["/usr/lib/jvm/java-17-openjdk-amd64/bin/java", "-jar", "${OUTPUT_LOCATION}.jar"],
         plugin: "https://github.com/asdf-community/asdf-kotlin.git",
         env: &[
-            ("LD_LIBRARY_PATH", "/java/lib:/lib"),
-            ("JAVA_HOME", "/java")
+            ("LD_LIBRARY_PATH", "/usr/lib/jvm/java-17-openjdk-amd64/lib:/lib"),
+            ("JAVA_HOME", "/usr/lib/jvm/java-17-openjdk-amd64"),
+            ("HOME", "/bin/java")
         ],
         latest_version: "2.1.10",
         icon: "kotlin.svg",
         extra_mounts: &[
-            ("/usr/lib/jvm/java-17-openjdk-amd64", "/java")
+            ("/usr/lib/jvm/java-17-openjdk-amd64", "/usr/lib/jvm/java-17-openjdk-amd64"),
+            ("/bin/java", "/bin/java"),
+            ("/usr/bin/java", "/usr/bin/java"),
+            ("/usr/bin/bash", "/usr/bin/bash"),
+            ("/usr/bin/env", "/usr/bin/env"),
+            ("/etc/alternatives", "/etc/alternatives"),
+            ("/usr/bin/uname", "/usr/bin/uname"),
+            ("/usr/bin/dirname", "/usr/bin/dirname")
         ],
         extension: ".kt",
         extra_runtime: 2,

@@ -64,7 +64,10 @@ async fn install_lang(
     version: &str,
     versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<(), RunProcessError> {
-    let lang = LANGS.get(&lang_name).unwrap();
+    let lang = match LANGS.get(&lang_name) {
+        Some(e) => e,
+        None => panic!("Unexpected lang {lang_name}"),
+    };
 
     let lang_version_token = versions.get(lang.plugin_name.to_owned());
     let lang_versions = lang_version_token

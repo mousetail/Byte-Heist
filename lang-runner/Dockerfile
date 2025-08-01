@@ -24,7 +24,7 @@ RUN apt-get update -y && apt-get install -y \
   libssl-dev \
   zip \
   unzip \
-  # Vyxal Dependencies
+  # Vyxal and Kotlin Dependencies
   openjdk-17-jdk
 
 RUN adduser byte_heist
@@ -40,6 +40,13 @@ RUN tar -xzf /home/byte_heist/asdf.tar.gz -C ~/.bin
 
 # Add asdf to PATH, so it can be run in this Dockerfile
 ENV PATH="$PATH:/home/byte_heist/.bin"
+
+USER root
+
+# Java tries to include a file un the users home directory which often fails. Disabling this functionality allows it to run more stabily.
+RUN sed -i '/policy.url.2=/d' ./usr/lib/jvm/java-17-openjdk-amd64/conf/security/java.security
+
+USER byte_heist
 
 # Add asdf shims to PATH, so installed executables can be run in this Dockerfile
 ENV PATH=$PATH:/home/byte_heist/.asdf/shims

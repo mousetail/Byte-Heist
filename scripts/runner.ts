@@ -106,7 +106,7 @@ const compile_and_run_program = (() => {
 
     if (Object.hasOwn(compiled_programs, code)) {
       outputLocation = compiled_programs[code];
-      Deno.remove("/tmp/code");
+      Deno.remove(`/tmp/code${lang.extension}`);
     } else {
       outputLocation = "/tmp/output";
     }
