@@ -85,3 +85,8 @@ cargo run --bin main-server
 Ensure the postgres is running since it checks the schema at compile time.
 
 Now you should be able to visit Byte Heist at http://localhost:3001
+
+
+## Adding a language
+
+I wrote a [guide on adding a language seperately](./how_to_add_a_language.md)
