@@ -7,6 +7,7 @@ import {
 import "./style.css";
 import { renderResultDisplay, ResultDisplay } from "./test_cases/test_case";
 import { initTestCaseHideShow } from "./test_cases/test_case_show_hide";
+import "./heists-filtering";
 
 const setupEditorControls = (
   editorControls: HTMLElement,

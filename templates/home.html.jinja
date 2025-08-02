@@ -1,5 +1,5 @@
 {% extends "base/base.html.jinja" %}
-{% import "base/home_page_challenge.html.jinja" as home_page_challenge %}
+{% import "base/challenge_card.html.jinja" as challenge_card %}
 {% block content %}
 {% if object.invalid_solutions_exist %}
 <div class="warning">
@@ -73,7 +73,7 @@
             </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-8">
                 {% for challenge in object.public_challenges %}
-                {{ home_page_challenge::challenge_box(challenge=challenge) }}
+                {{ challenge_card::challenge_box(challenge=challenge) }}
                 {% endfor %}
             </div>
             <div class="flex justify-center mt-8">
