@@ -7,7 +7,7 @@ import {
 import "./style.css";
 import { renderResultDisplay, ResultDisplay } from "./test_cases/test_case";
 import { initTestCaseHideShow } from "./test_cases/test_case_show_hide";
-import "./heists-filtering";
+import { HeistsFilter } from "./heists-filtering";
 
 const setupEditorControls = (
   editorControls: HTMLElement,
@@ -52,6 +52,11 @@ window.addEventListener("load", async () => {
   if (editorControls !== null) {
     setupEditorControls(editorControls, mainTextArea!);
   }
+});
+
+// Initialize heists filtering when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  new HeistsFilter();
 });
 
 /// Only works from the solutions page
