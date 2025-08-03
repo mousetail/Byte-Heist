@@ -85,7 +85,7 @@ fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, te
         Some(Value::Bool(e)) => *e,
         _ => return Err(tera::Error::msg("include_day must be a boolean")),
     };
-    if data.len() != 0 && (data.len() != 1 || !data.contains_key("include_day")) {
+    if !data.is_empty() && (data.len() != 1 || !data.contains_key("include_day")) {
         return Err(tera::Error::msg(
             "The format string filter takes one paramter: include day",
         ));
