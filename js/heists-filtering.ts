@@ -18,7 +18,7 @@ interface Challenge {
     isBeta?: boolean;
 }
 
-class HeistsFilter {
+export class HeistsFilter {
     private challenges: Challenge[] = [];
     private currentFilter: string = 'all';
     private searchTerm: string = '';
@@ -190,9 +190,4 @@ class HeistsFilter {
         emptyState?.classList.toggle('hidden', visibleCount !== 0);
         grid.classList.toggle('hidden', visibleCount === 0);
     }
-}
-
-// Initialize the filter when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new HeistsFilter();
-}); 
+} 
