@@ -4,7 +4,7 @@ use axum::response::{IntoResponse, Response};
 use common::langs::LANGS;
 use sqlx::types::time::OffsetDateTime;
 use tera::{to_value, Tera, Value};
-use tower_sessions::cookie::time::format_description;
+use tower_sessions::cookie::time::macros::format_description;
 
 use crate::markdown::MarkdownFilter;
 
@@ -80,9 +80,14 @@ fn format_number_with_thousands_seperators(num: i64) -> String {
 }
 
 fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, tera::Error> {
-    if !data.is_empty() {
+    let include_day = match data.get("include_day") {
+        None => true,
+        Some(Value::Bool(e)) => *e,
+        _ => return Err(tera::Error::msg("include_day must be a boolean")),
+    };
+    if data.len() != 0 && (data.len() != 1 || !data.contains_key("include_day")) {
         return Err(tera::Error::msg(
-            "The format string filter takes no parameters",
+            "The format string filter takes one paramter: include day",
         ));
     }
     let date: OffsetDateTime = serde_json::from_value(value.clone()).map_err(tera::Error::json)?;
@@ -90,10 +95,11 @@ fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, te
     let offset = (date - OffsetDateTime::now_utc()).abs();
 
     Ok(Value::String(if offset.whole_weeks() > 12 {
-        date.format(
-            &format_description::parse("[year]-[month]-[day]")
-                .map_err(|_e| tera::Error::call_filter("format_date", "unkown"))?,
-        )
+        date.format(if include_day {
+            format_description!("[day] [month repr:long] [year]")
+        } else {
+            format_description!("[month repr:long] [year]")
+        })
         .map_err(|_e| tera::Error::call_filter("format_date", "unkown"))?
     } else if offset.whole_weeks() != 0 {
         format!(

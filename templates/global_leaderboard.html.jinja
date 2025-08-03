@@ -250,7 +250,7 @@
                                 <a href="/user/{{ solution.author_id }}"
                                    class="hover:text-byte-green-400 transition-colors">{{ solution.author_name }}</a>
                               </div>
-                              <div class="text-xs text-byte-brown-200">Joined {{ solution.author_join_date | format_date }}</div>
+                              <div class="text-xs text-byte-brown-200">Joined {{ solution.author_join_date | format_date(include_day=false) }}</div>
                             </div>
                           </div>
                         </td>

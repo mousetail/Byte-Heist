@@ -32,6 +32,7 @@ tower-sessions-file-store = "0.2.0"
 discord-bot = { path = "../discord-bot" }
 similar = { version = "2.6.0", features = ["serde"] }
 num-format = "0.4.4"
+time = { version = "0.3.41", features = ["macros"] }
 
 [lints.clippy]
 print_stdout = "deny"
