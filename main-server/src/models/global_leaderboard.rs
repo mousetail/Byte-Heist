@@ -1,5 +1,5 @@
 use serde::Serialize;
-use sqlx::{query_as, PgPool};
+use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
 
 use crate::error::Error;
 
@@ -10,6 +10,8 @@ pub struct GlobalLeaderboardEntry {
     author_name: String,
     author_id: i32,
     author_avatar: String,
+    author_join_date: OffsetDateTime,
+    first_places: i32,
     total_score: i32,
     solutions: i64,
     rank: i64,
@@ -24,6 +26,9 @@ impl GlobalLeaderboardEntry {
                     scores.author as "author_id!",
                     accounts.username as author_name,
                     accounts.avatar as author_avatar,
+                    accounts.created_at as author_join_date,
+
+                    CAST(COUNT(*) FILTER (WHERE rank = 1) as integer) as "first_places!",
                     COUNT(*) as "solutions!",
                     CAST(SUM(scores.score) AS integer) as "total_score!:i32",
                     rank() OVER (ORDER BY CAST(SUM(scores.score) AS integer) DESC) as "rank!"
@@ -35,7 +40,7 @@ impl GlobalLeaderboardEntry {
                 WHERE
                     challenges.category = $1
                     AND challenges.status = 'public'
-                GROUP BY scores.author, accounts.username, accounts.avatar
+                GROUP BY scores.author, accounts.username, accounts.avatar, accounts.created_at
                 ORDER BY "total_score!:i32" DESC
             "#,
             category as ChallengeCategory
