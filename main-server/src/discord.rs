@@ -22,6 +22,7 @@ pub enum DiscordEvent {
     NewChallenge { challenge_id: i32 },
     NewBestScore { challenge_id: i32, solution_id: i32 },
     EndedChallenge { challenge_id: i32 },
+    AlmostEndedChallenge { challenge_id: i32 },
 }
 
 #[derive(Clone)]
@@ -80,6 +81,11 @@ async fn listen_for_events(
                         PostAllNewScoresReason::EndedChallenge,
                     )
                     .await;
+                }
+            }
+            DiscordEvent::AlmostEndedChallenge { challenge_id } => {
+                if let Some(bot) = &bot {
+                    bot.on_almost_ended_challenge(challenge_id).await
                 }
             }
         }
@@ -169,7 +175,7 @@ async fn post_best_scores_for_challenge(
         .unwrap()
         .unwrap();
 
-    bot.on_new_challenge(ChallengePostAllSolutionsEvent {
+    bot.post_all_scores_for_challenge(ChallengePostAllSolutionsEvent {
         challenge_id,
         challenge_name: challenge.challenge.challenge.name,
         scores: leaderboard

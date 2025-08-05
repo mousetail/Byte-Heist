@@ -38,8 +38,8 @@ use controllers::{
 };
 use discord::DiscordEventSender;
 use discord_bot::Bot;
-use sqlx::{postgres::PgPoolOptions, query, PgPool};
-use std::{env, time::Duration};
+use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::env;
 use strip_trailing_slashes::strip_trailing_slashes;
 use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};

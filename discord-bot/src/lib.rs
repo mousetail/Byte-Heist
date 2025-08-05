@@ -1,21 +1,23 @@
+mod almost_ended_challenge;
 #[deny(clippy::print_stdout)]
 mod checks;
 pub mod new_challenge;
 mod queries;
 
+use almost_ended_challenge::on_almost_ended_challenge;
 use checks::{get_last_best_score_fields, should_edit_message};
 use common::{
     langs::LANGS,
     urls::{get_url_for_challenge, ChallengePage},
 };
-use new_challenge::{on_new_challenge, ChallengePostAllSolutionsEvent};
+use new_challenge::{post_all_scores_for_challenge, ChallengePostAllSolutionsEvent};
 use queries::{
     get_challenge_name_by_id, get_last_message_for_challenge, get_last_posted_message_id,
     get_user_info_by_id, save_new_message_info, BasicAccontInfo, NewScore,
 };
 use serenity::all::{
-    ChannelId, Colour, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
-};
+        ChannelId, Colour, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
+    };
 use sqlx::PgPool;
 
 #[derive(Debug)]
@@ -234,11 +236,18 @@ impl Bot {
         };
     }
 
-    pub async fn on_new_challenge(&self, event: ChallengePostAllSolutionsEvent) {
-        match on_new_challenge(&self.http_client, &self.pool, self.channel_id, event).await {
+    pub async fn post_all_scores_for_challenge(&self, event: ChallengePostAllSolutionsEvent) {
+        match post_all_scores_for_challenge(&self.http_client, &self.pool, self.channel_id, event)
+            .await
+        {
             Ok(()) => (),
             Err(e) => eprintln!("{e}"),
         }
+    }
+
+    pub async fn on_almost_ended_challenge(&self, challenge_id: i32) {
+        on_almost_ended_challenge(&self.http_client, &self.pool, self.channel_id, challenge_id)
+            .await
     }
 }
 

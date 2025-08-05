@@ -1,5 +1,5 @@
+use std::borrow::Cow;
 use std::fmt::Write;
-use std::{borrow::Cow, fmt::format};
 
 use common::urls::get_url_for_challenge;
 use serenity::all::{ChannelId, CreateEmbed, CreateMessage};
@@ -64,7 +64,7 @@ fn gen_embed(
         ))
 }
 
-pub(crate) async fn on_new_challenge(
+pub(crate) async fn post_all_scores_for_challenge(
     http: &serenity::http::Http,
     pool: &PgPool,
     channel: ChannelId,
