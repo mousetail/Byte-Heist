@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite';
 import FullReload from 'vite-plugin-full-reload';
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ command }) => ({
   plugins: [
     // Only enable full reload in development
-    command === 'serve' && FullReload(['templates/**/*.html.jinja'])
+    command === 'serve' && FullReload(['templates/**/*.html.jinja']),
+    tailwindcss(),
   ].filter(Boolean),
   build: {
     // generate .vite/manifest.json in outDir
