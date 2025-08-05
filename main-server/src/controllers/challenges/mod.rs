@@ -9,6 +9,7 @@ use sqlx::PgPool;
 pub use view_challenge::{post_comment, post_reaction, view_challenge};
 
 use crate::{
+    background_tasks::solution_invalidation::notify_challenge_updated,
     discord::DiscordEventSender,
     error::Error,
     models::{
@@ -20,7 +21,6 @@ use crate::{
         solutions::InvalidatedSolution,
         GetById,
     },
-    solution_invalidation::notify_challenge_updated,
     tera_utils::auto_input::AutoInput,
     test_solution::test_solution,
 };

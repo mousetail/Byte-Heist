@@ -2,7 +2,7 @@ use std::env::VarError;
 
 use common::urls::get_url_for_challenge;
 use discord_bot::{
-    new_challenge::{BestScore, NewChallengeEvent},
+    new_challenge::{BestScore, ChallengePostAllSolutionsEvent, PostAllNewScoresReason},
     Bot, ScoreImproved,
 };
 use reqwest::StatusCode;
@@ -21,6 +21,7 @@ pub enum DiscordEvent {
     NewGolfer { user_id: i32 },
     NewChallenge { challenge_id: i32 },
     NewBestScore { challenge_id: i32, solution_id: i32 },
+    EndedChallenge { challenge_id: i32 },
 }
 
 #[derive(Clone)]
@@ -53,7 +54,13 @@ async fn listen_for_events(
                 post_new_challenge(&pool, challenge_id).await;
 
                 if let Some(bot) = &bot {
-                    post_best_scores_for_new_challenge(&pool, bot, challenge_id).await;
+                    post_best_scores_for_challenge(
+                        &pool,
+                        bot,
+                        challenge_id,
+                        PostAllNewScoresReason::NewChallenge,
+                    )
+                    .await;
                 }
             }
             DiscordEvent::NewBestScore {
@@ -62,6 +69,17 @@ async fn listen_for_events(
             } => {
                 if let Some(bot) = &bot {
                     post_updated_score(&pool, challenge_id, solution_id, bot).await
+                }
+            }
+            DiscordEvent::EndedChallenge { challenge_id } => {
+                if let Some(bot) = &bot {
+                    post_best_scores_for_challenge(
+                        &pool,
+                        bot,
+                        challenge_id,
+                        PostAllNewScoresReason::EndedChallenge,
+                    )
+                    .await;
                 }
             }
         }
@@ -136,7 +154,12 @@ async fn post_discord_webhook(
     Ok(())
 }
 
-async fn post_best_scores_for_new_challenge(pool: &PgPool, bot: &Bot, challenge_id: i32) {
+async fn post_best_scores_for_challenge(
+    pool: &PgPool,
+    bot: &Bot,
+    challenge_id: i32,
+    reason: PostAllNewScoresReason,
+) {
     let leaderboard = SolutionWithLanguage::get_best_per_language(pool, challenge_id)
         .await
         .unwrap();
@@ -146,7 +169,7 @@ async fn post_best_scores_for_new_challenge(pool: &PgPool, bot: &Bot, challenge_
         .unwrap()
         .unwrap();
 
-    bot.on_new_challenge(NewChallengeEvent {
+    bot.on_new_challenge(ChallengePostAllSolutionsEvent {
         challenge_id,
         challenge_name: challenge.challenge.challenge.name,
         scores: leaderboard
@@ -158,6 +181,7 @@ async fn post_best_scores_for_new_challenge(pool: &PgPool, bot: &Bot, challenge_
                 score: k.score,
             })
             .collect(),
+        reason,
     })
     .await;
 }

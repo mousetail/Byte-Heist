@@ -8,7 +8,7 @@ use common::{
     langs::LANGS,
     urls::{get_url_for_challenge, ChallengePage},
 };
-use new_challenge::{on_new_challenge, NewChallengeEvent};
+use new_challenge::{on_new_challenge, ChallengePostAllSolutionsEvent};
 use queries::{
     get_challenge_name_by_id, get_last_message_for_challenge, get_last_posted_message_id,
     get_user_info_by_id, save_new_message_info, BasicAccontInfo, NewScore,
@@ -234,7 +234,7 @@ impl Bot {
         };
     }
 
-    pub async fn on_new_challenge(&self, event: NewChallengeEvent) {
+    pub async fn on_new_challenge(&self, event: ChallengePostAllSolutionsEvent) {
         match on_new_challenge(&self.http_client, &self.pool, self.channel_id, event).await {
             Ok(()) => (),
             Err(e) => eprintln!("{e}"),

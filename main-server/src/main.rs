@@ -1,9 +1,9 @@
+mod background_tasks;
 mod controllers;
 mod discord;
 mod error;
 mod markdown;
 mod models;
-mod solution_invalidation;
 mod strip_trailing_slashes;
 mod tera_utils;
 mod test_case_display;
@@ -12,6 +12,10 @@ mod test_solution;
 use axum::{
     routing::{get, post},
     Extension, Router,
+};
+use background_tasks::{
+    announce_ended_challenges::announce_ended_challenges_task, refresh_views::refresh_views_task,
+    solution_invalidation::solution_invalidation_task,
 };
 use macros::OutputWrapperFactory;
 use tera_utils::TeraHtmlRenderer;
@@ -34,7 +38,6 @@ use controllers::{
 };
 use discord::DiscordEventSender;
 use discord_bot::Bot;
-use solution_invalidation::solution_invalidation_task;
 use sqlx::{postgres::PgPoolOptions, query, PgPool};
 use std::{env, time::Duration};
 use strip_trailing_slashes::strip_trailing_slashes;
@@ -80,12 +83,14 @@ async fn main() -> anyhow::Result<()> {
             .continuously_delete_expired(tokio::time::Duration::from_secs(60 * 60)),
     );
 
+    let discord_bot = init_bot_from_env(&pool);
+
     let _invalidation_task = tokio::task::spawn(solution_invalidation_task(pool.clone()));
-
-    // Bot
-    let bot = init_bot_from_env(&pool);
-
-    start_task_to_refresh_views(pool.clone());
+    let _announce_ended_challenges_task = tokio::task::spawn(announce_ended_challenges_task(
+        pool.clone(),
+        discord_bot.clone(),
+    ));
+    let _refresh_views_task = tokio::task::spawn(refresh_views_task(pool.clone()));
 
     let route_factory = OutputWrapperFactory {
         renderer: TeraHtmlRenderer,
@@ -162,7 +167,7 @@ async fn main() -> anyhow::Result<()> {
         .fallback(get(strip_trailing_slashes))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(Extension(pool))
-        .layer(Extension(bot))
+        .layer(Extension(discord_bot))
         .layer(session_layer);
 
     let listener = tokio::net::TcpListener::bind(&format!(
@@ -218,22 +223,4 @@ async fn shutdown_signal() {
         _ = ctrl_c => {},
         _ = terminate => {},
     }
-}
-
-fn start_task_to_refresh_views(pool: PgPool) {
-    tokio::spawn(async move {
-        loop {
-            let statement = query!("REFRESH MATERIALIZED VIEW scores")
-                .execute(&pool)
-                .await;
-            match statement {
-                Ok(_) => (),
-                Err(e) => {
-                    eprintln!("Error refreshing scores: {e:?}");
-                }
-            }
-
-            tokio::time::sleep(Duration::from_secs(30)).await;
-        }
-    });
 }
