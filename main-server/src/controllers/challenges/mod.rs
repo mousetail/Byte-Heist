@@ -109,7 +109,7 @@ pub async fn new_challenge(
     account: Account,
     AutoInput(challenge): AutoInput<NewChallenge>,
 ) -> Result<CustomResponseMetadata<ChallengeWithTests>, Error> {
-    if challenge.status != ChallengeStatus::Draft {
+    if challenge.status != ChallengeStatus::Draft && id.is_none() {
         account.rate_limit(&pool).await?
     };
 
