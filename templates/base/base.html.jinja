@@ -8,33 +8,6 @@
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta charset="UTF-8" />
       <link rel="icon" href="/static/favicon.svg" />
-      {# <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"> #}
-      {# <script src="https://cdn.tailwindcss.com"></script> #}
-      {# <script>
-     tailwind.config = {
-         theme: {
-             extend: {
-                 fontFamily: {
-                     'kode': ['Kode Mono', 'monospace'],
-                     'inter': ['Inter', 'sans-serif'],
-                 },
-                 colors: {
-                     'byte-green-950': '#042F15', // very dark green
-                     'byte-green-900': '#063C1B', // dark green
-                     'byte-green-700': '#27B762', // emerald/primary
-                     'byte-green-100': '#BDFFD8', // mint/light
-                     'byte-green-50': '#E2FFEE', // honeydew/very light
-                     'byte-brown-950': '#130F0C', // very dark brown
-                     'byte-brown-700': '#2C2824', // dark brown
-                     'byte-brown-500': '#654E3D', // brown
-                     'byte-brown-200': '#967B60', // light brown
-                 }
-             }
-         }
-     }
- </script> #}
     {% endblock head %}
     {% block scripts %}
       {{ modules(modules="js/index.ts") | safe }}
