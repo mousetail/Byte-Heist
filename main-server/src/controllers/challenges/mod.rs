@@ -109,7 +109,9 @@ pub async fn new_challenge(
     account: Account,
     AutoInput(challenge): AutoInput<NewChallenge>,
 ) -> Result<CustomResponseMetadata<ChallengeWithTests>, Error> {
-    account.rate_limit(&pool).await?;
+    if challenge.status != ChallengeStatus::Draft {
+        account.rate_limit(&pool).await?
+    };
 
     let (new_challenge, existing_challenge) = match id {
         Some(Path((id, _))) => {
@@ -160,8 +162,13 @@ pub async fn new_challenge(
         .with_status(StatusCode::BAD_REQUEST));
     }
 
-    match id {
-        None => {
+    match (challenge.status, id) {
+        (ChallengeStatus::Draft, None) => Ok(CustomResponseMetadata::new(ChallengeWithTests {
+            challenge: new_challenge,
+            tests: Some(tests.into()),
+            validation: None,
+        })),
+        (_, None) => {
             let row = sqlx::query_scalar!(
                 r#"
                 INSERT INTO challenges (name, judge, description, author, status, category)
@@ -195,7 +202,7 @@ pub async fn new_challenge(
 
             Err(Error::Redirect(std::borrow::Cow::Owned(destination)))
         }
-        Some(Path((id, _slug))) => {
+        (_, Some(Path((id, _slug)))) => {
             let existing_challenge = existing_challenge.unwrap(); // This can never fail
 
             if !account.admin && existing_challenge.challenge.author != account.id {
