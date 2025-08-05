@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            UPDATE challenges SET post_mortem_announced=true WHERE post_mortem_date > now() AND NOT post_mortem_announced RETURNING id\n        ",
+  "query": "\n            UPDATE challenges SET post_mortem_announced=true WHERE post_mortem_date < now() AND NOT post_mortem_announced RETURNING id\n        ",
   "describe": {
     "columns": [
       {
@@ -16,5 +16,5 @@
       false
     ]
   },
-  "hash": "367edc39c6566c35c3fa31f23cf974e20cc761d7cdcbc0c48b4198f329aebfc7"
+  "hash": "a9fa6d69ec8a05c24919c9f0de1408a28aa14f5785093691166f3a1063bdeb68"
 }

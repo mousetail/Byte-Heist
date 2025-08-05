@@ -13,7 +13,7 @@ async fn announce_ended_challenges(pool: &PgPool, bot: &DiscordEventSender) {
     let ended_challenges = match query_as!(
         EndedChallenge,
         r#"
-            UPDATE challenges SET post_mortem_announced=true WHERE post_mortem_date > now() AND NOT post_mortem_announced RETURNING id
+            UPDATE challenges SET post_mortem_announced=true WHERE post_mortem_date < now() AND NOT post_mortem_announced RETURNING id
         "#
     ).fetch_all(pool).await {
         Ok(e) => e,
@@ -39,7 +39,7 @@ async fn announce_almost_ended_challenges(pool: &PgPool, bot: &DiscordEventSende
     let almost_ended_challenges = match query_as!(
         EndedChallenge,
         r#"
-            UPDATE challenges SET post_mortem_warning_announced=true WHERE post_mortem_date + interval '25 hours'  > now() AND NOT post_mortem_warning_announced RETURNING id
+            UPDATE challenges SET post_mortem_warning_announced=true WHERE post_mortem_date + interval '25 hours' < now() AND NOT post_mortem_warning_announced RETURNING id
         "#
     ).fetch_all(pool).await {
         Ok(e) => e,
