@@ -110,7 +110,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             ("LD_LIBRARY_PATH", "/java/lib:/lib"),
             ("JAVA_TOOL_OPTIONS", "-Dfile.encoding=UTF-8")
         ],
-        latest_version: "3.8.0",
+        latest_version: "3.9.0",
         icon: "vyxal3.svg",
         extra_mounts: &[
             ("/usr/lib/jvm/java-17-openjdk-amd64", "/java", )
