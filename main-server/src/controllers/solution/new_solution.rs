@@ -142,13 +142,22 @@ async fn post_activity(
     previous_solution_code: Option<&Code>,
     challenge_id: i32,
     new_score: i32,
+    language_name: &str,
     account: &Account,
 ) -> Result<(), sqlx::Error> {
     let old_score = previous_solution_code
         .as_ref()
         .and_then(|d| d.valid.then_some(d.score));
 
-    save_activity_log(pool, challenge_id, account.id, old_score, new_score).await
+    save_activity_log(
+        pool,
+        challenge_id,
+        account.id,
+        language_name,
+        old_score,
+        new_score,
+    )
+    .await
 }
 
 pub async fn new_solution(
@@ -213,6 +222,7 @@ pub async fn new_solution(
                     previous_code.as_ref(),
                     challenge_id,
                     new_score,
+                    &language_name,
                     &account,
                 )
                 .await
@@ -235,6 +245,7 @@ pub async fn new_solution(
                     Some(previous_code),
                     challenge_id,
                     new_score,
+                    &language_name,
                     &account,
                 )
                 .await
