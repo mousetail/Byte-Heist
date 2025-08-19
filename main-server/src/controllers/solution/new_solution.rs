@@ -12,6 +12,7 @@ use crate::{
     error::Error,
     models::{
         account::Account,
+        activity_log::save_activity_log,
         challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, NewSolution},
         GetById,
@@ -136,6 +137,20 @@ async fn should_update_solution<'a>(
     }
 }
 
+async fn post_activity(
+    pool: &PgPool,
+    previous_solution_code: Option<&Code>,
+    challenge_id: i32,
+    new_score: i32,
+    account: &Account,
+) -> Result<(), sqlx::Error> {
+    let old_score = previous_solution_code
+        .as_ref()
+        .and_then(|d| d.valid.then_some(d.score));
+
+    save_activity_log(pool, challenge_id, account.id, old_score, new_score).await
+}
+
 pub async fn new_solution(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
     Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
@@ -168,9 +183,7 @@ pub async fn new_solution(
 
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
-
-    let previous_solution_invalid =
-        !test_result.tests.pass && previous_code.as_ref().is_some_and(|e| !e.valid);
+    let previous_solution_invalid = previous_code.as_ref().is_some_and(|e| !e.valid);
 
     // Currently the web browser turns all line breaks into "\r\n" when a solution
     // is submitted. This should eventually be fixed in the frontend, but for now
@@ -195,6 +208,16 @@ pub async fn new_solution(
                 )
                 .await?;
 
+                post_activity(
+                    &pool,
+                    previous_code.as_ref(),
+                    challenge_id,
+                    new_score,
+                    &account,
+                )
+                .await
+                .map_err(Error::Database)?;
+
                 (StatusCode::CREATED, Some(solution_id))
             }
             ShouldUpdateSolution::Update(previous_code) => {
@@ -206,6 +229,16 @@ pub async fn new_solution(
                     test_result.runtime,
                 )
                 .await?;
+
+                post_activity(
+                    &pool,
+                    Some(previous_code),
+                    challenge_id,
+                    new_score,
+                    &account,
+                )
+                .await
+                .map_err(Error::Database)?;
 
                 (StatusCode::CREATED, Some(previous_code.id))
             }

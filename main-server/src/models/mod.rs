@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 pub mod account;
+pub mod activity_log;
 pub mod challenge;
 pub mod global_leaderboard;
 pub mod solutions;
