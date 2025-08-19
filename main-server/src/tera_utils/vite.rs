@@ -28,7 +28,7 @@ struct Imports<'a> {
 }
 
 impl ManifestEntry {
-    fn find_all_imports(mut files: Vec<&str>) -> Imports {
+    fn find_all_imports(mut files: Vec<&str>) -> Imports<'_> {
         use std::fs::OpenOptions;
 
         let manifest = VITE_MANIFEST.get_or_init(|| {

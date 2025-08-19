@@ -61,9 +61,9 @@ impl<T: DeserializeOwned, S: Sync + Send> FromRequest<S> for AutoInput<T> {
                 .eq_ignore_ascii_case(b"application/x-www-form-urlencoded")
         }) {
             let Form(value) = Form::<T>::from_request(request, state).await?;
-            return Ok(AutoInput(value));
+            Ok(AutoInput(value))
         } else {
-            return Err(AutoInputRejection::BadContentType);
+            Err(AutoInputRejection::BadContentType)
         }
     }
 }
