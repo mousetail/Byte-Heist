@@ -16,15 +16,20 @@ pub struct UserPageLeaderboardEntry {
 }
 
 #[derive(Serialize)]
-pub struct AccountBasicInfo {
+pub struct AccountProfileInfo {
     username: String,
     avatar: String,
     join_date: OffsetDateTime,
+    solutions: Option<i64>,
+    distinct_challenges: Option<i64>,
+    first_places: Option<i64>,
+    top_ten_percents: Option<i64>,
+    rank: Option<i64>,
 }
 
 #[derive(Serialize)]
 pub struct UserInfo {
-    account_info: AccountBasicInfo,
+    account_info: AccountProfileInfo,
     solutions: Vec<UserPageLeaderboardEntry>,
     invalidated_solutions: Option<Vec<InvalidatedSolution>>,
     id: i32,
@@ -36,8 +41,25 @@ pub async fn get_user(
     Extension(pool): Extension<PgPool>,
 ) -> Result<UserInfo, Error> {
     let account_info = query_as!(
-        AccountBasicInfo,
-        "SELECT username, avatar, created_at as join_date FROM accounts WHERE id=$1",
+        AccountProfileInfo,
+        r#"
+            SELECT
+                username,
+                avatar,
+                user_scoring_info.sols as "solutions",
+                user_scoring_info.first_places as "first_places",
+                user_scoring_info.top_ten_percents as "top_ten_percents",
+                user_scoring_info.distinct_challenges as "distinct_challenges",
+                user_scoring_info.rank as "rank",
+                created_at as join_date
+            FROM accounts
+            LEFT JOIN user_scoring_info
+            ON accounts.id = user_scoring_info.author
+            WHERE id=$1 AND (
+                category IS NULL OR
+                category='code-golf'
+            )
+        "#,
         id
     )
     .fetch_optional(&pool)

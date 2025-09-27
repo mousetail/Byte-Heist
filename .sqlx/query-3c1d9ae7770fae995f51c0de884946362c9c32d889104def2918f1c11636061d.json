@@ -1,0 +1,75 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    user_scoring_info.author as \"author_id!\",\n                    accounts.username as author_name,\n                    accounts.avatar as author_avatar,\n                    accounts.created_at as author_join_date,\n\n                    user_scoring_info.first_places AS \"first_places!\",\n                    CAST(user_scoring_info.sols AS bigint) as \"solutions!:i64\",\n                    user_scoring_info.total_score as \"total_score!:i64\",\n                    user_scoring_info.rank as \"rank!:i64\"\n                FROM user_scoring_info\n                INNER JOIN accounts\n                    ON user_scoring_info.author = accounts.id\n                WHERE\n                    user_scoring_info.category = $1\n                ORDER BY \"total_score!:i64\" DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "author_id!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_join_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "first_places!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "solutions!:i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "total_score!:i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "rank!:i64",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "3c1d9ae7770fae995f51c0de884946362c9c32d889104def2918f1c11636061d"
+}

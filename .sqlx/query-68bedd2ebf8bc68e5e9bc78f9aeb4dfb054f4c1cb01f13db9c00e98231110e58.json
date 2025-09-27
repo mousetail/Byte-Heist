@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                username,\n                avatar,\n                user_scoring_info.sols as \"solutions\",\n                user_scoring_info.first_places as \"first_places\",\n                user_scoring_info.top_ten_percents as \"top_ten_percents\",\n                user_scoring_info.distinct_challenges as \"distinct_challenges\",\n                user_scoring_info.rank as \"rank\",\n                created_at as join_date\n            FROM accounts\n            LEFT JOIN user_scoring_info\n            ON accounts.id = user_scoring_info.author\n            WHERE id=$1 AND (\n                category IS NULL OR\n                category='code-golf'\n            )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "solutions",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "first_places",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "top_ten_percents",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "distinct_challenges",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "rank",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "join_date",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "68bedd2ebf8bc68e5e9bc78f9aeb4dfb054f4c1cb01f13db9c00e98231110e58"
+}

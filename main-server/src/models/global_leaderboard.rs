@@ -1,5 +1,9 @@
 use serde::Serialize;
-use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
+use sqlx::{
+    query_as,
+    types::time::OffsetDateTime,
+    PgPool,
+};
 
 use crate::error::Error;
 
@@ -11,8 +15,8 @@ pub struct GlobalLeaderboardEntry {
     author_id: i32,
     author_avatar: String,
     author_join_date: OffsetDateTime,
-    first_places: i32,
-    total_score: i32,
+    first_places: i64,
+    total_score: i64,
     solutions: i64,
     rank: i64,
 }
@@ -23,25 +27,21 @@ impl GlobalLeaderboardEntry {
             GlobalLeaderboardEntry,
             r#"
                 SELECT
-                    scores.author as "author_id!",
+                    user_scoring_info.author as "author_id!",
                     accounts.username as author_name,
                     accounts.avatar as author_avatar,
                     accounts.created_at as author_join_date,
 
-                    CAST(COUNT(*) FILTER (WHERE rank = 1) as integer) as "first_places!",
-                    COUNT(*) as "solutions!",
-                    CAST(SUM(scores.score) AS integer) as "total_score!:i32",
-                    rank() OVER (ORDER BY CAST(SUM(scores.score) AS integer) DESC) as "rank!"
-                FROM scores
+                    user_scoring_info.first_places AS "first_places!",
+                    CAST(user_scoring_info.sols AS bigint) as "solutions!:i64",
+                    user_scoring_info.total_score as "total_score!:i64",
+                    user_scoring_info.rank as "rank!:i64"
+                FROM user_scoring_info
                 INNER JOIN accounts
-                    ON scores.author = accounts.id
-                INNER JOIN challenges
-                    ON scores.challenge = challenges.id
+                    ON user_scoring_info.author = accounts.id
                 WHERE
-                    challenges.category = $1
-                    AND challenges.status = 'public'
-                GROUP BY scores.author, accounts.username, accounts.avatar, accounts.created_at
-                ORDER BY "total_score!:i32" DESC
+                    user_scoring_info.category = $1
+                ORDER BY "total_score!:i64" DESC
             "#,
             category as ChallengeCategory
         )

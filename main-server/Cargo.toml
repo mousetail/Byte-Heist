@@ -12,7 +12,7 @@ axum = { version = "0.8.3", features = ["macros"] }
 futures-util = "0.3.30"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_bytes = "0.11.15"
-sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "time"] }
+sqlx = { version = "0.8.2", features = ["bigdecimal", "postgres", "runtime-tokio", "time"] }
 tokio = { version = "1.40.0", features = ["rt-multi-thread", "signal"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 reqwest = { version = "0.12", features = [
