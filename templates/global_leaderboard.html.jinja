@@ -167,6 +167,26 @@
                         {% endif %}
                         rounded-md transition-colors">Restricted Source</a>
             </div>
+            <div class="bg-byte-brown-700 border border-byte-brown-500 rounded-lg p-1 flex w-fit">
+              <a href="/leaderboard/{{ object.category }}"
+                 class="px-6 py-2 text-sm font-medium
+                        {% if not object.language %}
+                          text-white bg-green-900
+                        {% else %}
+                          text-byte-brown-200 hover:text-white
+                        {% endif %}
+                        rounded-md transition-colors">All</a>
+              {% for lang, lang_data in languages() %}
+                <a href="/leaderboard/{{ object.category }}/{{ lang }}"
+                   class="px-6 py-2 text-sm font-medium
+                          {% if object.language==lang %}
+                            text-white bg-green-900
+                          {% else %}
+                            text-byte-brown-200 hover:text-white
+                          {% endif %}
+                          rounded-md transition-colors">{{ lang_data.displayName }}</a>
+              {% endfor %}
+            </div>
           </div>
           <!-- Leaderboard Table -->
           <div class="mt-4">

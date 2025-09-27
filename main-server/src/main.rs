@@ -28,7 +28,7 @@ use controllers::{
         all_challenges, compose_challenge, get_homepage, new_challenge, post_comment,
         post_reaction, view_challenge,
     },
-    global_leaderboard::global_leaderboard,
+    global_leaderboard::{global_leaderboard, global_leaderboard_per_language},
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
         challenge_redirect_with_slug, get_leaderboard, new_solution,
@@ -114,6 +114,13 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/leaderboard/{category}",
             get(route_factory.handler("global_leaderboard.html.jinja", global_leaderboard)),
+        )
+        .route(
+            "/leaderboard/{category}/{language}",
+            get(route_factory.handler(
+                "global_leaderboard.html.jinja",
+                global_leaderboard_per_language,
+            )),
         )
         .route(
             "/challenge",
