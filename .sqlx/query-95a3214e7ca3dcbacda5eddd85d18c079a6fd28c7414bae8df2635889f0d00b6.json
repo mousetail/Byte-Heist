@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE challenges SET post_mortem_warning_announced=true WHERE post_mortem_date - interval '25 hours' < now() AND NOT post_mortem_warning_announced RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "95a3214e7ca3dcbacda5eddd85d18c079a6fd28c7414bae8df2635889f0d00b6"
+}

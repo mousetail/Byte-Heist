@@ -1,4 +1,4 @@
-use std::env::VarError;
+use std::{env::VarError, time::Duration};
 
 use common::urls::get_url_for_challenge;
 use discord_bot::{
@@ -193,6 +193,11 @@ async fn post_best_scores_for_challenge(
 }
 
 async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
+    /*
+    We sleep a moment for a race condition where this runs before the transaction to add the challenge completes
+    */
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
     let challenge = ChallengeWithAuthorInfo::get_by_id(pool, challenge_id)
         .await
         .unwrap()
@@ -236,6 +241,11 @@ async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
 }
 
 async fn post_new_golfer(pool: &PgPool, user_id: i32) {
+    /*
+    We sleep a moment for a race condition where this runs before the transaction to add the user completes
+    */
+    tokio::time::sleep(Duration::from_secs(1)).await;
+
     let Some(account) = Account::get_by_id(pool, user_id).await else {
         eprintln!("Wanted to post a discord message regarding new golfer {user_id} but no such account was found");
         return;
