@@ -6,6 +6,12 @@
   <link rel="canonical"
         href="https://byte-heist.com/challenge/{{ object.challenge.id }}/{{ object.challenge.name | slugify }}/solve/python">
 {% endblock head %}
+{% block title %}
+  <title>{{ object.challenge.name }} - Byte Heist</title>
+{% endblock title %}
+{% block description %}
+  <meta name="description" value="{{ object.challenge.description }}" />
+{% endblock description %}
 {% block scripts %}
   {{ super() }}
   {{ modules(modules="js/old-style.ts") | safe }}

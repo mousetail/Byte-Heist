@@ -2,8 +2,12 @@
 <html lang="en">
   <head>
     {% block head %}
-      <title>Byte Heist</title>
-      <meta name="description" value="Yet Another Golf Site" />
+      {% block title %}
+        <title>Byte Heist</title>
+      {% endblock title %}
+      {% block description %}
+        <meta name="description" value="Yet Another Golf Site" />
+      {% endblock description %}
       <meta name="keywords" value="code-golf" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <meta charset="UTF-8" />

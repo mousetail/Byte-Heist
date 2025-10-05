@@ -5,6 +5,12 @@
   {{ super() }}
   {{ modules(modules="js/old-style.ts") | safe }}
 {% endblock scripts %}
+{% block title %}
+  <title>{{ object.name }} - Byte Heist</title>
+{% endblock title %}
+{% block description %}
+  <meta name="description" value="{{ object.description }}" />
+{% endblock description %}
 {% block content %}
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="post-mortem", id=object.id, name=object.name, author=object.author) }}

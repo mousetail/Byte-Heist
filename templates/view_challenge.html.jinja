@@ -1,6 +1,12 @@
 {% extends "base/base.html.jinja" %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% import "base/test_cases.html.jinja" as test_cases %}
+{% block title %}
+  <title>{{ object.name }} - Byte Heist</title>
+{% endblock title %}
+{% block description %}
+  <meta name="description" value="{{ object.description }}" />
+{% endblock description %}
 {% macro vote_button(is_upvote, reactions) %}
   <button type="submit"
           name="is_upvote"
