@@ -1,5 +1,6 @@
 {% import "base/test_cases.html.jinja" as test_cases %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
+{% import "base/language_selector.html.jinja" as language_selector %}
 {% extends "base/base.html.jinja" %}
 {% block head %}
   {{ super() }}
@@ -39,19 +40,8 @@
             </div>
             {% include "solve_challenge/leaderboard.html.jinja" %}
           </div>
-          <div class="lang-list tabs">
-            {% for lang, lang_data in languages() %}
-              <a href="/challenge/{{ object.challenge.id }}/{{ object.challenge.name | slugify }}/solve/{{ lang }}"
-                 class="lang tab
-                        {% if object.language == lang %}active{% endif %}">
-                <img width="32"
-                     src="/static/lang-icons/{{ lang_data.icon }}"
-                     alt=""
-                     class="lang-icon">
-                {{ lang_data.displayName }}
-              </a>
-            {% endfor %}
-          </div>
+          {% set challenge_name = object.challenge.name | slugify %}
+          {{ language_selector::language_selector(href=("/challenge/"~object.challenge.id ~ "/" ~ challenge_name ~ "/solve/") , selected=object.language) }}
           <form method="post" class="challenge-submission-form">
             {% if object.previous_solution_invalid %}
               <div class="warning">
@@ -64,14 +54,17 @@
                 This challenge has ended. You are free to submit more solutions but they won't count for scoring.
               </div>
             {% endif %}
-            <div class="hidden" id="editor-controls">
+            <div class="hidden w-full" id="editor-controls">
+              <div class="float-right">
+                <button type="button"
+                        id="restore-solution-button"
+                        class="btn btn-destructive">Restore solution</button>
+              </div>
               <div>
                 <span id="byte-counter"></span> Bytes
               </div>
-              <div>
-                <button type="button" id="restore-solution-button">Restore solution</button>
-              </div>
             </div>
+            <div class=" clear-both"></div>
             <textarea name="code" class="codemirror" id="main-code" data-encoded-source="{% if object.code %}{{ object.code | urlencode_strict }}{% endif %}">
         {%- if object.code -%}
           {{- object.code | prepend_linebreak -}}

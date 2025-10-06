@@ -8,9 +8,13 @@
 @tailwind utilities;
 
 table img {
-  width: 2rem;
+  width: 1rem;
 }
 
 .test-case-hidden .test-case-content {
   display: none;
+}
+
+[role="tab"] img {
+  width: 1rem;
 }

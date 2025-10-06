@@ -1,0 +1,15 @@
+{% macro language_selector(href, selected) %}
+    <div class="w-full tabs language-selector">
+        <nav class="w-full" role="tablist" aria-orientation="horizontal">
+            {% for lang, lang_data in languages() %}
+                <a href="{{- href -}}{{- lang -}}"
+                   class="tab"
+                   role="tab"
+                   aria-selected="{%- if selected==lang -%}true{%- else -%}false {%- endif -%}">
+                    <img src="/static/lang-icons/{{ lang_data.icon }}" alt="">
+                    {{ lang_data.displayName }}
+                </a>
+            {% endfor %}
+        </nav>
+    </div>
+{% endmacro %}
