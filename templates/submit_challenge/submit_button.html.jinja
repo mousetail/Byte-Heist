@@ -1,0 +1,42 @@
+{{ validation::validation(name="status") }}
+{% if account %}
+    {% if account.admin or object.status != "public" %}
+        <button name="status"
+                value="draft"
+                class="btn"
+                {% if object.is_post_mortem %}disabled{% endif %}>
+            {% if object.status!='draft' %}
+                Return to draft
+            {% else %}
+                Save Draft
+            {% endif %}
+        </button>
+        <button name="status"
+                value="beta"
+                class="btn"
+                {% if object.is_post_mortem %}disabled{% endif %}>
+            {% if object.status == 'draft' %}
+                Push to beta
+            {% elif object.status == "beta" %}
+                Save
+            {% else %}
+                Return to beta
+            {% endif %}
+        </button>
+    {% endif %}
+    {% if account.admin or object.status == "public" %}
+        <button name="status"
+                value="public"
+                class="btn btn-primary"
+                {% if object.is_post_mortem %}disabled{% endif %}>
+            {% if object.status != 'public' %}
+                Push Live
+            {% else %}
+                Save
+            {% endif %}
+        </button>
+    {% endif %}
+{% else %}
+    <div class="warning">You must be logged in to edit or create a challenge.</div>
+    <button type="submit" disabled class="btn btn-primary">Submit!</button>
+{% endif %}

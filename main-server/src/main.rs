@@ -124,13 +124,13 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/challenge",
-            get(route_factory.handler("submit_challenge.html.jinja", compose_challenge))
+            get(route_factory.handler("submit_challenge/index.html.jinja", compose_challenge))
                 .post(route_factory.handler("submit_challenge.html.jinja", new_challenge)),
         )
         .route("/challenge/{id}", get(challenge_redirect))
         .route(
             "/challenge/{id}/{slug}/edit",
-            get(route_factory.handler("submit_challenge.html.jinja", compose_challenge))
+            get(route_factory.handler("submit_challenge/index.html.jinja", compose_challenge))
                 .post(route_factory.handler("submit_challenge.html.jinja", new_challenge)),
         )
         .route(

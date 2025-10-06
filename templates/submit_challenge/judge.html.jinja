@@ -1,0 +1,11 @@
+<div>
+    <label for="challenge-judge">Judge:</label>
+    <textarea id="challenge-judge"
+              name="judge"
+              class="codemirror lang-typescript"
+              data-encoded-source="{{ object.judge | urlencode_strict }}"
+              {% if object.is_post_mortem %}
+                  disabled
+              {% endif %}>{{- object.judge -}}</textarea>
+    {{ validation::validation(name="judge") }}
+</div>

@@ -8,6 +8,18 @@ import "./style.css";
 import { renderResultDisplay, ResultDisplay } from "./test_cases/test_case";
 import { initTestCaseHideShow } from "./test_cases/test_case_show_hide";
 import { HeistsFilter } from "./heists-filtering";
+import "basecoat-css/all";
+
+(() => {
+  const apply = () => {
+    const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.classList.toggle("dark", prefersDark);
+  };
+
+  apply();
+
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", apply);
+})();
 
 const setupEditorControls = (
   editorControls: HTMLElement,
@@ -55,7 +67,7 @@ window.addEventListener("load", async () => {
 });
 
 // Initialize heists filtering when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   new HeistsFilter();
 });
 

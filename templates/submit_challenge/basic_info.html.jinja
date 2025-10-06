@@ -1,0 +1,43 @@
+<div class="grid gap-3">
+  <label for="challenge-name">Name:</label>
+  <input type="text"
+         id="challenge-name"
+         class="input"
+         name="name"
+         value="{{ object.name }}"
+         {% if object.is_post_mortem %}disabled{% endif %} />
+  {{ validation::validation(name="name") }}
+</div>
+<div class="grid gap-3">
+  <label for="challenge-description">Description:</label>
+  <textarea id="challenge-description"
+            name="description"
+            class="textarea"
+            {% if object.is_post_mortem %}
+              disabled
+            {% endif %}>{{- object.description -}}</textarea>
+  {{ validation::validation(name="description") }}
+</div>
+<div>
+  {{ validation::validation(name="category") }}
+  {{ radio::radio(name="category", value="code-golf", selected=object.category, label="Code Golf") }}
+  <p>Code golf challenges should:</p>
+  <ol>
+    <li>Not access the source code in any way</li>
+    <li>Have a legitimate, non-cheating example code entered</li>
+    <li>Present the test cases in the standard format</li>
+    <li>
+      Combine multiple test cases in a single run whenever possible. Best practice is to shuffle test cases and divide them into 1-3 runs.
+    </li>
+  </ol>
+  {{ radio::radio(name="category", value="restricted-source", selected=object.category, label="Restricted Source") }}
+  <p>Restricted challenges should:</p>
+  <ol>
+    <li>Have a legitimate, non-cheating example code entered</li>
+    <li>Present the test cases in the standard format</li>
+  </ol>
+  {{ radio::radio(name="category", value="private", selected=object.category, label="Private") }}
+  <p>
+    Private challenges have no rules. You can share them in the Discord, but they won't be shown on the home page. Use this for puzzles and other non-challenges where you don't want to share example code.
+  </p>
+</div>

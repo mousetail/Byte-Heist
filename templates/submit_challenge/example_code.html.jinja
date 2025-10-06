@@ -1,0 +1,12 @@
+<div>
+    <label for="example-code">Example Code:</label>
+    <p>Please don't golf the example code</p>
+    <textarea id="example-code"
+              name="example_code"
+              class="codemirror"
+              data-encoded-source="{{ object.example_code | urlencode_strict }}"
+              {% if object.is_post_mortem %}
+                  disabled
+              {% endif %}>{{- object.example_code -}}</textarea>
+    {{ validation::validation(name="example-code") }}
+</div>
