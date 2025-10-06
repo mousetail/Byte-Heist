@@ -80,3 +80,7 @@ table img {
 .diff-tag-delete {
   color: red;
 }
+
+.validation-error {
+  color: red;
+}

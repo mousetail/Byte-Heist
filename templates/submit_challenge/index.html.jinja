@@ -3,6 +3,10 @@
 {% import "base/test_cases.html.jinja" as test_cases %}
 {% import "base/radio.html.jinja" as radio %}
 {% import "base/validation.html.jinja" as validation %}
+{% block scripts %}
+  {{ super() }}
+  {{ modules(modules="js/create-challenge-page.ts") | safe }}
+{% endblock scripts %}
 {% block content %}
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="edit", id=object.id, name=object.name, author=object.author) }}
