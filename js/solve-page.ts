@@ -144,12 +144,12 @@ function updateLeaderbaord(ranking: LeaderboardEntry[]) {
 }
 
 function changeActiveLeaderboardTab(tab: string) {
-  document
-    .querySelector(`.leaderboard-tabs-form button[value=${tab}]`)
-    .classList.add("active");
-  document
-    .querySelector(`.leaderboard-tabs-form button:not([value=${tab}])`)
-    .classList.remove("active");
+  document.querySelector(
+    `.leaderboard-tabs-form button[value=${tab}]`
+  ).ariaSelected = "true";
+  document.querySelector(
+    `.leaderboard-tabs-form button:not([value=${tab}])`
+  ).ariaSelected = "false";
 }
 
 window.addEventListener("load", async () => {
