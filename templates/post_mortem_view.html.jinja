@@ -1,10 +1,6 @@
 {% extends "base/base.html.jinja" %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% import "base/test_cases.html.jinja" as test_cases %}
-{% block scripts %}
-  {{ super() }}
-  {{ modules(modules="js/old-style.ts") | safe }}
-{% endblock scripts %}
 {% block title %}
   <title>{{ object.name }} - Byte Heist</title>
 {% endblock title %}
