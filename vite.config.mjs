@@ -16,7 +16,6 @@ export default defineConfig(({ command }) => ({
       input: [
         'js/index.ts',
         'js/comments.ts',
-        'js/old-style.ts',
         'js/solve-page.ts',
         'js/create-challenge-page.ts'
       ],
