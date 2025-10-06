@@ -1,0 +1,74 @@
+<div class="leaderboard">
+    <form class="tabs leaderboard-tabs-form">
+        <div class="tabs w-full">
+            <nav role="tablist" aria-orientation="horizontal" class="w-full">
+                <button class="tab"
+                        name="ranking"
+                        role="tab"
+                        value="top"
+                        type="submit"
+                        aria-selected="{%- if object.ranking=='top' -%} true {%- else -%} false {%- endif -%}">
+                    Top
+                </button>
+                <button class="tab"
+                        name="ranking"
+                        role="tab"
+                        value="me"
+                        type="submit"
+                        aria-selected="{%- if object.ranking=='me' -%} true {%- else -%} false {%- endif -%}">
+                    Me
+                </button>
+            </nav>
+        </div>
+    </form>
+    <div class="card w-full">
+        <header>
+            <h2>Leaderboard</h2>
+        </header>
+        <section>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th>Author</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solution in object.leaderboard %}
+                        <tr>
+                            <td>#{{ solution.rank }}</td>
+                            <td>
+                                <img src="{{ solution.author_avatar }}&size=18"
+                                     alt="{{ solution.author_name }} avatar"
+                                     height="18" />
+                            </td>
+                            <td>
+                                <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
+                            </td>
+                            <td>{{ solution.score }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3">No solutions yet</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        <footer>
+            {% if object.challenge.post_mortem_date %}
+                <div>
+                    {% if object.challenge.is_post_mortem %}
+                        Challenge ended
+                    {% else %}
+                        Challenge ends in
+                    {% endif %}
+                    {{ object.challenge.post_mortem_date | format_date }}
+                    {% if object.challenge.is_post_mortem %}ago{% endif %}
+                </div>
+            {% endif %}
+        </footer>
+    </div>
+</div>

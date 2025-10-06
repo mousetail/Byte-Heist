@@ -152,8 +152,8 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/challenge/{id}/{slug}/solve/{language}",
-            get(route_factory.handler("challenge.html.jinja", all_solutions))
-                .post(route_factory.handler("challenge.html.jinja", new_solution)),
+            get(route_factory.handler("solve_challenge/index.html.jinja", all_solutions))
+                .post(route_factory.handler("solve_challenge/index.html.jinja", new_solution)),
         )
         .route(
             "/challenge/{id}/{slug}/solutions",

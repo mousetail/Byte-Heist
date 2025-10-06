@@ -1,20 +1,26 @@
 {% macro challenge_tabs(active, name, id, author) %}
-    <div class="tabs">
-        <span class="tab {% if active=='solve' %}active{% endif %}">
-            <a href="/challenge/{{ id }}/{{ name | slugify }}/solve">Solve</a>
-        </span>
-        {% if account %}
-            <span class="tab {% if active=='post-mortem' %}active{% endif %}">
-                <a href="/challenge/{{ id }}/{{ name | slugify }}/solutions">Solutions</a>
-            </span>
-        {% endif %}
-        <span class="tab {% if active=='view' %}active{% endif %}">
-            <a href="/challenge/{{ id }}/{{ name | slugify }}/view">View</a>
-        </span>
-        {% if account and (account.id == author or account.admin) %}
-            <span class="tab {% if active=='edit' %}active{% endif %}">
-                <a href="/challenge/{{ id }}/{{ name | slugify }}/edit">Edit</a>
-            </span>
-        {% endif %}
+    <div class="tabs w-full">
+        <nav class="w-full" role="tablist" aria-orientation="horizontal">
+            <a href="/challenge/{{ id }}/{{ name | slugify }}/solve"
+               class="tab"
+               role="tab"
+               aria-selected="{%- if active=='solve' -%} true {%- else -%} false {%- endif -%}">Solve</a>
+            {% if account %}
+                <a href="/challenge/{{ id }}/{{ name | slugify }}/solutions"
+                   class="tab"
+                   role="tab"
+                   aria-selected="{%- if active=='post-mortem' -%} true {%- else -%} false {%- endif -%}">Solutions</a>
+            {% endif %}
+            <a href="/challenge/{{ id }}/{{ name | slugify }}/view"
+               class="tab"
+               role="tab"
+               aria-selected="{%- if active=='view' -%} true {%- else -%} false {%- endif -%}">View</a>
+            {% if account and (account.id == author or account.admin) %}
+                <a href="/challenge/{{ id }}/{{ name | slugify }}/edit"
+                   class="tab"
+                   role="tab"
+                   aria-selected="{%- if active=='edit' -%} true {%- else -%} false {%- endif -%}">Edit</a>
+            {% endif %}
+        </nav>
     </div>
 {% endmacro challenge_tabs %}

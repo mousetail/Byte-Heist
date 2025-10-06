@@ -6,3 +6,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+table img {
+  width: 2rem;
+}
+
+.test-case-hidden .test-case-content {
+  display: none;
+}

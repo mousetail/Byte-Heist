@@ -17,6 +17,7 @@ export default defineConfig(({ command }) => ({
         'js/index.ts',
         'js/comments.ts',
         'js/old-style.ts',
+        'js/solve-page.ts'
       ],
       treeshake: 'smallest'
     },
