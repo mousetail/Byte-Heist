@@ -172,6 +172,7 @@ const setupEditorControls = (
   mainTextArea: EditorView
 ) => {
   editorControls.classList.remove("hidden");
+
   const byteCountElement = editorControls.querySelector("#byte-counter")!;
   const resetButton = editorControls.querySelector("#restore-solution-button")!;
   let originalText = mainTextArea.state.doc.toString();

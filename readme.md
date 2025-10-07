@@ -19,6 +19,16 @@ Byte Heist conists of two main projects
 - The main server provides the frontend. It should be able to run directly inside Linux or WSL.
   - Windows might work, but is untested
 
+# Local Instalation
+
+There is a:
+
+```
+make first-time-setup
+```
+
+command that might work. If it doesn't, keep reading.
+
 ## Running the lang Runner
 
 ### Start up
