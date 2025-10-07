@@ -4,6 +4,7 @@
         <button name="status"
                 value="draft"
                 class="btn"
+                type="submit"
                 {% if object.is_post_mortem %}disabled{% endif %}>
             {% if object.status!='draft' %}
                 Return to draft
@@ -14,6 +15,7 @@
         <button name="status"
                 value="beta"
                 class="btn"
+                type="submit"
                 {% if object.is_post_mortem %}disabled{% endif %}>
             {% if object.status == 'draft' %}
                 Push to beta
@@ -26,6 +28,7 @@
     {% endif %}
     {% if account.admin or object.status == "public" %}
         <button name="status"
+                type="submit"
                 value="public"
                 class="btn btn-primary"
                 {% if object.is_post_mortem %}disabled{% endif %}>

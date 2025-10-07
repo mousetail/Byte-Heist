@@ -11,7 +11,12 @@ import { StateEffect } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { basicLight } from "@fsegurai/codemirror-theme-basic-light";
 
-import { carriageReturn, insertChar, insertCharState, showUnprintables } from './code_editor_plugins';
+import {
+  carriageReturn,
+  insertChar,
+  insertCharState,
+  showUnprintables,
+} from "./code_editor_plugins";
 
 let typeScriptEnvironment: WorkerShape | undefined = undefined;
 
@@ -83,8 +88,8 @@ function editorFromTextArea(
   return view;
 }
 
-export function createCodemirrorFromTextAreas(): EditorView | undefined {
-  let mainTextArea: EditorView | undefined = undefined;
+export function createCodemirrorFromTextAreas(): { [key: string]: EditorView } {
+  const textAreas = {};
   const editorTheme = new Compartment();
 
   for (const textarea of document.querySelectorAll<HTMLTextAreaElement>(
@@ -102,7 +107,7 @@ export function createCodemirrorFromTextAreas(): EditorView | undefined {
       Prec.high(showUnprintables), // Increased precedence to override unprintable char printing in basicSetup
       Prec.high(carriageReturn), // Increased precedence to override shift-enter key binding in basicSetup
     ];
-    console.log("Replacing textarea with codemirror");
+    console.log(`Replacing textarea ${textarea.id} with codemirror`);
     let view = editorFromTextArea(
       textarea,
       decodeURIComponent(textarea.dataset.encodedSource),
@@ -117,12 +122,10 @@ export function createCodemirrorFromTextAreas(): EditorView | undefined {
         });
       });
     }
-    if (textarea.id === "main-code") {
-      mainTextArea = view;
-    }
+    textAreas[textarea.id] = view;
   }
 
-  return mainTextArea;
+  return textAreas;
 }
 
 const textEncoder = new TextEncoder();

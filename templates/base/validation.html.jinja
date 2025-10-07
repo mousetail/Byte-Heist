@@ -1,3 +1,11 @@
 {% macro validation(name) %}
-    {% if object.validation and object.validation[name] %}<div class="validation-error">{{ object.validation[name] }}</div>{% endif %}
+    {% if object.validation and object.validation[name] %}
+        <div class="validation-error"
+             data-field-name="{{ name }}"
+             id="validation-error-{{ name|slugify }}">{{ object.validation[name] }}</div>
+    {% else %}
+        <div class="validation-error display-none"
+             data-field-name="{{ name }}"
+             id="validation-error-{{ name|slugify }}"></div>
+    {% endif %}
 {% endmacro %}

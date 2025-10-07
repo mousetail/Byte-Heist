@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ command }) => ({
   plugins: [
     // Only enable full reload in development
-    command === 'serve' && FullReload(['templates/**/*.html.jinja']),
+    command === 'serve' && FullReload(['templates/**/*.html.jinja'], {delay: 1000, log: true}),
     tailwindcss(),
   ].filter(Boolean),
   build: {

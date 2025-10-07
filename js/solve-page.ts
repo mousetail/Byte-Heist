@@ -158,7 +158,7 @@ window.addEventListener("load", async () => {
     setupLeaderboardForm(leaderboardForm);
   }
 
-  const mainTextArea = createCodemirrorFromTextAreas();
+  const mainTextArea = createCodemirrorFromTextAreas()["main-code"];
   initTestCaseHideShow();
 
   let editorControls = document.getElementById("editor-controls");

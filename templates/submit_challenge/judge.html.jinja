@@ -3,6 +3,7 @@
     <textarea id="challenge-judge"
               name="judge"
               class="codemirror lang-typescript"
+              id="judge-code"
               data-encoded-source="{{ object.judge | urlencode_strict }}"
               {% if object.is_post_mortem %}
                   disabled

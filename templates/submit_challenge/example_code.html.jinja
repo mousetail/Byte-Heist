@@ -4,6 +4,7 @@
     <textarea id="example-code"
               name="example_code"
               class="codemirror"
+              id="example-code"
               data-encoded-source="{{ object.example_code | urlencode_strict }}"
               {% if object.is_post_mortem %}
                   disabled
