@@ -17,19 +17,23 @@ export default defineConfig(({ command }) => ({
     tailwindcss(),
     disableHotReloadForTemplateAndRustFilesPlugin
   ].filter(Boolean),
-  root: 'js',
   build: {
     // generate .vite/manifest.json in outDir
     manifest: true,
     rollupOptions: {
       // overwrite default .html entry
       input: [
-        'index.ts',
-        'comments.ts',
-        'solve-page.ts',
-        'create-challenge-page.ts'
+        'js/index.ts',
+        'js/comments.ts',
+        'js/solve-page.ts',
+        'js/create-challenge-page.ts'
       ],
-      treeshake: 'smallest'
+      treeshake: {
+        preset: 'smallest',
+        moduleSideEffects: (id, external) => {
+          return !!id.match(/node_modules\/basecoat-css/)
+        }
+      }
     },
     outDir: 'static/target'
   },

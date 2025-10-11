@@ -5,7 +5,7 @@
 {% import "base/validation.html.jinja" as validation %}
 {% block scripts %}
   {{ super() }}
-  {{ modules(modules="create-challenge-page.ts") | safe }}
+  {{ modules(modules="js/create-challenge-page.ts") | safe }}
 {% endblock scripts %}
 {% block content %}
   {% if object.id %}

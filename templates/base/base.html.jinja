@@ -14,7 +14,7 @@
       <link rel="icon" href="/static/favicon.svg" />
     {% endblock head %}
     {% block scripts %}
-      {{ modules(modules="index.ts") | safe }}
+      {{ modules(modules="js/index.ts") | safe }}
     {% endblock scripts %}
     {% if dev %}
       <!-- temporary hacks to get webworkers to work during dev -->

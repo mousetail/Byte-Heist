@@ -27,8 +27,10 @@ struct Imports<'a> {
     styles: Vec<&'a str>,
 }
 
+struct ModuleNotFound(String);
+
 impl ManifestEntry {
-    fn find_all_imports(mut files: Vec<&str>) -> Imports<'_> {
+    fn find_all_imports(mut files: Vec<&str>) -> Result<Imports<'_>, ModuleNotFound> {
         use std::fs::OpenOptions;
 
         let manifest = VITE_MANIFEST.get_or_init(|| {
@@ -43,7 +45,9 @@ impl ManifestEntry {
         let mut scripts = vec![];
         let mut styles = vec![];
         while let Some(file) = files.pop() {
-            let value = manifest.get(file).unwrap();
+            let value = manifest
+                .get(file)
+                .ok_or_else(|| ModuleNotFound(file.to_owned()))?;
             scripts.push(value.file.as_str());
             styles.extend(value.css.iter().map(|k| k.as_str()));
 
@@ -52,7 +56,7 @@ impl ManifestEntry {
             }
         }
 
-        Imports { scripts, styles }
+        Ok(Imports { scripts, styles })
     }
 }
 
@@ -85,7 +89,12 @@ pub fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error
 
         Ok(Value::String(out))
     } else {
-        let imports = ManifestEntry::find_all_imports(modules);
+        let imports = match ManifestEntry::find_all_imports(modules) {
+            Ok(e) => e,
+            Err(ModuleNotFound(name)) => {
+                return Err(tera::Error::from(format!("Cannot find module \"{name}\"")))
+            }
+        };
         Ok(Value::String(
             imports
                 .scripts
