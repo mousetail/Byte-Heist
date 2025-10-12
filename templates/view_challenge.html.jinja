@@ -11,6 +11,7 @@
   <button type="submit"
           name="is_upvote"
           value="{{ is_upvote }}"
+          class="btn"
           title="{%- for reaction in reactions -%} {{- reaction.author_username -}}, {%- endfor -%}"
           {% if account %}
             {% for reaction in reactions %}
@@ -30,7 +31,7 @@
 {% macro comment(com) %}
   <div class="comment">
     <div class="comment-author">
-      <a href="/users/{{ com.author_id }}">
+      <a href="/user/{{ com.author_id }}">
         <img src="{{ com.author_avatar }}"
              width="64"
              alt="{{ com.author_username }}">
@@ -53,7 +54,7 @@
             method="post"
             action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
         <input type="hidden" name="parent" value="{{ com.id }}">
-        <textarea name="message" placeholder="reply" class="textarea-small"></textarea>
+        <textarea name="message" placeholder="reply" class="textarea textarea-small"></textarea>
         <button type="submit">Submit</button>
       </form>
     {% endif %}
@@ -63,26 +64,32 @@
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author) }}
   {% endif %}
-  <h1>{{ object.name }}</h1>
-  {{ object.description | markdown }}
-  <h2>Judge</h2>
-  <pre class="code-pre">{{- object.judge  | syntax_highlight(lang="js") -}}</pre>
-  <h2>Example Code</h2>
-  <pre class="code-pre">
+  <div class="flex min-h-screen flex-col bg-byte-brown-950">
+    <main class="flex-1">
+      <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 md:px-8 lg:px-28 mt-10">
+        <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">{{ object.name }}</h1>
+        {{ object.description | markdown }}
+        <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Judge</h2>
+        <pre class="code-pre">{{- object.judge  | syntax_highlight(lang="js") -}}</pre>
+        <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Example Code</h2>
+        <pre class="code-pre">
     {{-
       object.example_code | syntax_highlight(lang="js")
     -}}
 </pre>
-  <h2>Comments</h2>
-  {% for comment in object.comments %}{{ self::comment(com=comment) }}{% endfor %}
-  {% if account and account.has_solved_a_challenge %}
-    <form class="comment-reply"
-          method="post"
-          action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
-      <textarea name="message"></textarea>
-      <button type="submit">Submit</button>
-    </form>
-  {% endif %}
+        <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Comments</h2>
+        {% for comment in object.comments %}{{ self::comment(com=comment) }}{% endfor %}
+        {% if account and account.has_solved_a_challenge %}
+          <form class="comment-reply"
+                method="post"
+                action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
+            <textarea name="message" class="textarea"></textarea>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        {% endif %}
+      </div>
+    </main>
+  </div>
 {% endblock content %}
 {% block post_content %}
   {{ modules(modules="js/comments.ts") | safe }}
