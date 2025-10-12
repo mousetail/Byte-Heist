@@ -6,7 +6,9 @@ use sqlx::types::time::OffsetDateTime;
 use tera::{to_value, Tera, Value};
 use tower_sessions::cookie::time::macros::format_description;
 
-use crate::markdown::MarkdownFilter;
+use crate::tera_utils::syntax_highlighting::SyntaxHighight;
+
+use super::markdown::MarkdownFilter;
 
 use super::{render_html_error, vite::load_assets};
 
@@ -37,6 +39,7 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
             tera.register_filter("format_number", format_number);
             tera.register_filter("format_date", format_date);
             tera.register_tester("empty", empty);
+            tera.register_filter("syntax_highlight", SyntaxHighight);
             tera
         })
     });

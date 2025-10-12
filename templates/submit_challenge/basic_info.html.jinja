@@ -12,7 +12,7 @@
   <label for="challenge-description">Description:</label>
   <textarea id="challenge-description"
             name="description"
-            class="textarea"
+            class="textarea h-96"
             {% if object.is_post_mortem %}
               disabled
             {% endif %}>{{- object.description -}}</textarea>

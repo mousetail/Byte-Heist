@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 const disableHotReloadForTemplateAndRustFilesPlugin = {
   handleHotUpdate({modules}) {
     return modules.filter(
-      i=>!i.url.endsWith('.html.jinja') || i.url.endsWith('.rs')
+      i=>!i.url.endsWith('.html.jinja') && !i.url.endsWith('.rs')
     )
   }
 }
@@ -17,6 +17,11 @@ export default defineConfig(({ command }) => ({
     tailwindcss(),
     disableHotReloadForTemplateAndRustFilesPlugin
   ].filter(Boolean),
+  server: {
+    watch: {
+      ignored: ['**/target/debug/**/*'],
+    }
+  },
   build: {
     // generate .vite/manifest.json in outDir
     manifest: true,

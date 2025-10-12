@@ -1,7 +1,12 @@
 use std::cell::OnceCell;
 
-use markdown_it::{plugins::cmark::inline::link::Link, MarkdownIt};
+use markdown_it::{
+    plugins::{cmark::inline::link::Link, extra::syntect::set_theme},
+    MarkdownIt,
+};
 use tera::Filter;
+
+use super::syntax_highlighting::SYNTECT_THEME;
 
 thread_local! {
     static MARKDOWN: OnceCell<MarkdownIt> = const { OnceCell::new() };
@@ -13,6 +18,10 @@ pub fn render_markdown(source: &str) -> String {
             let mut parser = markdown_it::MarkdownIt::new();
             markdown_it::plugins::cmark::add(&mut parser);
             markdown_it::plugins::extra::add(&mut parser);
+
+            // todo: Adjust this if we ever need a light mode
+            set_theme(&mut parser, SYNTECT_THEME);
+
             parser
         });
 

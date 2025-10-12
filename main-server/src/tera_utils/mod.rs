@@ -12,6 +12,8 @@ use tera::{escape_html, Context};
 pub mod auto_input;
 mod get_tera;
 mod html_context;
+mod markdown;
+mod syntax_highlighting;
 mod vite;
 
 fn render_html_error(title: &str, error: &tera::Error) -> Response {
@@ -23,7 +25,7 @@ fn render_html_error(title: &str, error: &tera::Error) -> Response {
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .header("Content-Type", "text/html")
         .body(Body::from(format!(
-            "<h2>{}</h2>\n<pre>{}</pre>",
+            "<h2>{}</h2>\n<pre>{:#}</pre>",
             escape_html(title),
             escape_html(&message)
         )))
