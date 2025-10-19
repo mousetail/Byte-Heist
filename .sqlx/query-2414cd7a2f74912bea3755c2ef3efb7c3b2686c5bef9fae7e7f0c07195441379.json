@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                field as \"field: DiffField\",\n                new_value as replacement_value\n            FROM challenge_change_suggestions\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "field: DiffField",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_diff_field",
+            "kind": {
+              "Enum": [
+                "description",
+                "judge",
+                "example-code"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "replacement_value",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "2414cd7a2f74912bea3755c2ef3efb7c3b2686c5bef9fae7e7f0c07195441379"
+}

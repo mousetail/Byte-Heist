@@ -8,7 +8,7 @@ use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
 
-pub use reactions::post_reaction;
+pub use reactions::{handle_reactions, post_reaction};
 pub use view_challenge::{post_comment, view_challenge};
 
 use crate::{

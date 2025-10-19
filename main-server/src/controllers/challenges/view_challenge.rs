@@ -12,11 +12,11 @@ use crate::{
     test_case_display::{DiffElement, OutputDisplay, get_diff_elements},
 };
 
-use super::suggest_changes::CommentDiff;
+use super::{reactions::RawReaction, suggest_changes::CommentDiff};
 
 #[derive(PartialEq, Eq)]
-struct RawComment {
-    id: i32,
+pub(super) struct RawComment {
+    pub(super) id: i32,
     challenge_id: i32,
     author_id: i32,
     author_username: String,
@@ -79,40 +79,6 @@ impl RawComment {
             id
         )
         .fetch_optional(pool)
-        .await
-    }
-}
-
-struct RawReaction {
-    #[allow(unused)]
-    id: i32,
-    comment_id: i32,
-    author_id: i32,
-    author_username: String,
-    is_upvote: bool,
-}
-
-impl RawReaction {
-    async fn get_reactions_for_challenge(
-        pool: &PgPool,
-        comments: &[RawComment],
-    ) -> Result<Vec<RawReaction>, sqlx::Error> {
-        query_as!(
-            RawReaction,
-            "
-                SELECT challenge_comment_votes.id,
-                    comment as comment_id,
-                    author as author_id,
-                    is_upvote,
-                    accounts.username as author_username
-                FROM challenge_comment_votes
-                INNER JOIN accounts ON accounts.id = challenge_comment_votes.author
-                WHERE challenge_comment_votes.comment = ANY($1)
-                ORDER BY comment ASC
-            ",
-            &comments.iter().map(|i| i.id).collect::<Vec<_>>()
-        )
-        .fetch_all(pool)
         .await
     }
 }

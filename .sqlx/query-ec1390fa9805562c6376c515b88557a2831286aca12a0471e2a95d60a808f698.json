@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT challenge_comment_votes.id,\n                    comment as comment_id,\n                    author as author_id,\n                    is_upvote,\n                    accounts.username as author_username\n                FROM challenge_comment_votes\n                INNER JOIN accounts ON accounts.id = challenge_comment_votes.author\n                WHERE challenge_comment_votes.comment = $1\n                ORDER BY comment ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "comment_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "is_upvote",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "author_username",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ec1390fa9805562c6376c515b88557a2831286aca12a0471e2a95d60a808f698"
+}

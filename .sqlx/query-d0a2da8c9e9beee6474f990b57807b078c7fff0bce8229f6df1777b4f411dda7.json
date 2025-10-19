@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE challenge_change_suggestions\n                SET status=$1\n                WHERE comment=$2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "challenge_diff_status",
+            "kind": {
+              "Enum": [
+                "active",
+                "accepted",
+                "rejected"
+              ]
+            }
+          }
+        },
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d0a2da8c9e9beee6474f990b57807b078c7fff0bce8229f6df1777b4f411dda7"
+}

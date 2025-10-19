@@ -1,9 +1,7 @@
 use serde::Deserialize;
 use sqlx::{PgPool, query, query_as, query_scalar};
 
-use crate::{
-    error::Error, test_case_display::OutputDisplay, test_solution::test_solution,
-};
+use crate::{error::Error, test_case_display::OutputDisplay, test_solution::test_solution};
 
 struct ChallengeFieldsNeededForValidation {
     judge: String,
@@ -51,9 +49,46 @@ pub(super) enum DiffField {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "challenge_diff_field", rename_all = "kebab-case")]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub(super) enum DiffStatus {
+    Active,
+    Rejected,
+    Accepted,
+}
+
+#[derive(Deserialize)]
 pub(super) struct CommentDiff {
-    field: DiffField,
-    replacement_value: String,
+    pub(super) field: DiffField,
+    pub(super) replacement_value: String,
+}
+
+impl CommentDiff {
+    pub(super) async fn apply(self, pool: &PgPool, challenge_id: i32) -> Result<(), sqlx::Error> {
+        match self.field {
+            DiffField::Judge => query!(
+                "UPDATE challenges SET judge=$1 WHERE id=$2",
+                self.replacement_value,
+                challenge_id
+            ),
+            DiffField::Example => query!(
+                "UPDATE challenges SET example_code=$1 WHERE id=$2",
+                self.replacement_value,
+                challenge_id
+            ),
+            DiffField::Description => query!(
+                "UPDATE challenges SET description=$1 WHERE id=$2",
+                self.replacement_value,
+                challenge_id
+            ),
+        }
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
 }
 
 async fn has_pending_diff(
