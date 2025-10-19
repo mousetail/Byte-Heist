@@ -16,6 +16,6 @@ CREATE TABLE challenge_change_suggestions(
 
 CREATE UNIQUE INDEX challenge_current_suggestion ON challenge_change_suggestions(challenge, field) where status='active';
 
-ALTER TABLE challenge_comments ADD COLUMN
-    last_vote_time TIMESTAMP WITH TIME ZONE NOT NULL default now(),
-    last_vote_processed_time TIMESTAMP WITH TIME ZONE NOT NOT NULL default now();
+ALTER TABLE challenge_comments
+	ADD column last_vote_time TIMESTAMP WITH TIME ZONE NOT NULL default now(),
+    ADD column last_vote_processed_time TIMESTAMP WITH TIME ZONE NOT NULL default now();
