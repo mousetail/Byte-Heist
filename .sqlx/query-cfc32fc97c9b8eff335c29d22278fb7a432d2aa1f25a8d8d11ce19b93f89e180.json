@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id FROM challenge_change_suggestions\n        WHERE challenge=$1\n        AND field=$2::challenge_diff_field\n        AND status='active'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        {
+          "Custom": {
+            "name": "challenge_diff_field",
+            "kind": {
+              "Enum": [
+                "description",
+                "judge",
+                "example-code"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "cfc32fc97c9b8eff335c29d22278fb7a432d2aa1f25a8d8d11ce19b93f89e180"
+}

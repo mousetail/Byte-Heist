@@ -1,14 +1,20 @@
-use std::{borrow::Cow, collections::HashSet};
+use std::{borrow::Cow, collections::HashSet, f32::consts::E};
 
-use axum::{extract::Path, Extension};
+use axum::{Extension, extract::Path};
+use common::RunLangOutput;
+use futures_util::task;
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, query_scalar, PgPool};
+use sqlx::{PgPool, query_as, query_scalar};
 
 use crate::{
+    controllers::challenges::suggest_changes::handle_diff,
     error::Error,
     models::{account::Account, challenge::NewOrExistingChallenge},
     tera_utils::auto_input::AutoInput,
+    test_case_display::OutputDisplay,
 };
+
+use super::suggest_changes::CommentDiff;
 
 #[derive(PartialEq, Eq)]
 struct RawComment {
@@ -19,7 +25,6 @@ struct RawComment {
     author_avatar: String,
     parent: Option<i32>,
     message: String,
-    diff: Option<String>,
 }
 
 impl PartialOrd for RawComment {
@@ -47,7 +52,6 @@ impl RawComment {
                     challenge as challenge_id,
                     parent,
                     message,
-                    diff,
                     author as author_id,
                     accounts.username as author_username,
                     accounts.avatar as author_avatar
@@ -115,7 +119,6 @@ struct ProcessedComment {
     id: i32,
     parent: Option<i32>,
     message: String,
-    diff: Option<String>,
     children: Vec<ProcessedComment>,
     author_id: i32,
     author_username: String,
@@ -187,7 +190,6 @@ impl ProcessedComment {
                 id: e.id,
                 parent: e.parent,
                 message: e.message,
-                diff: e.diff,
                 children: vec![],
 
                 author_id: e.author_id,
@@ -248,11 +250,10 @@ pub async fn view_challenge(
         comments,
     })
 }
-
 #[derive(Deserialize)]
 pub struct NewComment {
     message: String,
-    diff: Option<String>,
+    diff: Option<CommentDiff>,
     parent: Option<i32>,
 }
 
@@ -260,15 +261,14 @@ impl NewComment {
     async fn submit(&self, challenge: i32, author: i32, pool: &PgPool) -> Result<i32, sqlx::Error> {
         query_scalar!(
             "
-            INSERT INTO challenge_comments(challenge, parent, author, message, diff)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO challenge_comments(challenge, parent, author, message)
+            VALUES ($1, $2, $3, $4)
             RETURNING id
             ",
             challenge,
             self.parent,
             author,
-            self.message,
-            self.diff
+            self.message
         )
         .fetch_one(pool)
         .await
@@ -280,14 +280,12 @@ pub async fn post_comment(
     account: Account,
     Extension(pool): Extension<PgPool>,
     AutoInput(data): AutoInput<NewComment>,
-) -> Result<(), Error> {
+) -> Result<OutputDisplay, Error> {
     if !account.has_solved_a_challenge {
         return Err(Error::PermissionDenied(
             "Can't post a comment until your account has solved at least one challenge",
         ));
     }
-
-    account.rate_limit(&pool).await?;
 
     if data.message.is_empty() || data.message.len() > 5000 {
         return Err(Error::PermissionDenied(
@@ -305,10 +303,32 @@ pub async fn post_comment(
             return Err(Error::ServerError);
         }
 
-    let _result = data
+    let task = if let Some(diff) = &data.diff {
+        if data.parent.is_some() {
+            return Err(Error::PermissionDenied(
+                "Can't submit a diff as a child comment",
+            ));
+        }
+
+        match handle_diff(&pool, id, diff).await? {
+            Ok(e) => Some(e),
+            Err(d) => return Ok(d),
+        }
+    } else {
+        None
+    };
+
+    // Only apply the rate limit if the validation succceeded
+    account.rate_limit(&pool).await?;
+
+    let result = data
         .submit(id, account.id, &pool)
         .await
         .map_err(Error::Database)?;
+
+    if let Some(task) = task {
+        task.apply(&pool, result).await?;
+    }
 
     Err(Error::Redirect(Cow::Owned(format!(
         "/challenge/{id}/{slug}/view"

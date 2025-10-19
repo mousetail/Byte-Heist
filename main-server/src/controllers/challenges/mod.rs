@@ -1,3 +1,4 @@
+mod suggest_changes;
 mod view_challenge;
 
 use axum::{extract::Path, http::StatusCode, Extension};

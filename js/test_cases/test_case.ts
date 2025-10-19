@@ -25,14 +25,33 @@ type Column = {
   title: string | null;
 };
 
+function getOrCreateElement(
+  parent: HTMLDivElement,
+  className: string
+): HTMLDivElement {
+  let elementsWithClass = parent.querySelector<HTMLDivElement>("." + className);
+  if (elementsWithClass) {
+    return elementsWithClass;
+  } else {
+    let elem = document.createElement("div");
+    parent.appendChild(elem);
+    elem.classList.add(className);
+    return elem;
+  }
+}
+
 export function renderResultDisplay(
   display: ResultDisplay,
   parent: HTMLDivElement
 ) {
-  const resultPassStateDiv = parent.querySelector(".result-pass-state");
-  const timeOutWarningDiv = parent.querySelector(".time-out-warning");
-  const judgeErrorsDiv = parent.querySelector(".judge-errors");
-  const testCasesDiv = parent.querySelector(".test-cases");
+  const resultPassStateDiv = getOrCreateElement(parent, "result-pass-state");
+  const timeOutWarningDiv = getOrCreateElement(parent, "time-out-warning");
+  const judgeErrorsDiv = getOrCreateElement(parent, "judge-errors");
+  if (!judgeErrorsDiv.querySelector("pre")) {
+    let pre = document.createElement("pre");
+    judgeErrorsDiv.appendChild(pre);
+  }
+  const testCasesDiv = getOrCreateElement(parent, "test-cases");
 
   resultPassStateDiv.textContent = display.passed ? "Pass" : "Fail";
 
