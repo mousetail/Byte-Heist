@@ -1,8 +1,6 @@
-use std::{borrow::Cow, collections::HashSet, f32::consts::E};
+use std::{borrow::Cow, collections::HashSet};
 
 use axum::{Extension, extract::Path};
-use common::RunLangOutput;
-use futures_util::task;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query_as, query_scalar};
 
@@ -11,7 +9,7 @@ use crate::{
     error::Error,
     models::{account::Account, challenge::NewOrExistingChallenge},
     tera_utils::auto_input::AutoInput,
-    test_case_display::OutputDisplay,
+    test_case_display::{DiffElement, OutputDisplay, get_diff_elements},
 };
 
 use super::suggest_changes::CommentDiff;
@@ -25,6 +23,8 @@ struct RawComment {
     author_avatar: String,
     parent: Option<i32>,
     message: String,
+    old_value: Option<String>,
+    new_value: Option<String>,
 }
 
 impl PartialOrd for RawComment {
@@ -46,20 +46,23 @@ impl RawComment {
     ) -> Result<Vec<RawComment>, sqlx::Error> {
         query_as!(
             RawComment,
-            "
+            r#"
                 SELECT
                     challenge_comments.id,
-                    challenge as challenge_id,
+                    challenge_comments.challenge as challenge_id,
                     parent,
                     message,
                     author as author_id,
                     accounts.username as author_username,
-                    accounts.avatar as author_avatar
+                    accounts.avatar as author_avatar,
+                    challenge_change_suggestions.old_value as "old_value?",
+                    challenge_change_suggestions.new_value as "new_value?"
                 FROM challenge_comments
                 LEFT JOIN accounts on challenge_comments.author = accounts.id
-                WHERE challenge = $1
+                LEFT JOIN challenge_change_suggestions ON challenge_change_suggestions.comment = challenge_comments.id
+                WHERE challenge_comments.challenge = $1
                 ORDER BY id ASC
-            ",
+            "#,
             challenge_id
         )
         .fetch_all(pool)
@@ -126,6 +129,8 @@ struct ProcessedComment {
 
     up_reactions: HashSet<Reaction>,
     down_reactions: HashSet<Reaction>,
+
+    diff: Option<(Vec<DiffElement>, Vec<DiffElement>)>,
 }
 
 impl Ord for ProcessedComment {
@@ -186,18 +191,26 @@ impl ProcessedComment {
     ) -> Vec<ProcessedComment> {
         let mut output: Vec<_> = comments
             .into_iter()
-            .map(|e| ProcessedComment {
-                id: e.id,
-                parent: e.parent,
-                message: e.message,
-                children: vec![],
+            .map(|e| {
+                let diff = e
+                    .old_value
+                    .zip(e.new_value)
+                    .map(|(left, right)| get_diff_elements(left, right, "\n"));
+                ProcessedComment {
+                    id: e.id,
+                    parent: e.parent,
+                    message: e.message,
+                    children: vec![],
 
-                author_id: e.author_id,
-                author_avatar: e.author_avatar,
-                author_username: e.author_username,
+                    author_id: e.author_id,
+                    author_avatar: e.author_avatar,
+                    author_username: e.author_username,
 
-                up_reactions: HashSet::new(),
-                down_reactions: HashSet::new(),
+                    up_reactions: HashSet::new(),
+                    down_reactions: HashSet::new(),
+
+                    diff,
+                }
             })
             .collect();
 
@@ -299,9 +312,9 @@ pub async fn post_comment(
             .await
             .map_err(Error::Database)?
             != Some(id)
-        {
-            return Err(Error::ServerError);
-        }
+    {
+        return Err(Error::ServerError);
+    }
 
     let task = if let Some(diff) = &data.diff {
         if data.parent.is_some() {

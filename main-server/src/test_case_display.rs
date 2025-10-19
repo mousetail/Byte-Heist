@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, sync::LazyLock};
 
 use common::{ResultDisplay, RunLangOutput, TestCase, TestPassState};
 use serde::Serialize;
@@ -20,8 +20,8 @@ pub struct Column {
     content: Vec<DiffElement>,
 }
 
-#[derive(Serialize)]
-struct DiffElement {
+#[derive(Serialize, PartialEq, Eq)]
+pub(crate) struct DiffElement {
     tag: similar::ChangeTag,
     content: String,
 }
@@ -35,8 +35,58 @@ impl DiffElement {
     }
 }
 
+pub fn get_diff_elements(
+    left: String,
+    right: String,
+    sep: &str,
+) -> (Vec<DiffElement>, Vec<DiffElement>) {
+    let mut output_diff = vec![];
+    let mut expected_diff = vec![];
+
+    for value in DIFF_CONFIG
+        .diff_slices(
+            left.split(&sep)
+                .map(|k| k.trim_end())
+                .collect::<Vec<_>>()
+                .as_slice(),
+            right
+                .split(&sep)
+                .map(|k| k.trim_end())
+                .collect::<Vec<_>>()
+                .as_slice(),
+        )
+        .iter_all_changes()
+    {
+        let mut text = value.value().to_string();
+        match value.tag() {
+            similar::ChangeTag::Delete => {
+                output_diff.push(DiffElement {
+                    tag: similar::ChangeTag::Delete,
+                    content: text,
+                });
+                output_diff.push(DiffElement::from_string(sep.to_owned()));
+            }
+            similar::ChangeTag::Equal => {
+                text.push_str(&sep);
+                expected_diff.push(DiffElement::from_string(text.clone()));
+                output_diff.push(DiffElement::from_string(text));
+            }
+            similar::ChangeTag::Insert => {
+                expected_diff.push(DiffElement {
+                    tag: similar::ChangeTag::Insert,
+                    content: text,
+                });
+
+                expected_diff.push(DiffElement::from_string(sep.to_owned()));
+            }
+        }
+    }
+
+    (output_diff, expected_diff)
+}
+
 impl TestCaseDisplay {
-    fn get_columns(result_display: ResultDisplay, diff_generator: &TextDiffConfig) -> Vec<Column> {
+    fn get_columns(result_display: ResultDisplay) -> Vec<Column> {
         match result_display {
             common::ResultDisplay::Empty => vec![],
             common::ResultDisplay::Text(e) => vec![Column {
@@ -49,49 +99,7 @@ impl TestCaseDisplay {
                 input,
                 sep,
             } => {
-                let mut output_diff = vec![];
-                let mut expected_diff = vec![];
-
-                for value in diff_generator
-                    .diff_slices(
-                        output
-                            .split(&sep)
-                            .map(|k| k.trim_end())
-                            .collect::<Vec<_>>()
-                            .as_slice(),
-                        expected
-                            .split(&sep)
-                            .map(|k| k.trim_end())
-                            .collect::<Vec<_>>()
-                            .as_slice(),
-                    )
-                    .iter_all_changes()
-                {
-                    let mut text = value.value().to_string();
-                    match value.tag() {
-                        similar::ChangeTag::Delete => {
-                            output_diff.push(DiffElement {
-                                tag: similar::ChangeTag::Delete,
-                                content: text,
-                            });
-                            output_diff.push(DiffElement::from_string(sep.clone()));
-                        }
-                        similar::ChangeTag::Equal => {
-                            text.push_str(&sep);
-                            expected_diff.push(DiffElement::from_string(text.clone()));
-                            output_diff.push(DiffElement::from_string(text));
-                        }
-                        similar::ChangeTag::Insert => {
-                            expected_diff.push(DiffElement {
-                                tag: similar::ChangeTag::Insert,
-                                content: text,
-                            });
-
-                            expected_diff.push(DiffElement::from_string(sep.clone()));
-                        }
-                    }
-                }
-
+                let (output_diff, expected_diff) = get_diff_elements(output, expected, &sep);
                 input
                     .map(|e| Column {
                         title: Some(Cow::Borrowed("Input")),
@@ -148,9 +156,8 @@ impl TestCaseDisplay {
     }
 
     pub fn from_test_case(test_case: TestCase) -> Self {
-        let diff_generator = TextDiff::configure();
         let default_visible = Self::get_default_visible(&test_case);
-        let columns = Self::get_columns(test_case.result_display, &diff_generator);
+        let columns = Self::get_columns(test_case.result_display);
 
         TestCaseDisplay {
             columns,
@@ -196,3 +203,5 @@ impl From<RunLangOutput> for OutputDisplay {
         }
     }
 }
+
+static DIFF_CONFIG: LazyLock<TextDiffConfig> = LazyLock::new(|| TextDiff::configure());

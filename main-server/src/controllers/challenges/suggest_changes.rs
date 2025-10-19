@@ -1,9 +1,8 @@
-use common::RunLangOutput;
 use serde::Deserialize;
 use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
-    error::Error, models::challenge, test_case_display::OutputDisplay, test_solution::test_solution,
+    error::Error, test_case_display::OutputDisplay, test_solution::test_solution,
 };
 
 struct ChallengeFieldsNeededForValidation {

@@ -46,6 +46,13 @@
       </form>
     </div>
     <div class="comment-content">{{ com.message | markdown }}</div>
+    {%- if com.diff -%}
+      <div class="comment-diff grid grid-cols-2 gap-4">
+        {%- for column in com.diff -%}
+          <div>{{ test_cases::diff_column(content=column) }}</div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
     <div class="comment-children">
       {% for child in com.children %}{{ self::comment(com=child) }}{% endfor %}
     </div>

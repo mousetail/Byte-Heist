@@ -1,11 +1,11 @@
 use std::cell::OnceCell;
 
 use markdown_it::{
+    MarkdownIt,
     plugins::{
         cmark::{block::fence::CodeFence, inline::link::Link},
         extra::syntect::set_theme,
     },
-    MarkdownIt,
 };
 use tera::Filter;
 
@@ -37,11 +37,6 @@ pub fn render_markdown(source: &str) -> String {
             }
         });
 
-        ast.walk_mut(|e, index| {
-            if e.is::<CodeFence>() {
-                e.attrs.push(("class", "code-pre".to_owned()));
-            }
-        });
         ast.render()
     })
 }
