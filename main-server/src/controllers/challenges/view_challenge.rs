@@ -12,7 +12,10 @@ use crate::{
     test_case_display::{DiffElement, OutputDisplay, get_diff_elements},
 };
 
-use super::{reactions::RawReaction, suggest_changes::CommentDiff};
+use super::{
+    reactions::RawReaction,
+    suggest_changes::{CommentDiff, DiffStatus},
+};
 
 #[derive(PartialEq, Eq)]
 pub(super) struct RawComment {
@@ -25,6 +28,7 @@ pub(super) struct RawComment {
     message: String,
     old_value: Option<String>,
     new_value: Option<String>,
+    status: Option<DiffStatus>,
 }
 
 impl PartialOrd for RawComment {
@@ -56,7 +60,8 @@ impl RawComment {
                     accounts.username as author_username,
                     accounts.avatar as author_avatar,
                     challenge_change_suggestions.old_value as "old_value?",
-                    challenge_change_suggestions.new_value as "new_value?"
+                    challenge_change_suggestions.new_value as "new_value?",
+                    challenge_change_suggestions.status as "status?: DiffStatus"
                 FROM challenge_comments
                 LEFT JOIN accounts on challenge_comments.author = accounts.id
                 LEFT JOIN challenge_change_suggestions ON challenge_change_suggestions.comment = challenge_comments.id
@@ -84,6 +89,12 @@ impl RawComment {
 }
 
 #[derive(Serialize, Eq, PartialEq)]
+struct ProcessedDiff {
+    columns: (Vec<DiffElement>, Vec<DiffElement>),
+    status: DiffStatus,
+}
+
+#[derive(Serialize, Eq, PartialEq)]
 struct ProcessedComment {
     id: i32,
     parent: Option<i32>,
@@ -96,7 +107,7 @@ struct ProcessedComment {
     up_reactions: HashSet<Reaction>,
     down_reactions: HashSet<Reaction>,
 
-    diff: Option<(Vec<DiffElement>, Vec<DiffElement>)>,
+    diff: Option<ProcessedDiff>,
 }
 
 impl Ord for ProcessedComment {
@@ -161,7 +172,12 @@ impl ProcessedComment {
                 let diff = e
                     .old_value
                     .zip(e.new_value)
-                    .map(|(left, right)| get_diff_elements(left, right, "\n"));
+                    .map(|(left, right)| get_diff_elements(left, right, "\n"))
+                    .zip(e.status)
+                    .map(|(diff, status)| ProcessedDiff {
+                        columns: diff,
+                        status,
+                    });
                 ProcessedComment {
                     id: e.id,
                     parent: e.parent,

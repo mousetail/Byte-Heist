@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{error::Error, test_case_display::OutputDisplay, test_solution::test_solution};
@@ -48,7 +48,7 @@ pub(super) enum DiffField {
     Description,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[derive(sqlx::Type)]
 #[sqlx(type_name = "challenge_diff_field", rename_all = "kebab-case")]
