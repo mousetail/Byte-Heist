@@ -265,13 +265,13 @@ async fn create_account<'c>(
     username: &str,
     avatar: &str,
 ) -> Result<i32, sqlx::Error> {
-    let value = sqlx::query_scalar!(
+    
+
+    sqlx::query_scalar!(
         "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id",
         username,
         avatar
     )
     .fetch_one(pool)
-    .await;
-
-    value
+    .await
 }

@@ -296,15 +296,14 @@ pub async fn post_comment(
     }
 
     // Sanity check if you are reacting to a comment that exists and is under the correct challenge
-    if let Some(parent_id) = data.parent {
-        if RawComment::get_challenge_by_id(&pool, parent_id)
+    if let Some(parent_id) = data.parent
+        && RawComment::get_challenge_by_id(&pool, parent_id)
             .await
             .map_err(Error::Database)?
             != Some(id)
         {
             return Err(Error::ServerError);
         }
-    }
 
     let _result = data
         .submit(id, account.id, &pool)

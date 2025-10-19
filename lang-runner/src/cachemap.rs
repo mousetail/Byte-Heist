@@ -18,8 +18,8 @@ impl<K: Hash + Eq, V> CacheMap<K, V> {
     }
 
     pub fn get(&self, key: K) -> Arc<OnceCell<V>> {
-        let entry = self.inner.entry(key).or_default().clone();
-        entry
+        
+        self.inner.entry(key).or_default().clone()
     }
 }
 
