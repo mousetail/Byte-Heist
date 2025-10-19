@@ -12,8 +12,8 @@ use sqlx::{PgPool, query_scalar};
 
 use crate::models::{
     GetById,
-    account::{self, Account},
-    challenge::{Challenge, ChallengeStatus, ChallengeWithAuthorInfo},
+    account::Account,
+    challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
     solutions::{LeaderboardEntry, SolutionWithLanguage},
 };
 

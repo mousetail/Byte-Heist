@@ -67,7 +67,7 @@ pub fn get_diff_elements(
                 output_diff.push(DiffElement::from_string(sep.to_owned()));
             }
             similar::ChangeTag::Equal => {
-                text.push_str(&sep);
+                text.push_str(sep);
                 expected_diff.push(DiffElement::from_string(text.clone()));
                 output_diff.push(DiffElement::from_string(text));
             }
@@ -204,4 +204,4 @@ impl From<RunLangOutput> for OutputDisplay {
     }
 }
 
-static DIFF_CONFIG: LazyLock<TextDiffConfig> = LazyLock::new(|| TextDiff::configure());
+static DIFF_CONFIG: LazyLock<TextDiffConfig> = LazyLock::new(TextDiff::configure);
