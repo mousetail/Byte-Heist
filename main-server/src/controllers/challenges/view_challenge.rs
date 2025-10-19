@@ -1,25 +1,34 @@
 use std::{borrow::Cow, collections::HashSet};
 
-use axum::{extract::Path, Extension};
+use axum::{Extension, extract::Path};
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, query_scalar, PgPool};
+use sqlx::{PgPool, query_as, query_scalar};
 
 use crate::{
+    controllers::challenges::suggest_changes::handle_diff,
     error::Error,
     models::{account::Account, challenge::NewOrExistingChallenge},
     tera_utils::auto_input::AutoInput,
+    test_case_display::{DiffElement, OutputDisplay, get_diff_elements},
+};
+
+use super::{
+    reactions::RawReaction,
+    suggest_changes::{CommentDiff, DiffStatus},
 };
 
 #[derive(PartialEq, Eq)]
-struct RawComment {
-    id: i32,
+pub(super) struct RawComment {
+    pub(super) id: i32,
     challenge_id: i32,
     author_id: i32,
     author_username: String,
     author_avatar: String,
     parent: Option<i32>,
     message: String,
-    diff: Option<String>,
+    old_value: Option<String>,
+    new_value: Option<String>,
+    status: Option<DiffStatus>,
 }
 
 impl PartialOrd for RawComment {
@@ -41,21 +50,24 @@ impl RawComment {
     ) -> Result<Vec<RawComment>, sqlx::Error> {
         query_as!(
             RawComment,
-            "
+            r#"
                 SELECT
                     challenge_comments.id,
-                    challenge as challenge_id,
+                    challenge_comments.challenge as challenge_id,
                     parent,
                     message,
-                    diff,
                     author as author_id,
                     accounts.username as author_username,
-                    accounts.avatar as author_avatar
+                    accounts.avatar as author_avatar,
+                    challenge_change_suggestions.old_value as "old_value?",
+                    challenge_change_suggestions.new_value as "new_value?",
+                    challenge_change_suggestions.status as "status?: DiffStatus"
                 FROM challenge_comments
                 LEFT JOIN accounts on challenge_comments.author = accounts.id
-                WHERE challenge = $1
+                LEFT JOIN challenge_change_suggestions ON challenge_change_suggestions.comment = challenge_comments.id
+                WHERE challenge_comments.challenge = $1
                 ORDER BY id ASC
-            ",
+            "#,
             challenge_id
         )
         .fetch_all(pool)
@@ -76,38 +88,10 @@ impl RawComment {
     }
 }
 
-struct RawReaction {
-    #[allow(unused)]
-    id: i32,
-    comment_id: i32,
-    author_id: i32,
-    author_username: String,
-    is_upvote: bool,
-}
-
-impl RawReaction {
-    async fn get_reactions_for_challenge(
-        pool: &PgPool,
-        comments: &[RawComment],
-    ) -> Result<Vec<RawReaction>, sqlx::Error> {
-        query_as!(
-            RawReaction,
-            "
-                SELECT challenge_comment_votes.id,
-                    comment as comment_id,
-                    author as author_id,
-                    is_upvote,
-                    accounts.username as author_username
-                FROM challenge_comment_votes
-                INNER JOIN accounts ON accounts.id = challenge_comment_votes.author
-                WHERE challenge_comment_votes.comment = ANY($1)
-                ORDER BY comment ASC
-            ",
-            &comments.iter().map(|i| i.id).collect::<Vec<_>>()
-        )
-        .fetch_all(pool)
-        .await
-    }
+#[derive(Serialize, Eq, PartialEq)]
+struct ProcessedDiff {
+    columns: (Vec<DiffElement>, Vec<DiffElement>),
+    status: DiffStatus,
 }
 
 #[derive(Serialize, Eq, PartialEq)]
@@ -115,7 +99,6 @@ struct ProcessedComment {
     id: i32,
     parent: Option<i32>,
     message: String,
-    diff: Option<String>,
     children: Vec<ProcessedComment>,
     author_id: i32,
     author_username: String,
@@ -123,6 +106,8 @@ struct ProcessedComment {
 
     up_reactions: HashSet<Reaction>,
     down_reactions: HashSet<Reaction>,
+
+    diff: Option<ProcessedDiff>,
 }
 
 impl Ord for ProcessedComment {
@@ -183,19 +168,31 @@ impl ProcessedComment {
     ) -> Vec<ProcessedComment> {
         let mut output: Vec<_> = comments
             .into_iter()
-            .map(|e| ProcessedComment {
-                id: e.id,
-                parent: e.parent,
-                message: e.message,
-                diff: e.diff,
-                children: vec![],
+            .map(|e| {
+                let diff = e
+                    .old_value
+                    .zip(e.new_value)
+                    .map(|(left, right)| get_diff_elements(left, right, "\n"))
+                    .zip(e.status)
+                    .map(|(diff, status)| ProcessedDiff {
+                        columns: diff,
+                        status,
+                    });
+                ProcessedComment {
+                    id: e.id,
+                    parent: e.parent,
+                    message: e.message,
+                    children: vec![],
 
-                author_id: e.author_id,
-                author_avatar: e.author_avatar,
-                author_username: e.author_username,
+                    author_id: e.author_id,
+                    author_avatar: e.author_avatar,
+                    author_username: e.author_username,
 
-                up_reactions: HashSet::new(),
-                down_reactions: HashSet::new(),
+                    up_reactions: HashSet::new(),
+                    down_reactions: HashSet::new(),
+
+                    diff,
+                }
             })
             .collect();
 
@@ -248,11 +245,10 @@ pub async fn view_challenge(
         comments,
     })
 }
-
 #[derive(Deserialize)]
 pub struct NewComment {
     message: String,
-    diff: Option<String>,
+    diff: Option<CommentDiff>,
     parent: Option<i32>,
 }
 
@@ -260,15 +256,14 @@ impl NewComment {
     async fn submit(&self, challenge: i32, author: i32, pool: &PgPool) -> Result<i32, sqlx::Error> {
         query_scalar!(
             "
-            INSERT INTO challenge_comments(challenge, parent, author, message, diff)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO challenge_comments(challenge, parent, author, message)
+            VALUES ($1, $2, $3, $4)
             RETURNING id
             ",
             challenge,
             self.parent,
             author,
-            self.message,
-            self.diff
+            self.message
         )
         .fetch_one(pool)
         .await
@@ -280,14 +275,12 @@ pub async fn post_comment(
     account: Account,
     Extension(pool): Extension<PgPool>,
     AutoInput(data): AutoInput<NewComment>,
-) -> Result<(), Error> {
+) -> Result<OutputDisplay, Error> {
     if !account.has_solved_a_challenge {
         return Err(Error::PermissionDenied(
             "Can't post a comment until your account has solved at least one challenge",
         ));
     }
-
-    account.rate_limit(&pool).await?;
 
     if data.message.is_empty() || data.message.len() > 5000 {
         return Err(Error::PermissionDenied(
@@ -301,58 +294,36 @@ pub async fn post_comment(
             .await
             .map_err(Error::Database)?
             != Some(id)
-        {
-            return Err(Error::ServerError);
+    {
+        return Err(Error::ServerError);
+    }
+
+    let task = if let Some(diff) = &data.diff {
+        if data.parent.is_some() {
+            return Err(Error::PermissionDenied(
+                "Can't submit a diff as a child comment",
+            ));
         }
 
-    let _result = data
+        match handle_diff(&pool, id, diff).await? {
+            Ok(e) => Some(e),
+            Err(d) => return Ok(d),
+        }
+    } else {
+        None
+    };
+
+    // Only apply the rate limit if the validation succceeded
+    account.rate_limit(&pool).await?;
+
+    let result = data
         .submit(id, account.id, &pool)
         .await
         .map_err(Error::Database)?;
 
-    Err(Error::Redirect(Cow::Owned(format!(
-        "/challenge/{id}/{slug}/view"
-    ))))
-}
-
-#[derive(Deserialize)]
-pub struct NewReaction {
-    comment_id: i32,
-    is_upvote: bool,
-}
-
-impl NewReaction {
-    async fn submit(&self, author: i32, pool: &PgPool) -> Result<i32, sqlx::Error> {
-        query_scalar!(
-            "
-            INSERT INTO challenge_comment_votes(
-                author,
-                comment,
-                is_upvote
-            )
-            VALUES ($1, $2, $3)
-            ON CONFLICT(author, comment) DO UPDATE SET is_upvote=$3
-            RETURNING id
-            ",
-            author,
-            self.comment_id,
-            self.is_upvote
-        )
-        .fetch_one(pool)
-        .await
+    if let Some(task) = task {
+        task.apply(&pool, result, account).await?;
     }
-}
-
-pub async fn post_reaction(
-    Path((id, slug)): Path<(i32, String)>,
-    account: Account,
-    Extension(pool): Extension<PgPool>,
-    AutoInput(reaction): AutoInput<NewReaction>,
-) -> Result<(), Error> {
-    reaction
-        .submit(account.id, &pool)
-        .await
-        .map_err(Error::Database)?;
 
     Err(Error::Redirect(Cow::Owned(format!(
         "/challenge/{id}/{slug}/view"

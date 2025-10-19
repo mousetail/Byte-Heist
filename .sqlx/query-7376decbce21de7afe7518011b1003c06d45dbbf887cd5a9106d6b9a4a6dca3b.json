@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO challenge_change_suggestions (\n                challenge,\n                comment,\n                old_value,\n                new_value,\n                field,\n                status\n            ) VALUES\n            (\n                $1,\n                $2,\n                $3,\n                $4,\n                $5::challenge_diff_field,\n                'active'\n            )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "challenge_diff_field",
+            "kind": {
+              "Enum": [
+                "description",
+                "judge",
+                "example-code"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7376decbce21de7afe7518011b1003c06d45dbbf887cd5a9106d6b9a4a6dca3b"
+}

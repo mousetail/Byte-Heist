@@ -20,6 +20,20 @@ import {
 
 let typeScriptEnvironment: WorkerShape | undefined = undefined;
 
+const editorTheme = new Compartment();
+export const defaultPlugins: typeof basicSetup = [
+  basicSetup,
+  keymap.of([indentWithTab]),
+  indentUnit.of("\t"),
+  editorTheme.of(getTheme()),
+  EditorView.lineWrapping,
+
+  insertChar,
+  insertCharState,
+  Prec.high(showUnprintables), // Increased precedence to override unprintable char printing in basicSetup
+  Prec.high(carriageReturn), // Increased precedence to override shift-enter key binding in basicSetup
+];
+
 async function initTypescriptForCodebox(): Promise<typeof minimalSetup> {
   const {
     tsFacetWorker,
@@ -65,13 +79,20 @@ function getTheme() {
   }
 }
 
+export function createDefaultEditor(
+  content: string,
+  extensions: typeof minimalSetup
+): EditorView {
+  return new EditorView({ doc: content, extensions });
+}
+
 function editorFromTextArea(
   textarea: HTMLTextAreaElement,
   content: string,
   extensions: typeof minimalSetup,
   swapOnSubmit: boolean
 ): EditorView {
-  let view = new EditorView({ doc: content, extensions });
+  let view = createDefaultEditor(content, extensions);
   textarea.parentNode?.insertBefore(view.dom, textarea);
   if (swapOnSubmit) {
     textarea.style.display = "none";
@@ -90,28 +111,15 @@ function editorFromTextArea(
 
 export function createCodemirrorFromTextAreas(): { [key: string]: EditorView } {
   const textAreas = {};
-  const editorTheme = new Compartment();
 
   for (const textarea of document.querySelectorAll<HTMLTextAreaElement>(
     "textarea.codemirror"
   )) {
-    let plugins: typeof basicSetup = [
-      basicSetup,
-      keymap.of([indentWithTab]),
-      indentUnit.of("\t"),
-      editorTheme.of(getTheme()),
-      EditorView.lineWrapping,
-
-      insertChar,
-      insertCharState,
-      Prec.high(showUnprintables), // Increased precedence to override unprintable char printing in basicSetup
-      Prec.high(carriageReturn), // Increased precedence to override shift-enter key binding in basicSetup
-    ];
     console.log(`Replacing textarea ${textarea.id} with codemirror`);
     let view = editorFromTextArea(
       textarea,
       decodeURIComponent(textarea.dataset.encodedSource),
-      plugins,
+      defaultPlugins,
       textarea.id !== "main-code"
     );
 

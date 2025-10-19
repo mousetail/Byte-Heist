@@ -50,13 +50,7 @@
                 {% for column in test.columns %}
                   <div class="test-case-column">
                     {% if column.title %}<h3>{{ column.title }}</h3>{% endif %}
-                    <pre class="code-pre">
-                      {%- for value in column.content -%}
-                        <span class="diff-tag-{{ value.tag }}">
-                          {{- value.content -}}
-                        </span>
-                      {%- endfor -%}
-                    </pre>
+                    {{ diff_column(diff=column.content) }}
                   </div>
                 {% endfor %}
               </div>
@@ -67,3 +61,12 @@
     </div>
   </div>
 {% endmacro test_cases %}
+{% macro diff_column(content) %}
+  <pre class="code-pre">
+    {%- for value in content -%}
+      <span class="diff-tag-{{ value.tag }}">
+        {{- value.content -}}
+      </span>
+    {%- endfor -%}
+  </pre>
+{% endmacro diff_column %}

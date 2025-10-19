@@ -18,6 +18,7 @@ pub enum Error {
     PermissionDenied(&'static str),
     Redirect(Cow<'static, str>),
     RateLimit,
+    Conflict,
 }
 
 #[derive(Debug)]
@@ -68,6 +69,13 @@ impl IntoResponse for Error {
                     "<h2>Lang Runner Error</h2><pre>{}</pre>",
                     tera::escape_html(&s)
                 )))
+                .unwrap(),
+            Error::Conflict => Response::builder()
+                .status(StatusCode::CONFLICT)
+                .header("Content-Type", "text/html")
+                .body(Body::from(
+                    "<h2>Conflict</h2><p>A race condition occurred handling this request</p>",
+                ))
                 .unwrap(),
             Error::PermissionDenied(e) => Response::builder()
                 .status(StatusCode::FORBIDDEN)

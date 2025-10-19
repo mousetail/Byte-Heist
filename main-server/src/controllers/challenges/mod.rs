@@ -1,25 +1,28 @@
+mod reactions;
+mod suggest_changes;
 mod view_challenge;
 
-use axum::{extract::Path, http::StatusCode, Extension};
+use axum::{Extension, extract::Path, http::StatusCode};
 use common::urls::get_url_for_challenge;
 use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
 
-pub use view_challenge::{post_comment, post_reaction, view_challenge};
+pub use reactions::{handle_reactions, post_reaction};
+pub use view_challenge::{post_comment, view_challenge};
 
 use crate::{
     background_tasks::solution_invalidation::notify_challenge_updated,
     discord::DiscordEventSender,
     error::Error,
     models::{
+        GetById,
         account::Account,
         challenge::{
             ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo, ChallengeWithTests,
             HomePageChallenge, NewChallenge, NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
-        GetById,
     },
     tera_utils::auto_input::AutoInput,
     test_solution::test_solution,

@@ -81,3 +81,51 @@
 .validation-error {
   color: red;
 }
+
+.code-pre {
+  overflow: auto;
+  min-height: 8rem;
+  max-height: 32rem;
+  padding: 0.5rem;
+}
+
+.comment {
+  display: grid;
+  grid-template-columns: 1rem 9rem 1fr;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.comment-content {
+  padding: 1rem;
+  border: 2px solid var(--light-border);
+  margin-bottom: 1rem;
+  min-height: 6rem;
+  transition: background-color ease 0.5s;
+}
+
+.comment-author {
+  grid-column: 1/3;
+  text-align: center;
+
+  & img {
+    display: inline-block;
+    border-radius: 50%;
+  }
+}
+
+.comment-diff {
+  grid-column: 1/4;
+}
+
+.comment-children {
+  grid-column: 2/4;
+}
+
+.comment .comment-reply {
+  grid-column: 2/4;
+}
+
+.comment-content:has(~ .comment-reply:hover) {
+  background-color: #222;
+}

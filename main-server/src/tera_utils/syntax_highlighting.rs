@@ -53,7 +53,7 @@ impl Filter for SyntaxHighight {
                 (themes.themes[SYNTECT_THEME].clone(), syntax_set)
             });
 
-            let html = highlighted_html_for_string(
+            let mut html = highlighted_html_for_string(
                 code,
                 syntax_set,
                 syntax_set.find_syntax_by_token(lang).ok_or_else(|| {
@@ -62,6 +62,8 @@ impl Filter for SyntaxHighight {
                 theme,
             )
             .map_err(|e| tera::Error::msg(format!("error: {e:?}")))?;
+
+            html.insert_str(4, " class=\"code-pre\"");
 
             Ok(tera::Value::String(html))
         })

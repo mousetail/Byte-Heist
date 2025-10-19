@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT judge, example_code\n            FROM challenges\n            WHERE id=$1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "judge",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "example_code",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "1ee532dbd1015ad518d0324c9e01ce6a7dbf29b077cd534ca92a6531543dac5a"
+}

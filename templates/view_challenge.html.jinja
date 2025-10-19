@@ -45,7 +45,27 @@
         {{ self::vote_button(is_upvote=false, reactions=com.down_reactions) }}
       </form>
     </div>
-    <div class="comment-content">{{ com.message | markdown }}</div>
+    <div class="comment-content">
+      {%- if com.diff -%}
+        <span class="
+                     {% if com.diff.status == 'active' %}
+                       bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                     {% elif com.diff == 'rejected' %}
+                       bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                     {% elif com.diff == 'accepted' %}
+                       bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                     {% endif %}
+                     text-sm font-medium me-2 px-2.5 py-0.5 rounded-sm">{{ com.diff.status }}</span>
+      {%- endif -%}
+      {{- com.message | markdown -}}
+    </div>
+    {%- if com.diff -%}
+      <div class="comment-diff grid grid-cols-2 gap-4">
+        {%- for column in com.diff.columns -%}
+          <div>{{ test_cases::diff_column(content=column) }}</div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
     <div class="comment-children">
       {% for child in com.children %}{{ self::comment(com=child) }}{% endfor %}
     </div>
@@ -68,15 +88,38 @@
     <main class="flex-1">
       <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 md:px-8 lg:px-28 mt-10">
         <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">{{ object.name }}</h1>
-        {{ object.description | markdown }}
+        <div id="description-container">{{ object.description | markdown }}</div>
+        {% if account and account.has_solved_a_challenge %}
+          <div class="flex justify-end">
+            <button type="button"
+                    class="btn"
+                    data-for="description-container"
+                    data-name="description"
+                    data-value="{{- object.description -}}">edit</button>
+          </div>
+        {% endif %}
         <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Judge</h2>
-        <pre class="code-pre">{{- object.judge  | syntax_highlight(lang="js") -}}</pre>
+        <div id="judge-container">{{- object.judge | syntax_highlight(lang="js") -}}</div>
+        {% if account and account.has_solved_a_challenge %}
+          <div class="flex justify-end">
+            <button type="button"
+                    class="btn"
+                    data-for="judge-container"
+                    data-name="judge"
+                    data-value="{{- object.judge -}}">edit</button>
+          </div>
+        {% endif %}
         <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Example Code</h2>
-        <pre class="code-pre">
-    {{-
-      object.example_code | syntax_highlight(lang="js")
-    -}}
-</pre>
+        <div id="example-container">{{- object.example_code | syntax_highlight(lang="js") -}}</div>
+        {% if account and account.has_solved_a_challenge %}
+          <div class="flex justify-end">
+            <button type="button"
+                    class="btn"
+                    data-for="example-container"
+                    data-name="example"
+                    data-value="{{- object.example_code -}}">edit</button>
+          </div>
+        {% endif %}
         <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Comments</h2>
         {% for comment in object.comments %}{{ self::comment(com=comment) }}{% endfor %}
         {% if account and account.has_solved_a_challenge %}

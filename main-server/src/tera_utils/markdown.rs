@@ -1,8 +1,8 @@
 use std::cell::OnceCell;
 
 use markdown_it::{
-    plugins::{cmark::inline::link::Link, extra::syntect::set_theme},
     MarkdownIt,
+    plugins::{cmark::inline::link::Link, extra::syntect::set_theme},
 };
 use tera::Filter;
 
@@ -33,6 +33,7 @@ pub fn render_markdown(source: &str) -> String {
                 e.attrs.push(("rel", "nofollow noopener".to_owned()));
             }
         });
+
         ast.render()
     })
 }
