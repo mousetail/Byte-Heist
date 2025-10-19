@@ -2,10 +2,7 @@ use std::cell::OnceCell;
 
 use markdown_it::{
     MarkdownIt,
-    plugins::{
-        cmark::{block::fence::CodeFence, inline::link::Link},
-        extra::syntect::set_theme,
-    },
+    plugins::{cmark::inline::link::Link, extra::syntect::set_theme},
 };
 use tera::Filter;
 
