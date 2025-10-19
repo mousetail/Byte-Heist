@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query, query_as, query_scalar};
 
-use crate::{error::Error, test_case_display::OutputDisplay, test_solution::test_solution};
+use crate::{
+    discord::post_change_suggestion, error::Error, models::account::Account,
+    test_case_display::OutputDisplay, test_solution::test_solution,
+};
 
 struct ChallengeFieldsNeededForValidation {
     judge: String,
@@ -154,16 +157,42 @@ pub(super) struct InsertDiffTask<'a> {
 }
 
 impl<'a> InsertDiffTask<'a> {
-    pub(super) async fn apply(self, pool: &PgPool, comment_id: i32) -> Result<(), Error> {
-        insert_diff(
-            pool,
-            comment_id,
-            self.challenge_id,
-            self.previous_value,
-            self.diff,
-        )
-        .await
-        .map_err(Error::Database)
+    pub(super) async fn apply(
+        self,
+        pool: &PgPool,
+        comment_id: i32,
+        author: Account,
+    ) -> Result<(), Error> {
+        let InsertDiffTask {
+            diff,
+            challenge_id,
+            previous_value,
+        } = self;
+
+        let replacement_value = diff.replacement_value.clone();
+
+        insert_diff(pool, comment_id, challenge_id, previous_value.clone(), diff)
+            .await
+            .map_err(Error::Database)?;
+
+        let pool = pool.clone();
+
+        tokio::spawn(async move {
+            if let Err(e) = post_change_suggestion(
+                &pool,
+                author,
+                previous_value,
+                replacement_value,
+                challenge_id,
+                comment_id,
+            )
+            .await
+            {
+                eprintln!("Failed to send discord webhook message: {e:?}")
+            }
+        });
+
+        Ok(())
     }
 }
 

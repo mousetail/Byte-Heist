@@ -322,7 +322,7 @@ pub async fn post_comment(
         .map_err(Error::Database)?;
 
     if let Some(task) = task {
-        task.apply(&pool, result).await?;
+        task.apply(&pool, result, account).await?;
     }
 
     Err(Error::Redirect(Cow::Owned(format!(

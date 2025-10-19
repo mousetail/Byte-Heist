@@ -2,18 +2,19 @@ use std::{env::VarError, time::Duration};
 
 use common::urls::get_url_for_challenge;
 use discord_bot::{
-    new_challenge::{BestScore, ChallengePostAllSolutionsEvent, PostAllNewScoresReason},
     Bot, ScoreImproved,
+    new_challenge::{BestScore, ChallengePostAllSolutionsEvent, PostAllNewScoresReason},
 };
 use reqwest::StatusCode;
 use serde::Serialize;
-use sqlx::PgPool;
+use similar::{ChangeTag, utils::diff_lines};
+use sqlx::{PgPool, query_scalar};
 
 use crate::models::{
-    account::Account,
-    challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
-    solutions::{LeaderboardEntry, SolutionWithLanguage},
     GetById,
+    account::{self, Account},
+    challenge::{Challenge, ChallengeStatus, ChallengeWithAuthorInfo},
+    solutions::{LeaderboardEntry, SolutionWithLanguage},
 };
 
 #[allow(clippy::enum_variant_names)]
@@ -112,6 +113,7 @@ pub struct Embed<'a> {
 pub enum DiscordWebhookChannel {
     NewGolfer,
     NewChallenge,
+    ChangeRequest,
 }
 
 impl DiscordWebhookChannel {
@@ -119,6 +121,7 @@ impl DiscordWebhookChannel {
         match self {
             DiscordWebhookChannel::NewGolfer => "DISCORD_NEW_GOLFER_WEBHOOK_URL",
             DiscordWebhookChannel::NewChallenge => "DISCORD_NEW_CHALLENGE_WEBHOOK_URL",
+            DiscordWebhookChannel::ChangeRequest => "DISCORD_CHANGE_REQUEST_WEBHOOK_URL",
         }
     }
 }
@@ -247,7 +250,9 @@ async fn post_new_golfer(pool: &PgPool, user_id: i32) {
     tokio::time::sleep(Duration::from_secs(1)).await;
 
     let Some(account) = Account::get_by_id(pool, user_id).await else {
-        eprintln!("Wanted to post a discord message regarding new golfer {user_id} but no such account was found");
+        eprintln!(
+            "Wanted to post a discord message regarding new golfer {user_id} but no such account was found"
+        );
         return;
     };
     match post_discord_webhook(
@@ -278,22 +283,30 @@ async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, 
     let challenge = match ChallengeWithAuthorInfo::get_by_id(pool, challenge_id).await {
         Ok(Some(c)) => c,
         Ok(None) => {
-            eprintln!("Attempted to post updated score for challenge {challenge_id}, but challenge with id {solution_id} could not be found in the database");
+            eprintln!(
+                "Attempted to post updated score for challenge {challenge_id}, but challenge with id {solution_id} could not be found in the database"
+            );
             return;
         }
         Err(e) => {
-            eprintln!("Attempted to post updated score, but got an error trying to fetch the challenge from the database: {e:?}");
+            eprintln!(
+                "Attempted to post updated score, but got an error trying to fetch the challenge from the database: {e:?}"
+            );
             return;
         }
     };
     let solution = match SolutionWithLanguage::get_by_id(pool, solution_id).await {
         Ok(Some(c)) => c,
         Ok(None) => {
-            eprintln!("Attempted to post updated score for challenge {challenge_id}, but solution with id {solution_id} could not be found in the database");
+            eprintln!(
+                "Attempted to post updated score for challenge {challenge_id}, but solution with id {solution_id} could not be found in the database"
+            );
             return;
         }
         Err(e) => {
-            eprintln!("Attempted to post updated score, but got an error trying to fetch the solution from the database: {e:?}");
+            eprintln!(
+                "Attempted to post updated score, but got an error trying to fetch the solution from the database: {e:?}"
+            );
             return;
         }
     };
@@ -321,4 +334,68 @@ async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, 
         })
         .await;
     }
+}
+
+pub async fn post_change_suggestion(
+    pool: &PgPool,
+    author: Account,
+    previous_value: String,
+    new_value: String,
+    challenge_id: i32,
+    comment_id: i32,
+) -> Result<(), sqlx::Error> {
+    let challenge_name = query_scalar!("SELECT name FROM challenges WHERE id=$1", challenge_id)
+        .fetch_one(pool)
+        .await?;
+
+    let lines_diff = diff_lines(similar::Algorithm::Myers, &previous_value, &new_value);
+
+    match post_discord_webhook(
+        DiscordWebhookChannel::ChangeRequest,
+        WebHookRequest {
+            content: None,
+            username: Some(&author.username),
+            avatar_url: Some(&author.avatar),
+            tts: None,
+            embeds: Some(vec![Embed {
+                title: Some(&format!("Edit Suggested: {}", challenge_name)),
+                description: Some(
+                    &["```diff\n"]
+                        .into_iter()
+                        .chain(lines_diff.into_iter().flat_map(|(tag, string)| {
+                            [
+                                match tag {
+                                    ChangeTag::Delete => "- ",
+                                    ChangeTag::Insert => "+ ",
+                                    ChangeTag::Equal => "  ",
+                                },
+                                string,
+                                "\n",
+                            ]
+                        }))
+                        .chain(["```"])
+                        .collect::<String>(),
+                ),
+                url: Some(&format!(
+                    "https://byte-heist.com/{}#{}",
+                    get_url_for_challenge(
+                        challenge_id,
+                        Some(&challenge_name),
+                        common::urls::ChallengePage::View
+                    ),
+                    comment_id
+                )),
+                color: Some(255),
+            }]),
+        },
+    )
+    .await
+    {
+        Ok(()) => (),
+        Err(e) => {
+            eprintln!("{e:?}");
+        }
+    };
+
+    Ok(())
 }
