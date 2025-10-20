@@ -47,7 +47,7 @@ async fn get_previous_description(pool: &PgPool, id: i32) -> Result<String, sqlx
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(super) enum DiffField {
     Judge,
-    Example,
+    ExampleCode,
     Description,
 }
 
@@ -76,7 +76,7 @@ impl CommentDiff {
                 self.replacement_value,
                 challenge_id
             ),
-            DiffField::Example => query!(
+            DiffField::ExampleCode => query!(
                 "UPDATE challenges SET example_code=$1 WHERE id=$2",
                 self.replacement_value,
                 challenge_id
@@ -210,7 +210,7 @@ pub(super) async fn handle_diff<'a>(
     }
 
     let (test_results, previous_value) = match diff.field {
-        DiffField::Judge | DiffField::Example => {
+        DiffField::Judge | DiffField::ExampleCode => {
             let mut challenge = ChallengeFieldsNeededForValidation::get_by_id(pool, challenge_id)
                 .await
                 .map_err(Error::Database)?;
@@ -219,7 +219,7 @@ pub(super) async fn handle_diff<'a>(
                 DiffField::Judge => {
                     std::mem::replace(&mut challenge.judge, diff.replacement_value.clone())
                 }
-                DiffField::Example => {
+                DiffField::ExampleCode => {
                     std::mem::replace(&mut challenge.example_code, diff.replacement_value.clone())
                 }
                 _ => unreachable!(),

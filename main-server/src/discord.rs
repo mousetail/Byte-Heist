@@ -7,14 +7,16 @@ use discord_bot::{
 };
 use reqwest::StatusCode;
 use serde::Serialize;
-use similar::{ChangeTag, utils::diff_lines};
 use sqlx::{PgPool, query_scalar};
 
-use crate::models::{
-    GetById,
-    account::Account,
-    challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
-    solutions::{LeaderboardEntry, SolutionWithLanguage},
+use crate::{
+    models::{
+        GetById,
+        account::Account,
+        challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
+        solutions::{LeaderboardEntry, SolutionWithLanguage},
+    },
+    test_case_display::inline_diff,
 };
 
 #[allow(clippy::enum_variant_names)]
@@ -348,8 +350,6 @@ pub async fn post_change_suggestion(
         .fetch_one(pool)
         .await?;
 
-    let lines_diff = diff_lines(similar::Algorithm::Myers, &previous_value, &new_value);
-
     match post_discord_webhook(
         DiscordWebhookChannel::ChangeRequest,
         WebHookRequest {
@@ -359,23 +359,10 @@ pub async fn post_change_suggestion(
             tts: None,
             embeds: Some(vec![Embed {
                 title: Some(&format!("Edit Suggested: {}", challenge_name)),
-                description: Some(
-                    &["```diff\n"]
-                        .into_iter()
-                        .chain(lines_diff.into_iter().flat_map(|(tag, string)| {
-                            [
-                                match tag {
-                                    ChangeTag::Delete => "- ",
-                                    ChangeTag::Insert => "+ ",
-                                    ChangeTag::Equal => "  ",
-                                },
-                                string,
-                                "\n",
-                            ]
-                        }))
-                        .chain(["```"])
-                        .collect::<String>(),
-                ),
+                description: Some(&inline_diff(
+                    &previous_value.replace("`", "`\u{200B}"),
+                    &new_value.replace("`", "`\u{200B}"),
+                )),
                 url: Some(&format!(
                     "https://byte-heist.com/{}#{}",
                     get_url_for_challenge(

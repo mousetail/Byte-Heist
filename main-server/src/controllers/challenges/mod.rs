@@ -174,12 +174,13 @@ pub async fn new_challenge(
         (_, None) => {
             let row = sqlx::query_scalar!(
                 r#"
-                INSERT INTO challenges (name, judge, description, author, status, category)
-                values ($1, $2, $3, $4, $5::challenge_status, $6::challenge_category)
+                INSERT INTO challenges (name, judge, description, example_code, author, status, category)
+                values ($1, $2, $3, $4, $5, $6::challenge_status, $7::challenge_category)
                 RETURNING id"#,
                 challenge.name,
                 challenge.judge,
                 challenge.description,
+                challenge.example_code,
                 account.id,
                 challenge.status as ChallengeStatus,
                 challenge.category as ChallengeCategory,

@@ -50,9 +50,9 @@
         <span class="
                      {% if com.diff.status == 'active' %}
                        bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                     {% elif com.diff == 'rejected' %}
+                     {% elif com.diff.status == 'rejected' %}
                        bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                     {% elif com.diff == 'accepted' %}
+                     {% elif com.diff.status == 'accepted' %}
                        bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
                      {% endif %}
                      text-sm font-medium me-2 px-2.5 py-0.5 rounded-sm">{{ com.diff.status }}</span>
@@ -116,7 +116,7 @@
             <button type="button"
                     class="btn"
                     data-for="example-container"
-                    data-name="example"
+                    data-name="example_code"
                     data-value="{{- object.example_code -}}">edit</button>
           </div>
         {% endif %}
