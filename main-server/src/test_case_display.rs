@@ -232,7 +232,7 @@ pub fn inline_diff(old: &str, new: &str) -> String {
     diff.truncate(1500);
     diff.push_str("```");
 
-    return diff;
+    diff
 }
 
 static DIFF_CONFIG: LazyLock<TextDiffConfig> = LazyLock::new(TextDiff::configure);

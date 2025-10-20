@@ -48,14 +48,14 @@ where
                 return Some(self.placeholder_value);
             }
             if let Some(value) = self.queue.pop_back() {
-                return Some(value);
+                Some(value)
             } else {
                 self.next_valid_value = None;
                 self.has_ever_had_valid_value = true;
-                return Some(next_valid_value);
+                Some(next_valid_value)
             }
         } else {
-            return None;
+            None
         }
     }
 }
