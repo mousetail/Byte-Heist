@@ -54,7 +54,7 @@ pub(super) enum DiffField {
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[derive(sqlx::Type)]
-#[sqlx(type_name = "challenge_diff_field", rename_all = "kebab-case")]
+#[sqlx(type_name = "challenge_diff_status", rename_all = "kebab-case")]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(super) enum DiffStatus {
     Active,
