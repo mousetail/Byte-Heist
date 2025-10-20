@@ -8,16 +8,16 @@ use almost_ended_challenge::on_almost_ended_challenge;
 use checks::{get_last_best_score_fields, should_edit_message};
 use common::{
     langs::LANGS,
-    urls::{get_url_for_challenge, ChallengePage},
+    urls::{ChallengePage, get_url_for_challenge},
 };
-use new_challenge::{post_all_scores_for_challenge, ChallengePostAllSolutionsEvent};
+use new_challenge::{ChallengePostAllSolutionsEvent, post_all_scores_for_challenge};
 use queries::{
-    get_challenge_name_by_id, get_last_message_for_challenge, get_last_posted_message_id,
-    get_user_info_by_id, save_new_message_info, BasicAccontInfo, NewScore,
+    BasicAccontInfo, NewScore, get_challenge_name_by_id, get_last_message_for_challenge,
+    get_last_posted_message_id, get_user_info_by_id, save_new_message_info,
 };
 use serenity::all::{
-        ChannelId, Colour, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
-    };
+    ChannelId, Colour, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
+};
 use sqlx::PgPool;
 
 #[derive(Debug)]
@@ -73,7 +73,7 @@ fn format_message(
                 .url(format!("{public_url}/user/{}", &new_message.author)),
         )
         .url(format!(
-            "{public_url}{}",
+            "{}",
             get_url_for_challenge(
                 new_message.challenge_id,
                 Some(challenge_name),

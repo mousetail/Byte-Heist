@@ -5,7 +5,7 @@ use common::urls::get_url_for_challenge;
 use serenity::all::{ChannelId, CreateEmbed, CreateMessage};
 use sqlx::PgPool;
 
-use crate::{get_last_message_for_challenge, save_new_message_info, ScoreImproved};
+use crate::{ScoreImproved, get_last_message_for_challenge, save_new_message_info};
 
 pub enum PostAllNewScoresReason {
     NewChallenge,
@@ -55,7 +55,7 @@ fn gen_embed(
             a
         }))
         .url(format!(
-            "{public_url}{}",
+            "{}",
             get_url_for_challenge(
                 *challenge_id,
                 Some(challenge_name),

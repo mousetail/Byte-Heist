@@ -225,7 +225,7 @@ async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
                         [..100.min(challenge.challenge.challenge.description.len())],
                 ),
                 url: Some(&format!(
-                    "https://byte-heist.com/{}",
+                    "{}",
                     get_url_for_challenge(
                         challenge_id,
                         Some(&challenge.challenge.challenge.name),
@@ -364,7 +364,7 @@ pub async fn post_change_suggestion(
                     &new_value.replace("`", "`\u{200B}"),
                 )),
                 url: Some(&format!(
-                    "https://byte-heist.com/{}#{}",
+                    "{}#comment-{}",
                     get_url_for_challenge(
                         challenge_id,
                         Some(&challenge_name),

@@ -29,7 +29,7 @@
   </button>
 {% endmacro %}
 {% macro comment(com) %}
-  <div class="comment">
+  <div class="comment" id="comment-{{ com.id }}">
     <div class="comment-author">
       <a href="/user/{{ com.author_id }}">
         <img src="{{ com.author_avatar }}"

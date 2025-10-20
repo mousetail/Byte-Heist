@@ -1,4 +1,3 @@
-
 use common::urls::get_url_for_challenge;
 use serenity::all::{ChannelId, CreateEmbed, CreateMessage};
 use sqlx::PgPool;
@@ -28,13 +27,12 @@ pub async fn on_almost_ended_challenge(
 }
 
 fn gen_embed(challenge_id: i32, challenge_name: String) -> CreateEmbed {
-    let public_url = std::env::var("BYTE_HEIST_PUBLIC_URL").unwrap();
     CreateEmbed::new()
         .title(format!("{challenge_name} is ending in less than 24 hours"))
         .color(3426654)
         .description("Last chance to earn points")
         .url(format!(
-            "{public_url}{}",
+            "{}",
             get_url_for_challenge(
                 challenge_id,
                 Some(&challenge_name),

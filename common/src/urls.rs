@@ -17,6 +17,14 @@ pub struct ChallengeUrl<'a> {
 
 impl Display for ChallengeUrl<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            std::env::var("BYTE_HEIST_PUBLIC_URL")
+                .unwrap_or_default()
+                .trim_end_matches("/"),
+        )?;
+
         write!(f, "/challenge/{}/", self.challenge_id)?;
         match self.challenge_name {
             Some(e) => write!(f, "{}", Slug(e))?,
