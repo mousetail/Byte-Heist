@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                field as \"field: DiffField\",\n                new_value as replacement_value\n            FROM challenge_change_suggestions\n            ",
+  "query": "\n            SELECT\n                field as \"field: DiffField\",\n                new_value as replacement_value\n            FROM challenge_change_suggestions\n            WHERE comment=$1\n            AND status='active'\n            ",
   "describe": {
     "columns": [
       {
@@ -26,12 +26,14 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Int4"
+      ]
     },
     "nullable": [
       false,
       false
     ]
   },
-  "hash": "2414cd7a2f74912bea3755c2ef3efb7c3b2686c5bef9fae7e7f0c07195441379"
+  "hash": "c87383e5618cb21eafdbd19f558a5f7bfb9b50afeb9fef1226c87e5d9893834d"
 }

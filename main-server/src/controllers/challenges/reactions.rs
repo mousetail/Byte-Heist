@@ -143,7 +143,10 @@ pub async fn handle_reactions(pool: &PgPool) -> Result<(), sqlx::Error> {
                 field as "field: DiffField",
                 new_value as replacement_value
             FROM challenge_change_suggestions
-            "#
+            WHERE comment=$1
+            AND status='active'
+            "#,
+            comment_id
         )
         .fetch_optional(pool)
         .await?;
