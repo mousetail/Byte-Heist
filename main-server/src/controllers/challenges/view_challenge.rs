@@ -1,6 +1,7 @@
 use std::{borrow::Cow, collections::HashSet};
 
 use axum::{Extension, extract::Path};
+use macros::CustomResponseMetadata;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query_as, query_scalar};
 
@@ -275,7 +276,7 @@ pub async fn post_comment(
     account: Account,
     Extension(pool): Extension<PgPool>,
     AutoInput(data): AutoInput<NewComment>,
-) -> Result<OutputDisplay, Error> {
+) -> Result<CustomResponseMetadata<OutputDisplay>, Error> {
     if !account.has_solved_a_challenge {
         return Err(Error::PermissionDenied(
             "Can't post a comment until your account has solved at least one challenge",

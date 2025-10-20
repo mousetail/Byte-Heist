@@ -1,3 +1,5 @@
+use macros::CustomResponseMetadata;
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query, query_as, query_scalar};
 
@@ -200,7 +202,7 @@ pub(super) async fn handle_diff<'a>(
     pool: &PgPool,
     challenge_id: i32,
     diff: &'a CommentDiff,
-) -> Result<Result<InsertDiffTask<'a>, OutputDisplay>, Error> {
+) -> Result<Result<InsertDiffTask<'a>, CustomResponseMetadata<OutputDisplay>>, Error> {
     if has_pending_diff(pool, challenge_id, diff.field)
         .await
         .map_err(Error::Database)?
@@ -246,7 +248,9 @@ pub(super) async fn handle_diff<'a>(
     if let Some(result) = test_results
         && (result.timed_out || !result.tests.pass)
     {
-        return Ok(Err(result.into()));
+        return Ok(Err(
+            CustomResponseMetadata::new(result.into()).with_status(StatusCode::BAD_REQUEST)
+        ));
     };
 
     Ok(Ok(InsertDiffTask {

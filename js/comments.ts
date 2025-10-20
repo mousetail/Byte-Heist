@@ -78,6 +78,16 @@ const setupEditButtons = () => {
         errorBox.textContent = message;
       }
 
+      function renderTestCases(data: ResultDisplay) {
+        if (testCasesBox === undefined) {
+          testCasesBox = document.createElement("div");
+          button.parentElement.insertAdjacentElement("afterend", testCasesBox);
+        }
+
+        renderResultDisplay(data, testCasesBox);
+        button.disabled = false;
+      }
+
       button.addEventListener("click", () => {
         if (button.dataset.active != "true") {
           oldComponent.style.display = "none";
@@ -111,23 +121,13 @@ const setupEditButtons = () => {
                 );
               } else if (res.redirected) {
                 window.location.reload();
+              } else if (res.status == 400) {
+                res.json().then((i) => renderTestCases(i));
               } else if (!res.ok) {
                 throw new Error(res.statusText);
               } else {
                 return res.json();
               }
-            })
-            .then((data: ResultDisplay) => {
-              if (testCasesBox === undefined) {
-                testCasesBox = document.createElement("div");
-                button.parentElement.insertAdjacentElement(
-                  "afterend",
-                  testCasesBox
-                );
-              }
-
-              renderResultDisplay(data, testCasesBox);
-              button.disabled = false;
             })
             .catch((e: Error) => {
               setErrorMessage(e.message);
