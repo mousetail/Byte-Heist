@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::VecDeque, sync::LazyLock};
+use std::{borrow::Cow, sync::LazyLock};
 
 use common::{ResultDisplay, RunLangOutput, TestCase, TestPassState};
 use serde::Serialize;
@@ -45,22 +45,19 @@ pub fn get_diff_elements(
     let mut output_diff = vec![];
     let mut expected_diff = vec![];
 
-    for value in DIFF_CONFIG
-        .diff_slices(
-            left.split(&sep)
-                .map(|k| k.trim_end())
-                .collect::<Vec<_>>()
-                .as_slice(),
-            right
-                .split(&sep)
-                .map(|k| k.trim_end())
-                .collect::<Vec<_>>()
-                .as_slice(),
-        )
-        .iter_all_changes()
-    {
-        let mut text = value.value().to_string();
-        match value.tag() {
+    let left_split = left.split(&sep).map(|k| k.trim_end()).collect::<Vec<_>>();
+    let right_map = right.split(&sep).map(|k| k.trim_end()).collect::<Vec<_>>();
+
+    let slices_diff = DIFF_CONFIG.diff_slices(&left_split, &right_map);
+
+    for (tag, value) in FilterIteratorButKeepContext::new(
+        slices_diff.iter_all_changes().map(|i| (i.tag(), i.value())),
+        |(tag, _)| tag != ChangeTag::Equal,
+        (ChangeTag::Equal, "..."),
+        3,
+    ) {
+        let mut text = value.to_string();
+        match tag {
             similar::ChangeTag::Delete => {
                 output_diff.push(DiffElement {
                     tag: similar::ChangeTag::Delete,

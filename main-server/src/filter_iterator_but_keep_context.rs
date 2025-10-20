@@ -12,6 +12,7 @@ where
     consecutive_values: usize,
     next_valid_value: Option<T>,
     truncated: bool,
+    has_ever_had_valid_value: bool,
 }
 
 impl<T: Copy, IteratorType, FilterFunction: Fn(T) -> bool>
@@ -36,6 +37,7 @@ where
             consecutive_values: context + 1,
             next_valid_value: None,
             truncated: false,
+            has_ever_had_valid_value: false,
         }
     }
 
@@ -49,6 +51,7 @@ where
                 return Some(value);
             } else {
                 self.next_valid_value = None;
+                self.has_ever_had_valid_value = true;
                 return Some(next_valid_value);
             }
         } else {
@@ -88,7 +91,7 @@ where
                         } else {
                             self.queue.push_front(value);
                             if self.queue.len() > self.context {
-                                self.truncated = true;
+                                self.truncated |= self.has_ever_had_valid_value;
                                 self.queue.truncate(self.context);
                             }
                         }
