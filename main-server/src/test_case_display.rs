@@ -4,6 +4,8 @@ use common::{ResultDisplay, RunLangOutput, TestCase, TestPassState};
 use serde::Serialize;
 use similar::{ChangeTag, TextDiff, TextDiffConfig};
 
+use crate::filter_iterator_but_keep_context::FilterIteratorButKeepContext;
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TestCaseDisplay {
@@ -204,114 +206,12 @@ impl From<RunLangOutput> for OutputDisplay {
     }
 }
 
-struct RemoveConsecutiveElements<T: Copy, IteratorType, FilterFunction: Fn(T) -> bool>
-where
-    IteratorType: Iterator<Item = T>,
-{
-    iterator: IteratorType,
-    filter_function: FilterFunction,
-    placeholder_value: T,
-    context: usize,
-    queue: VecDeque<T>,
-    consecutive_values: usize,
-    next_valid_value: Option<T>,
-    truncated: bool,
-}
-
-impl<T: Copy, IteratorType, FilterFunction: Fn(T) -> bool>
-    RemoveConsecutiveElements<T, IteratorType, FilterFunction>
-where
-    IteratorType: Iterator<Item = T>,
-{
-    fn new(
-        iterator: IteratorType,
-        filter_function: FilterFunction,
-        placeholder_value: T,
-        context: usize,
-    ) -> Self {
-        let queue = VecDeque::<T>::with_capacity(context);
-
-        Self {
-            iterator,
-            filter_function,
-            placeholder_value,
-            context,
-            queue,
-            consecutive_values: context + 1,
-            next_valid_value: None,
-            truncated: false,
-        }
-    }
-
-    fn pop_from_queue_or_next_valid(&mut self) -> Option<T> {
-        if let Some(next_valid_value) = self.next_valid_value {
-            if self.truncated {
-                self.truncated = false;
-                return Some(self.placeholder_value);
-            }
-            if let Some(value) = self.queue.pop_back() {
-                return Some(value);
-            } else {
-                self.next_valid_value = None;
-                return Some(next_valid_value);
-            }
-        } else {
-            return None;
-        }
-    }
-}
-
-impl<T: Copy, IteratorType, FilterFunction: Fn(T) -> bool> Iterator
-    for RemoveConsecutiveElements<T, IteratorType, FilterFunction>
-where
-    IteratorType: Iterator<Item = T>,
-{
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(value) = self.pop_from_queue_or_next_valid() {
-            return Some(value);
-        }
-
-        if let Some(next_value) = self.iterator.next() {
-            if (self.filter_function)(next_value) {
-                self.consecutive_values = 0;
-                return Some(next_value);
-            } else {
-                self.consecutive_values += 1;
-
-                if self.consecutive_values <= self.context {
-                    return Some(next_value);
-                } else {
-                    while let Some(value) = self.iterator.next() {
-                        if (self.filter_function)(value) {
-                            self.consecutive_values = 0;
-                            self.next_valid_value = Some(value);
-
-                            return self.pop_from_queue_or_next_valid();
-                        } else {
-                            self.queue.push_front(value);
-                            if self.queue.len() > self.context {
-                                self.truncated = true;
-                                self.queue.truncate(self.context);
-                            }
-                        }
-                    }
-                }
-
-                return self.pop_from_queue_or_next_valid();
-            }
-        }
-        None
-    }
-}
-
 pub fn inline_diff(old: &str, new: &str) -> String {
     let old_slices = old.split('\n').map(|k| k.trim_end()).collect::<Vec<_>>();
     let new_slices = new.split('\n').map(|k| k.trim_end()).collect::<Vec<_>>();
     let slices_diff = DIFF_CONFIG.diff_slices(&old_slices, &new_slices);
 
-    let lines_diff = RemoveConsecutiveElements::new(
+    let lines_diff = FilterIteratorButKeepContext::new(
         slices_diff.iter_all_changes().map(|c| (c.tag(), c.value())),
         |(tag, _)| matches!(tag, ChangeTag::Delete | ChangeTag::Insert),
         (ChangeTag::Equal, "..."),

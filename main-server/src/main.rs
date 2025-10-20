@@ -2,6 +2,7 @@ mod background_tasks;
 mod controllers;
 mod discord;
 mod error;
+mod filter_iterator_but_keep_context;
 mod models;
 mod strip_trailing_slashes;
 mod tera_utils;
@@ -9,8 +10,8 @@ mod test_case_display;
 mod test_solution;
 
 use axum::{
-    routing::{get, post},
     Extension, Router,
+    routing::{get, post},
 };
 use background_tasks::{
     announce_ended_challenges::announce_ended_challenges_task, refresh_views::refresh_views_task,
@@ -37,7 +38,7 @@ use controllers::{
 };
 use discord::DiscordEventSender;
 use discord_bot::Bot;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{PgPool, postgres::PgPoolOptions};
 use std::env;
 use strip_trailing_slashes::strip_trailing_slashes;
 use tokio::signal;
