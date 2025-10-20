@@ -78,6 +78,17 @@ pub struct NewReaction {
 
 impl NewReaction {
     async fn submit(&self, author: i32, pool: &PgPool) -> Result<i32, sqlx::Error> {
+        query!(
+            "
+            UPDATE challenge_comments
+            SET last_vote_time=now()
+            WHERE id=$1
+            ",
+            self.comment_id
+        )
+        .execute(pool)
+        .await?;
+
         query_scalar!(
             "
             INSERT INTO challenge_comment_votes(

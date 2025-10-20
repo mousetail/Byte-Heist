@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE challenge_comments\n            SET last_vote_time=now()\n            WHERE id=$1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "858f1028b8e39c456e776e9fddaa934ea1f531edcad17a8a108d65e0abc6adad"
+}
