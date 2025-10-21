@@ -190,11 +190,11 @@ async fn process_diff(
     let up_reactions = reactions.iter().filter(|i| i.is_upvote).count();
     let down_reactions = reactions.len() - up_reactions;
 
-    let status = if up_reactions - down_reactions > 2 && down_reactions < 2 {
+    let status = if up_reactions.saturating_sub(down_reactions) > 2 && down_reactions < 2 {
         diff.apply(pool, challenge_id).await?;
 
         DiffStatus::Accepted
-    } else if down_reactions - up_reactions < 2 && up_reactions < 2 {
+    } else if down_reactions.saturating_sub(up_reactions) < 2 && up_reactions < 2 {
         DiffStatus::Rejected
     } else {
         DiffStatus::Active
