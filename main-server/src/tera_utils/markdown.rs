@@ -34,7 +34,7 @@ pub fn render_markdown(source: &str) -> String {
             }
         });
 
-        ast.render()
+        format!("<div class=\"markdown\">{}</div>", ast.render())
     })
 }
 

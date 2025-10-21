@@ -82,7 +82,8 @@
   color: red;
 }
 
-.code-pre {
+.code-pre,
+.markdown pre {
   overflow: auto;
   min-height: 8rem;
   max-height: 32rem;
@@ -128,4 +129,37 @@
 
 .comment-content:has(~ .comment-reply:hover) {
   background-color: #222;
+}
+
+.markdown {
+  & h1 {
+    font-size: 1.5rem;
+  }
+
+  & h2 {
+    font-size: 1.4rem;
+  }
+
+  & h3 {
+    font-size: 1.3rem;
+  }
+
+  & h4 {
+    font-size: 1.2rem;
+  }
+
+  & blockquote {
+    border-left: 4px solid grey;
+    padding-left: 0.6rem;
+  }
+
+  & p,
+  a,
+  h1,
+  h2,
+  h3,
+  h4,
+  blockquote {
+    margin-bottom: 1.5rem;
+  }
 }

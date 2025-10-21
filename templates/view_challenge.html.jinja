@@ -64,6 +64,18 @@
         {%- for column in com.diff.columns -%}
           <div>{{ test_cases::diff_column(content=column) }}</div>
         {%- endfor -%}
+        <p>
+          A suggestion is automatically accepted if it has 3 more upvotes than downvotes
+          and no more than 1 downvote.
+        </p>
+        <p>
+          A suggestion is automatically rejected if it has 3 more downvotes than upvotes
+          and no more than 1 upvote.
+        </p>
+        <p>
+          If a suggestion has both 2 upvotes and 2 downvotes, it will
+          need to be manually reviewed by an admin.
+        </p>
       </div>
     {%- endif -%}
     <div class="comment-children">
