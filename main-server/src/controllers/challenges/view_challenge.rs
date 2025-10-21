@@ -283,10 +283,11 @@ pub async fn post_comment(
         ));
     }
 
-    if data.message.is_empty() || data.message.len() > 5000 {
-        return Err(Error::PermissionDenied(
-            "Message can't be empty of more than 5kb",
-        ));
+    if data.message.is_empty() {
+        return Err(Error::BadRequest("Message can't be empty"));
+    }
+    if data.message.len() > 5000 {
+        return Err(Error::BadRequest("Message can't be more than 5 kb"));
     }
 
     // Sanity check if you are reacting to a comment that exists and is under the correct challenge

@@ -16,6 +16,7 @@ pub enum Error {
     Oauth(OauthError),
     RunLang(String),
     PermissionDenied(&'static str),
+    BadRequest(&'static str),
     Redirect(Cow<'static, str>),
     RateLimit,
     Conflict,
@@ -79,8 +80,18 @@ impl IntoResponse for Error {
                 .unwrap(),
             Error::PermissionDenied(e) => Response::builder()
                 .status(StatusCode::FORBIDDEN)
+                .header("Content-Type", "text/html")
                 .body(Body::from(format!(
                     "<h2>Not Authorized</h2>
+                    <p>{}</p>",
+                    tera::escape_html(e)
+                )))
+                .unwrap(),
+            Error::BadRequest(e) => Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .header("Content-Type", "text/html")
+                .body(Body::from(format!(
+                    "<h2>Bad Request</h2>
                     <p>{}</p>",
                     tera::escape_html(e)
                 )))
