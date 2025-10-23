@@ -194,7 +194,7 @@ async fn process_diff(
         diff.apply(pool, challenge_id).await?;
 
         DiffStatus::Accepted
-    } else if down_reactions.saturating_sub(up_reactions) < 2 && up_reactions < 2 {
+    } else if down_reactions.saturating_sub(up_reactions) > 2 && up_reactions < 2 {
         DiffStatus::Rejected
     } else {
         DiffStatus::Active
