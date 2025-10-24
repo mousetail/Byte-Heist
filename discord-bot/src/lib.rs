@@ -151,6 +151,14 @@ async fn handle_message(
         &score_improved_event.language,
     )
     .await?;
+
+    if let Some(last_message) = &last_message_for_challenge
+        && last_message.author_id == score_improved_event.author
+        && last_message.score == score_improved_event.score
+    {
+        return Ok(());
+    }
+
     let challenge_name = get_challenge_name_by_id(pool, score_improved_event.challenge_id).await?;
     let user_info = get_user_info_by_id(pool, score_improved_event.author).await?;
     let latest_message = get_last_posted_message_id(pool).await?;

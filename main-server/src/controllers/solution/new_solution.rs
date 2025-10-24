@@ -1,27 +1,27 @@
 use axum::{
-    extract::{Path, Query},
     Extension,
+    extract::{Path, Query},
 };
 use common::langs::LANGS;
 use macros::CustomResponseMetadata;
 use reqwest::StatusCode;
-use sqlx::{types::time::OffsetDateTime, PgPool};
+use sqlx::{PgPool, types::time::OffsetDateTime};
 
 use crate::{
     discord::DiscordEventSender,
     error::Error,
     models::{
+        GetById,
         account::Account,
         activity_log::save_activity_log,
         challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, NewSolution},
-        GetById,
     },
     tera_utils::auto_input::AutoInput,
     test_solution::test_solution,
 };
 
-use super::{all_solutions::AllSolutionsOutput, SolutionQueryParameters};
+use super::{SolutionQueryParameters, all_solutions::AllSolutionsOutput};
 
 #[allow(clippy::too_many_arguments)]
 async fn insert_new_solution(

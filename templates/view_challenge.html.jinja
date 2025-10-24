@@ -44,41 +44,42 @@
         {{ self::vote_button(is_upvote=true, reactions=com.up_reactions) }}
         {{ self::vote_button(is_upvote=false, reactions=com.down_reactions) }}
       </form>
-    </div>
-    <div class="comment-content">
-      {%- if com.diff -%}
-        <span class="
-                     {% if com.diff.status == 'active' %}
-                       bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
-                     {% elif com.diff.status == 'rejected' %}
-                       bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
-                     {% elif com.diff.status == 'accepted' %}
-                       bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-                     {% endif %}
-                     text-sm font-medium me-2 px-2.5 py-0.5 rounded-sm">{{ com.diff.status }}</span>
-      {%- endif -%}
-      {{- com.message | markdown -}}
-    </div>
-    {%- if com.diff -%}
-      <div class="comment-diff grid grid-cols-2 gap-4">
-        {%- for column in com.diff.columns -%}
-          <div>{{ test_cases::diff_column(content=column) }}</div>
-        {%- endfor -%}
-      </div>
-    {%- endif -%}
-    <div class="comment-children">
-      {% for child in com.children %}{{ self::comment(com=child) }}{% endfor %}
-    </div>
-    {% if account and account.has_solved_a_challenge %}
-      <form class="comment-reply"
-            method="post"
-            action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
-        <input type="hidden" name="parent" value="{{ com.id }}">
-        <textarea name="message" placeholder="reply" class="textarea textarea-small"></textarea>
-        <button type="submit">Reply</button>
-      </form>
-    {% endif %}
+      {%- if com.diff -%}<i class="text-xs">This suggestion will automatically be acceped if it gets enough 👍</i>{% endif %}
   </div>
+  <div class="comment-content">
+    {%- if com.diff -%}
+      <span class="
+                   {% if com.diff.status == 'active' %}
+                     bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300
+                   {% elif com.diff.status == 'rejected' %}
+                     bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300
+                   {% elif com.diff.status == 'accepted' %}
+                     bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+                   {% endif %}
+                   text-sm font-medium me-2 px-2.5 py-0.5 rounded-sm">{{ com.diff.status }}</span>
+    {%- endif -%}
+    {{- com.message | markdown -}}
+  </div>
+  {%- if com.diff -%}
+    <div class="comment-diff grid grid-cols-2 gap-4">
+      {%- for column in com.diff.columns -%}
+        <div>{{ test_cases::diff_column(content=column) }}</div>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+  <div class="comment-children">
+    {% for child in com.children %}{{ self::comment(com=child) }}{% endfor %}
+  </div>
+  {% if account and account.has_solved_a_challenge %}
+    <form class="comment-reply"
+          method="post"
+          action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
+      <input type="hidden" name="parent" value="{{ com.id }}">
+      <textarea name="message" placeholder="reply" class="textarea textarea-small"></textarea>
+      <button type="submit">Reply</button>
+    </form>
+  {% endif %}
+</div>
 {% endmacro %}
 {% block content %}
   {% if object.id %}
