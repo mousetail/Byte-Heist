@@ -12,7 +12,7 @@ pub use reactions::{handle_reactions, post_reaction};
 pub use view_challenge::{post_comment, view_challenge};
 
 use crate::{
-    background_tasks::solution_invalidation::notify_challenge_updated,
+    background_tasks::solution_invalidation::queue_solution_retesting,
     discord::DiscordEventSender,
     error::Error,
     models::{
@@ -249,7 +249,11 @@ pub async fn new_challenge(
                 .unwrap();
 
                 // Tells the solution invalidator task to re-check all solutions
-                notify_challenge_updated();
+                if existing_challenge.challenge.challenge.judge != challenge.judge {
+                    queue_solution_retesting(&pool, Some(id), None, None, account.id)
+                        .await
+                        .map_err(Error::Database)?;
+                };
 
                 if existing_challenge.challenge.challenge.status != ChallengeStatus::Public
                     && challenge.status == ChallengeStatus::Public

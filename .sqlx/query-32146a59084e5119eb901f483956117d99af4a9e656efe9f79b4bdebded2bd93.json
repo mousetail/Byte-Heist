@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    id,\n                    challenge,\n                    language\n                FROM solution_retest_request\n                WHERE NOT processed\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "challenge",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "language",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "32146a59084e5119eb901f483956117d99af4a9e656efe9f79b4bdebded2bd93"
+}

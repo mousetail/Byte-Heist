@@ -1,0 +1,47 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    solutions.id,\n                    solutions.code,\n                    solutions.language,\n                    challenges.judge,\n                    solutions.time_out_count\n                FROM solutions\n                INNER JOIN challenges ON solutions.challenge = challenges.id\n                WHERE ($1::text IS NULL OR solutions.language=$1::text) AND\n                    ($2::integer IS NULL OR challenges.id=$2::integer) AND\n                    solutions.valid\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "language",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "judge",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "time_out_count",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e0fbee30613fd4db248c2f02dfa47cfcd5f057e299e756d82c5346b436799675"
+}

@@ -129,12 +129,13 @@ pub async fn handle_reactions(pool: &PgPool) -> Result<(), sqlx::Error> {
     struct CommentInfo {
         id: i32,
         challenge_id: i32,
+        author_id: i32,
     }
 
     let messages = query_as!(
         CommentInfo,
         r#"
-            SELECT id, challenge as challenge_id
+            SELECT id, challenge as challenge_id, author as author_id
             FROM challenge_comments
             WHERE last_vote_time > last_vote_processed_time
         "#
@@ -145,6 +146,7 @@ pub async fn handle_reactions(pool: &PgPool) -> Result<(), sqlx::Error> {
     for CommentInfo {
         id: comment_id,
         challenge_id,
+        author_id,
     } in messages
     {
         let diff = query_as!(
@@ -163,7 +165,7 @@ pub async fn handle_reactions(pool: &PgPool) -> Result<(), sqlx::Error> {
         .await?;
 
         if let Some(diff) = diff {
-            process_diff(pool, diff, challenge_id, comment_id).await?;
+            process_diff(pool, diff, challenge_id, comment_id, author_id).await?;
         }
 
         query!(
@@ -184,6 +186,7 @@ async fn process_diff(
     diff: CommentDiff,
     challenge_id: i32,
     comment_id: i32,
+    author_id: i32,
 ) -> Result<(), sqlx::Error> {
     let reactions = RawReaction::get_reactions_for_comment(pool, comment_id).await?;
 
@@ -191,7 +194,8 @@ async fn process_diff(
     let down_reactions = reactions.len() - up_reactions;
 
     let status = if up_reactions.saturating_sub(down_reactions) > 2 && down_reactions < 2 {
-        diff.apply(pool, challenge_id).await?;
+        diff.apply(pool, challenge_id, comment_id, author_id)
+            .await?;
 
         DiffStatus::Accepted
     } else if down_reactions.saturating_sub(up_reactions) > 2 && up_reactions < 2 {

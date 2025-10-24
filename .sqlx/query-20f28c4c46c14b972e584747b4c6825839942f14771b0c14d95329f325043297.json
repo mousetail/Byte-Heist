@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE solution_retest_request\n                SET\n                    processed=true,\n                    solutions_passed=$2,\n                    solutions_failed=$3,\n                    solutions_timed_out=$4\n                WHERE id=$1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "20f28c4c46c14b972e584747b4c6825839942f14771b0c14d95329f325043297"
+}

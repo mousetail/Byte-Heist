@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE solutions\n                    SET\n                        time_out_count=time_out_count+1,\n                        fail_reason=$2\n                    WHERE id=$1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bc79a68ff18bf724fbddc3725b06f0c0cc49b06e65e266cde73bf88e9f283bb9"
+}

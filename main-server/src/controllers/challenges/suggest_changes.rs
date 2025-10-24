@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
+    background_tasks::solution_invalidation::queue_solution_retesting,
     discord::post_change_suggestion, error::Error, models::account::Account,
     test_case_display::OutputDisplay, test_solution::test_solution,
 };
@@ -71,7 +72,13 @@ pub(super) struct CommentDiff {
 }
 
 impl CommentDiff {
-    pub(super) async fn apply(self, pool: &PgPool, challenge_id: i32) -> Result<(), sqlx::Error> {
+    pub(super) async fn apply(
+        self,
+        pool: &PgPool,
+        challenge_id: i32,
+        comment_id: i32,
+        author_id: i32,
+    ) -> Result<(), sqlx::Error> {
         match self.field {
             DiffField::Judge => query!(
                 "UPDATE challenges SET judge=$1 WHERE id=$2",
@@ -91,6 +98,11 @@ impl CommentDiff {
         }
         .execute(pool)
         .await?;
+
+        if let DiffField::Judge = self.field {
+            queue_solution_retesting(pool, Some(challenge_id), None, Some(comment_id), author_id)
+                .await?;
+        }
 
         Ok(())
     }
