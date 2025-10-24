@@ -13,9 +13,7 @@ pub trait HtmlRenderer<S> {
         status_code: axum::http::StatusCode,
     ) -> Response;
 
-    fn render_error(&self, err: Self::Err) -> Response;
-
-    fn render_json(&self, data: impl Serialize, status_code: axum::http::StatusCode) -> Response;
+    fn render_error(&self, err: Self::Err, context: Self::Context) -> Response;
 }
 
 pub trait IntoSerializedResponse<S, R: HtmlRenderer<S>> {
@@ -25,8 +23,6 @@ pub trait IntoSerializedResponse<S, R: HtmlRenderer<S>> {
         renderer: R,
         template: &'static str,
     ) -> Response;
-
-    fn into_json_response(self, renderer: R) -> Response;
 }
 
 impl<S, K, R: HtmlRenderer<S>> IntoSerializedResponse<S, R> for K
@@ -40,10 +36,6 @@ where
         template: &'static str,
     ) -> Response {
         renderer.render(self, context, template, StatusCode::OK)
-    }
-
-    fn into_json_response(self, renderer: R) -> Response {
-        renderer.render_json(self, StatusCode::OK)
     }
 }
 
@@ -79,9 +71,5 @@ where
         template: &'static str,
     ) -> Response {
         renderer.render(self.value, context, template, self.status_code)
-    }
-
-    fn into_json_response(self, renderer: R) -> Response {
-        renderer.render_json(self.value, self.status_code)
     }
 }

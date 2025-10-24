@@ -74,7 +74,7 @@ macro_rules! impl_handler {
                 let (mut parts, body) = req.into_parts();
 
                 Box::pin(async move {
-                    let output_format = auto_output_format::Format::from_request_parts(&mut parts, &state).await.unwrap();
+                    let output_format = Hal::Context::from_request_parts(&mut parts, &state).await.unwrap();
 
                     $(
                         let $ty = match $ty::from_request_parts(&mut parts, &state).await {
@@ -96,7 +96,7 @@ macro_rules! impl_handler {
                         Ok(data) => {
                             auto_output_format::AutoOutputFormat::new(data, self.template, output_format, self.renderer).into_response()
                         }
-                        Err(e) => self.renderer.render_error(e)
+                        Err(e) => self.renderer.render_error(e, output_format)
                     }
                 })
             }

@@ -3,14 +3,16 @@ mod leaderboard;
 mod new_solution;
 pub mod post_mortem;
 
+use std::borrow::Cow;
+
 pub use all_solutions::all_solutions;
 use common::urls::get_url_for_challenge;
 pub use leaderboard::get_leaderboard;
 pub use new_solution::new_solution;
 
-use axum::{extract::Path, response::Redirect, Extension};
+use axum::{Extension, extract::Path};
 use serde::{Deserialize, Serialize};
-use sqlx::{query_scalar, PgPool};
+use sqlx::{PgPool, query_scalar};
 
 use crate::{
     error::Error,
@@ -27,7 +29,7 @@ pub async fn challenge_redirect(
     Path(id): Path<i32>,
     account: Option<Account>,
     pool: Extension<PgPool>,
-) -> Result<Redirect, Error> {
+) -> Result<(), Error> {
     challenge_redirect_no_slug(Path((id, None)), account, pool).await
 }
 
@@ -35,7 +37,7 @@ pub async fn challenge_redirect_with_slug(
     Path((id, _slug)): Path<(i32, String)>,
     account: Option<Account>,
     pool: Extension<PgPool>,
-) -> Result<Redirect, Error> {
+) -> Result<(), Error> {
     challenge_redirect_no_slug(Path((id, None)), account, pool).await
 }
 
@@ -43,7 +45,7 @@ pub async fn challenge_redirect_no_slug(
     Path((id, language)): Path<(i32, Option<String>)>,
     account: Option<Account>,
     Extension(pool): Extension<PgPool>,
-) -> Result<Redirect, Error> {
+) -> Result<(), Error> {
     let language = match language.as_ref() {
         Some(language) => language.as_str(),
         None => match account.as_ref() {
@@ -60,7 +62,7 @@ pub async fn challenge_redirect_no_slug(
         return Err(Error::NotFound);
     };
 
-    Ok(Redirect::temporary(&format!(
+    return Err(Error::Redirect(Cow::Owned(format!(
         "{}",
         get_url_for_challenge(
             id,
@@ -69,5 +71,5 @@ pub async fn challenge_redirect_no_slug(
                 language: Some(language)
             }
         )
-    )))
+    ))));
 }

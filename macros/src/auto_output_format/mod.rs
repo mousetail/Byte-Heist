@@ -1,14 +1,12 @@
-pub mod format;
 pub mod html_renderer;
 
-pub use format::Format;
 use html_renderer::{HtmlRenderer, IntoSerializedResponse};
 
 use axum::response::IntoResponse;
 
 pub struct AutoOutputFormat<S, T: IntoSerializedResponse<S, Renderer>, Renderer: HtmlRenderer<S>> {
     data: T,
-    format: Format<Renderer::Context>,
+    context: Renderer::Context,
     template: &'static str,
     renderer: Renderer,
 }
@@ -19,12 +17,12 @@ impl<S, T: IntoSerializedResponse<S, Renderer>, Renderer: HtmlRenderer<S>>
     pub fn new(
         data: T,
         template: &'static str,
-        format: Format<Renderer::Context>,
+        format: Renderer::Context,
         renderer: Renderer,
     ) -> Self {
         AutoOutputFormat {
             data,
-            format,
+            context: format,
             template,
             renderer,
         }
@@ -35,12 +33,7 @@ impl<S, T: IntoSerializedResponse<S, Cb>, Cb: HtmlRenderer<S>> IntoResponse
     for AutoOutputFormat<S, T, Cb>
 {
     fn into_response(self) -> axum::response::Response {
-        match self.format {
-            Format::Html(ctx) => {
-                self.data
-                    .into_serialized_response(ctx, self.renderer, self.template)
-            }
-            Format::Json => self.data.into_json_response(self.renderer),
-        }
+        self.data
+            .into_serialized_response(self.context, self.renderer, self.template)
     }
 }

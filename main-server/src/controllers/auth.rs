@@ -1,15 +1,15 @@
+use std::borrow::Cow;
 use std::env;
 
-use axum::extract::Query;
-use axum::response::{IntoResponse, Redirect, Response};
 use axum::Extension;
+use axum::extract::Query;
+use axum::response::Redirect;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::{
     AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, EmptyExtraTokenFields,
     EndpointNotSet, EndpointSet, RedirectUrl, Scope, StandardTokenResponse, TokenResponse,
     TokenUrl,
 };
-use reqwest::StatusCode;
 use serde::Deserialize;
 use sqlx::prelude::FromRow;
 use sqlx::{Executor, PgPool, Pool, Postgres};
@@ -21,8 +21,8 @@ use crate::error::Error;
 const GITHUB_SESSION_CSRF_KEY: &str = "GITHUB_SESSION_CSRF_TOKEN";
 pub const ACCOUNT_ID_KEY: &str = "ACCOUNT_ID";
 
-fn create_github_client(
-) -> BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet> {
+fn create_github_client()
+-> BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet> {
     let github_client_id = ClientId::new(
         env::var("GITHUB_CLIENT_ID").expect("Missing the GITHUB_CLIENT_ID environment variable."),
     );
@@ -87,7 +87,7 @@ pub async fn github_callback(
     Extension(pool): Extension<PgPool>,
     Extension(bot): Extension<DiscordEventSender>,
     Query(token): Query<GithubResponse>,
-) -> Result<Response, Error> {
+) -> Result<(), Error> {
     let client = create_github_client();
 
     let http_client = reqwest::ClientBuilder::new()
@@ -144,14 +144,14 @@ pub async fn github_callback(
         }
 
         update_or_insert_user(&pool, &user_info, bot, &token_res, &session).await?;
-        Ok(Redirect::temporary("/").into_response())
+        Err(Error::Redirect(Cow::Borrowed("/")))
     } else {
-        let data = response.bytes().await.unwrap();
-        Ok((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            String::from_utf8_lossy(&data).to_string(),
-        )
-            .into_response())
+        // let data = response.bytes().await.unwrap();
+        Err(Error::ServerError)
+        //     StatusCode::INTERNAL_SERVER_ERROR,
+        //     String::from_utf8_lossy(&data).to_string(),
+        // )
+        //     .into_response())
     }
 }
 
@@ -255,6 +255,7 @@ async fn create_account_oauth_codes<'c>(
     id_on_provider: i64,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(r"INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
+    
         ($1, $2, $3, $4)", id, access_token, refresh_token, id_on_provider)
         .execute(pool)
         .await.map(|_|())
@@ -265,8 +266,6 @@ async fn create_account<'c>(
     username: &str,
     avatar: &str,
 ) -> Result<i32, sqlx::Error> {
-    
-
     sqlx::query_scalar!(
         "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id",
         username,

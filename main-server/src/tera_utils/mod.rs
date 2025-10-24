@@ -1,13 +1,14 @@
 use axum::{
     body::Body,
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Redirect, Response},
 };
-use html_context::HtmlContext;
+use html_context::{HtmlContext, RenderContext};
 use macros::HtmlRenderer;
 use reqwest::StatusCode;
 use serde::Serialize;
 use std::error::Error;
-use tera::{escape_html, Context};
+use tera::{Context, escape_html};
+
 
 pub mod auto_input;
 mod get_tera;
@@ -35,28 +36,24 @@ fn render_html_error(title: &str, error: &tera::Error) -> Response {
 #[derive(Clone)]
 pub struct TeraHtmlRenderer;
 
-impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
-    type Context = HtmlContext;
-    type Err = crate::error::Error;
-
-    fn render(
-        &self,
+impl TeraHtmlRenderer {
+    fn render_html(
         data: impl Serialize,
-        html_context: Self::Context,
-        template: &'static str,
+        context: HtmlContext,
         status_code: axum::http::StatusCode,
+        template: &'static str,
     ) -> Response {
         let tera = match get_tera::get_tera() {
             Ok(tera) => tera,
             Err(e) => return e.into_response(),
         };
 
-        let mut context = Context::new();
-        context.insert("object", &data);
-        context.insert("account", &html_context.account);
-        context.insert("dev", &cfg!(debug_assertions));
+        let mut tera_context = Context::new();
+        tera_context.insert("object", &data);
+        tera_context.insert("account", &context.account);
+        tera_context.insert("dev", &cfg!(debug_assertions));
 
-        let html = match tera.render(template, &context) {
+        let html = match tera.render(template, &tera_context) {
             Ok(html) => html,
             Err(err) => return render_html_error("Error rendering template", &err),
         };
@@ -67,25 +64,53 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
             .unwrap()
     }
 
-    fn render_error(&self, err: Self::Err) -> Response {
-        err.into_response()
-    }
-
-    fn render_json(&self, data: impl Serialize, status_code: axum::http::StatusCode) -> Response {
-        let Ok(data) = serde_json::to_vec(&data) else {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .header("Content-Type", "text/plain")
-                .body(Body::from(
-                    "An error was encountered serializing the response to this route".to_string(),
-                ))
-                .unwrap();
-        };
-
+    fn render_json(data: impl Serialize, status_code: axum::http::StatusCode) -> Response {
         Response::builder()
             .status(status_code)
             .header("Content-Type", "application/json")
-            .body(Body::from(data))
+            .body(axum::body::Body::from(serde_json::to_vec(&data).unwrap()))
             .unwrap()
+    }
+}
+
+impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
+    type Context = RenderContext;
+    type Err = crate::error::Error;
+
+    fn render(
+        &self,
+        data: impl Serialize,
+        context: Self::Context,
+        template: &'static str,
+        status_code: axum::http::StatusCode,
+    ) -> Response {
+        match context {
+            RenderContext::Html(e) => Self::render_html(data, e, status_code, template),
+            RenderContext::Json => Self::render_json(data, status_code),
+        }
+    }
+
+    fn render_error(&self, err: Self::Err, context: Self::Context) -> Response {
+        let representation = err.get_representaiton();
+        let status_code = representation.status_code;
+        match context {
+            html_context::Format::Json => {
+                return Self::render_json(
+                    representation,
+                    if status_code.is_redirection() {
+                        axum::http::StatusCode::IM_A_TEAPOT
+                    } else {
+                        status_code
+                    },
+                );
+            }
+            html_context::Format::Html(ctx) => {
+                if let Some(location) = representation.location {
+                    return Redirect::temporary(&location).into_response();
+                }
+
+                Self::render_html(representation, ctx, status_code, "error.html.jinja")
+            }
+        }
     }
 }

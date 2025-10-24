@@ -1,11 +1,7 @@
 use std::borrow::Cow;
 
-use axum::{
-    body::Body,
-    http::Response,
-    response::{IntoResponse, Redirect},
-};
 use reqwest::StatusCode;
+use serde::Serialize;
 
 #[derive(Debug)]
 pub enum Error {
@@ -30,80 +26,87 @@ pub enum OauthError {
     CsrfValidation,
 }
 
-impl IntoResponse for OauthError {
-    fn into_response(self) -> axum::response::Response {
-        Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .header("Content-Type", "Text/Plain")
-            .body(Body::from(format!("{self:?}")))
-            .unwrap()
+impl OauthError {
+    fn get_representaiton(self) -> ErrorRepresentation {
+        ErrorRepresentation {
+            status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            title: Cow::Borrowed("OAuth Error"),
+            body: Some(Cow::Owned(format!("{self:?}"))),
+            location: None,
+        }
     }
 }
 
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
+#[derive(Serialize)]
+pub struct ErrorRepresentation {
+    #[serde(skip)]
+    pub status_code: axum::http::StatusCode,
+    pub title: Cow<'static, str>,
+    pub body: Option<Cow<'static, str>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<Cow<'static, str>>,
+}
+
+impl Error {
+    pub fn get_representaiton(self) -> ErrorRepresentation {
         match self {
-            Error::NotFound => Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body(Body::from(
-                    r#"<h2>Not Found<h2>
-                    <a href="/">Back to Home</a>
-                "#,
-                ))
-                .unwrap(),
-            Error::ServerError => Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap(),
-            Error::Database(e) => Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .header("Content-Type", "text/html")
-                .body(Body::from(format!(
-                    "Database Error: <pre>{}</pre>",
-                    tera::escape_html(&format!("{e:#?}"))
-                )))
-                .unwrap(),
-            Error::Oauth(oauth_error) => oauth_error.into_response(),
-            Error::RunLang(s) => Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::from(format!(
-                    "<h2>Lang Runner Error</h2><pre>{}</pre>",
-                    tera::escape_html(&s)
-                )))
-                .unwrap(),
-            Error::Conflict => Response::builder()
-                .status(StatusCode::CONFLICT)
-                .header("Content-Type", "text/html")
-                .body(Body::from(
-                    "<h2>Conflict</h2><p>A race condition occurred handling this request</p>",
-                ))
-                .unwrap(),
-            Error::PermissionDenied(e) => Response::builder()
-                .status(StatusCode::FORBIDDEN)
-                .header("Content-Type", "text/html")
-                .body(Body::from(format!(
-                    "<h2>Not Authorized</h2>
-                    <p>{}</p>",
-                    tera::escape_html(e)
-                )))
-                .unwrap(),
-            Error::BadRequest(e) => Response::builder()
-                .status(StatusCode::BAD_REQUEST)
-                .header("Content-Type", "text/html")
-                .body(Body::from(format!(
-                    "<h2>Bad Request</h2>
-                    <p>{}</p>",
-                    tera::escape_html(e)
-                )))
-                .unwrap(),
-            Error::Redirect(e) => Redirect::to(&e).into_response(),
-            Error::RateLimit => Response::builder()
-                .status(StatusCode::TOO_MANY_REQUESTS)
-                .header("Content-Type", "text/html")
-                .body(Body::from(
-                    "<h1>Rate Limit Exceeded</h1><p>Please wait one minute</p>",
-                ))
-                .unwrap(),
+            Error::NotFound => ErrorRepresentation {
+                status_code: StatusCode::NOT_FOUND,
+                title: Cow::Borrowed("Not Found"),
+                body: None,
+                location: None,
+            },
+            Error::ServerError => ErrorRepresentation {
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                title: Cow::Borrowed("Internal Server Error"),
+                body: None,
+                location: None,
+            },
+            Error::Database(e) => ErrorRepresentation {
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                title: Cow::Borrowed("Database Error"),
+                body: Some(Cow::Owned(format!("{e:#?}"))),
+                location: None,
+            },
+            Error::Oauth(oauth_error) => oauth_error.get_representaiton(),
+            Error::RunLang(s) => ErrorRepresentation {
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+                title: Cow::Borrowed("Lang Runner Error"),
+                body: Some(Cow::Owned(s)),
+                location: None,
+            },
+            Error::Conflict => ErrorRepresentation {
+                status_code: StatusCode::CONFLICT,
+                title: Cow::Borrowed("Conflict"),
+                body: Some(Cow::Borrowed(
+                    "A race condition occurred processing this request",
+                )),
+                location: None,
+            },
+            Error::PermissionDenied(e) => ErrorRepresentation {
+                status_code: StatusCode::FORBIDDEN,
+                title: Cow::Borrowed("Not Authorized"),
+                body: Some(Cow::Borrowed(e)),
+                location: None,
+            },
+            Error::BadRequest(e) => ErrorRepresentation {
+                status_code: StatusCode::BAD_REQUEST,
+                title: Cow::Borrowed("Bad Request"),
+                body: Some(Cow::Borrowed(e)),
+                location: None,
+            },
+            Error::Redirect(e) => ErrorRepresentation {
+                status_code: StatusCode::TEMPORARY_REDIRECT,
+                title: Cow::Borrowed(""),
+                body: None,
+                location: Some(e),
+            },
+            Error::RateLimit => ErrorRepresentation {
+                status_code: StatusCode::TOO_MANY_REQUESTS,
+                title: Cow::Borrowed("Rate Limit Exceeded"),
+                body: Some(Cow::Borrowed("Please wait one minute")),
+                location: None,
+            },
         }
     }
 }

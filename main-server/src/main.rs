@@ -127,7 +127,10 @@ async fn main() -> anyhow::Result<()> {
             get(route_factory.handler("submit_challenge/index.html.jinja", compose_challenge))
                 .post(route_factory.handler("submit_challenge/index.html.jinja", new_challenge)),
         )
-        .route("/challenge/{id}", get(challenge_redirect))
+        .route(
+            "/challenge/{id}",
+            get(route_factory.handler("", challenge_redirect)),
+        )
         .route(
             "/challenge/{id}/{slug}/edit",
             get(route_factory.handler("submit_challenge/index.html.jinja", compose_challenge))
@@ -144,7 +147,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/challenge/{id}/{slug}/solve",
-            get(challenge_redirect_with_slug),
+            get(route_factory.handler("", challenge_redirect_with_slug)),
         )
         .route(
             "/challenge/{id}/{slug}/leaderboard/{language}",
@@ -164,14 +167,20 @@ async fn main() -> anyhow::Result<()> {
             get(route_factory.handler("post_mortem_view.html.jinja", post_mortem_view)),
         )
         .route("/login/github", get(github_login))
-        .route("/callback/github", get(github_callback))
+        .route(
+            "/callback/github",
+            get(route_factory.handler("", github_callback)),
+        )
         .route(
             "/user/{id}",
             get(route_factory.handler("user.html.jinja", get_user)),
         )
-        .route("/{id}/{language}", get(challenge_redirect_no_slug))
+        .route(
+            "/{id}/{language}",
+            get(route_factory.handler("", challenge_redirect_no_slug)),
+        )
         .nest_service("/static", ServeDir::new("static"))
-        .fallback(get(strip_trailing_slashes))
+        .fallback(get(route_factory.handler("", strip_trailing_slashes)))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(Extension(pool))
         .layer(Extension(discord_bot))
