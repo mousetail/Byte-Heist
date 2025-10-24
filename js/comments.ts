@@ -41,7 +41,7 @@ const setupVotingButton = (button: HTMLButtonElement) => {
       body: JSON.stringify({ is_upvote: is_upvote, comment_id: comment_id }),
     });
 
-    if (res.status >= 400) {
+    if (res.status >= 400 && res.status != 418) {
       console.error(`Failed to submit vote: ${res.status}`);
       button.textContent = button.textContent.replace(
         /\d+/,
