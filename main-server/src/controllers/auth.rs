@@ -254,11 +254,30 @@ async fn create_account_oauth_codes<'c>(
     refresh_token: &str,
     id_on_provider: i64,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query!(r"INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
-    
-        ($1, $2, $3, $4)", id, access_token, refresh_token, id_on_provider)
-        .execute(pool)
-        .await.map(|_|())
+    sqlx::query!(
+        r#"
+            INSERT INTO
+                account_oauth_codes(
+                    account,
+                    access_token,
+                    refresh_token,
+                    id_on_provider
+                ) VALUES
+                (
+                    $1,
+                    $2,
+                    $3,
+                    $4
+                )
+        "#,
+        id,
+        access_token,
+        refresh_token,
+        id_on_provider
+    )
+    .execute(pool)
+    .await
+    .map(|_| ())
 }
 
 async fn create_account<'c>(

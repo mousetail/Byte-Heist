@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO\n                account_oauth_codes(\n                    account,\n                    access_token,\n                    refresh_token,\n                    id_on_provider\n                ) VALUES\n                (\n                    $1,\n                    $2,\n                    $3,\n                    $4\n                )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Varchar",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "60f36134316f29761fafeb499cb3531028c44a1a84a03843b316c4cf6ee7bc2c"
+}
