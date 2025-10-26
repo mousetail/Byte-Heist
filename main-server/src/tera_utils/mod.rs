@@ -95,14 +95,14 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
         let status_code = representation.status_code;
         match context {
             html_context::Format::Json => {
-                return Self::render_json(
+                Self::render_json(
                     representation,
                     if status_code.is_redirection() {
                         axum::http::StatusCode::IM_A_TEAPOT
                     } else {
                         status_code
                     },
-                );
+                )
             }
             html_context::Format::Html(ctx) => {
                 if let Some(location) = representation.location {

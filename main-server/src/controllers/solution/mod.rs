@@ -62,7 +62,7 @@ pub async fn challenge_redirect_no_slug(
         return Err(Error::NotFound);
     };
 
-    return Err(Error::Redirect(Cow::Owned(format!(
+    Err(Error::Redirect(Cow::Owned(format!(
         "{}",
         get_url_for_challenge(
             id,
@@ -71,5 +71,5 @@ pub async fn challenge_redirect_no_slug(
                 language: Some(language)
             }
         )
-    ))));
+    ))))
 }

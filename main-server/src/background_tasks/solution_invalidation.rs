@@ -193,10 +193,10 @@ fn notify_challenge_updated() {
     SOLUTION_INVALIATION_NOTIFICATION.notify_one();
 }
 
-pub async fn queue_solution_retesting<'a>(
+pub async fn queue_solution_retesting(
     pool: &PgPool,
     challenge_id: Option<i32>,
-    language: Option<&'a str>,
+    language: Option<&str>,
     comment_id: Option<i32>,
     author_id: i32,
 ) -> Result<(), sqlx::Error> {
