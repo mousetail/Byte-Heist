@@ -11,67 +11,61 @@
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="edit", id=object.id, name=object.name, author=object.author) }}
   {% endif %}
-  <div class="flex min-h-screen flex-col bg-byte-brown-950">
-    <main class="flex-1">
-      <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 md:px-8 lg:px-28 mt-10">
-        <div class="flex flex-col gap-6">
-          <form method="post" id="submit-challenge-form">
-            {% if object.is_post_mortem %}
-              <div class="warning">This challenge has ended and can no longer be edited.</div>
-            {% endif %}
-            {% if object.validation and object.validation is not empty %}
-              <div class="warning">Not saved, see fields for details.</div>
-            {% endif %}
-            <div class="tabs w-full" id="create-challenge-tabs">
-              <nav role="tablist" aria-orientation="horizontal" class="w-full">
-                <button type="button"
-                        role="tab"
-                        id="challenge-tabs-basic-info"
-                        aria-controls="challenge-tabs-basic-info-1"
-                        aria-selected="true"
-                        tabindex="0">Description</button>
-                <button type="button"
-                        role="tab"
-                        id="challenge-tabs-judge"
-                        aria-controls="challenge-tabs-judge-1"
-                        aria-selected="false"
-                        tabindex="0">Judge</button>
-                <button type="button"
-                        role="tab"
-                        id="challenge-tabs-example-code"
-                        aria-controls="challenge-tabs-example-code-1"
-                        aria-selected="false"
-                        tabindex="0">Example Code</button>
-              </nav>
-            </div>
-            <div role="tabpanel"
-                 id="challenge-tabs-basic-info-1"
-                 aria-labelledby="challenge-tabs-basic-info"
-                 tabindex="-1"
-                 aria-selected="true">{% include "submit_challenge/basic_info.html.jinja" %}</div>
-            <div role="tabpanel"
-                 id="challenge-tabs-judge-1"
-                 aria-labelledby="challenge-tabs-judge"
-                 aria-selected="false"
-                 tabindex="-1"
-                 hidden>{% include "submit_challenge/judge.html.jinja" %}</div>
-            <div role="tabpanel"
-                 id="challenge-tabs-example-code-1"
-                 aria-labelledby="challenge-tabs-example-code"
-                 aria-selected="false"
-                 tabindex="-1"
-                 hidden>{% include "submit_challenge/example_code.html.jinja" %}</div>
-            {% include "submit_challenge/submit_button.html.jinja" %}
-            <div id="test-case-container">
-              {% if object.tests %}
-                {{ test_cases::test_cases(cases=object.tests) }}
-              {% else %}
-                {{ test_cases::test_cases(cases=False) }}
-              {% endif %}
-            </div>
-          </form>
-        </div>
+  <div class="flex flex-col gap-6">
+    <form method="post" id="submit-challenge-form">
+      {% if object.is_post_mortem %}
+        <div class="warning">This challenge has ended and can no longer be edited.</div>
+      {% endif %}
+      {% if object.validation and object.validation is not empty %}
+        <div class="warning">Not saved, see fields for details.</div>
+      {% endif %}
+      <div class="tabs w-full" id="create-challenge-tabs">
+        <nav role="tablist" aria-orientation="horizontal" class="w-full">
+          <button type="button"
+                  role="tab"
+                  id="challenge-tabs-basic-info"
+                  aria-controls="challenge-tabs-basic-info-1"
+                  aria-selected="true"
+                  tabindex="0">Description</button>
+          <button type="button"
+                  role="tab"
+                  id="challenge-tabs-judge"
+                  aria-controls="challenge-tabs-judge-1"
+                  aria-selected="false"
+                  tabindex="0">Judge</button>
+          <button type="button"
+                  role="tab"
+                  id="challenge-tabs-example-code"
+                  aria-controls="challenge-tabs-example-code-1"
+                  aria-selected="false"
+                  tabindex="0">Example Code</button>
+        </nav>
       </div>
-    </main>
+      <div role="tabpanel"
+           id="challenge-tabs-basic-info-1"
+           aria-labelledby="challenge-tabs-basic-info"
+           tabindex="-1"
+           aria-selected="true">{% include "submit_challenge/basic_info.html.jinja" %}</div>
+      <div role="tabpanel"
+           id="challenge-tabs-judge-1"
+           aria-labelledby="challenge-tabs-judge"
+           aria-selected="false"
+           tabindex="-1"
+           hidden>{% include "submit_challenge/judge.html.jinja" %}</div>
+      <div role="tabpanel"
+           id="challenge-tabs-example-code-1"
+           aria-labelledby="challenge-tabs-example-code"
+           aria-selected="false"
+           tabindex="-1"
+           hidden>{% include "submit_challenge/example_code.html.jinja" %}</div>
+      {% include "submit_challenge/submit_button.html.jinja" %}
+      <div id="test-case-container">
+        {% if object.tests %}
+          {{ test_cases::test_cases(cases=object.tests) }}
+        {% else %}
+          {{ test_cases::test_cases(cases=False) }}
+        {% endif %}
+      </div>
+    </form>
   </div>
 {% endblock content %}

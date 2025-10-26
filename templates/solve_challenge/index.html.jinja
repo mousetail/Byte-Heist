@@ -19,69 +19,63 @@
 {% endblock scripts %}
 {% block content %}
   {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.name, author=object.challenge.author) }}
-  <div class="flex min-h-screen flex-col bg-byte-brown-950">
-    <main class="flex-1">
-      <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 md:px-8 lg:px-28 mt-10">
-        <div class="flex flex-col gap-6">
-          <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">{{ object.challenge.name }}</h1>
-          <p>
-            A challenge by
-            <a href="/user/{{ object.challenge.author }}" class="underline">
-              <img src="{{ object.challenge.author_avatar }}&size=18"
-                   alt="{{ object.challenge.author_name }} avatar"
-                   class="inline rounded-full"
-                   height="18" />
-              {{ object.challenge.author_name }}
-            </a>
-          </p>
-          <div class="grid md:grid-cols-4 gap-3">
-            <div class="md:col-span-3">
-              <h3 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Description</h3>
-              {{ object.challenge.description | markdown }}
-            </div>
-            {% include "solve_challenge/leaderboard.html.jinja" %}
-          </div>
-          {% set challenge_name = object.challenge.name | slugify %}
-          {{ language_selector::language_selector(href=("/challenge/"~object.challenge.id ~ "/" ~ challenge_name ~ "/solve/") , selected=object.language) }}
-          <form method="post" class="challenge-submission-form">
-            {% if object.previous_solution_invalid %}
-              <div class="warning">
-                Your previous submitted solution has been made invalid due to updates in the challenge. Please fix your solution before it will
-                be added back to the leaderboard.
-              </div>
-            {% endif %}
-            {% if object.challenge.is_post_mortem %}
-              <div class="warning">
-                This challenge has ended. You are free to submit more solutions but they won't count for scoring.
-              </div>
-            {% endif %}
-            <div class="hidden w-full" id="editor-controls">
-              <div class="float-right">
-                <button type="button"
-                        id="restore-solution-button"
-                        class="btn btn-destructive">Restore solution</button>
-              </div>
-              <div>
-                <span id="byte-counter"></span> Bytes
-              </div>
-            </div>
-            <div class=" clear-both"></div>
-            <textarea name="code" class="codemirror" id="main-code" data-encoded-source="{% if object.code %}{{ object.code | urlencode_strict }}{% endif %}">
+  <div class="flex flex-col gap-6">
+    <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">{{ object.challenge.name }}</h1>
+    <p>
+      A challenge by
+      <a href="/user/{{ object.challenge.author }}" class="underline">
+        <img src="{{ object.challenge.author_avatar }}&size=18"
+             alt="{{ object.challenge.author_name }} avatar"
+             class="inline rounded-full"
+             height="18" />
+        {{ object.challenge.author_name }}
+      </a>
+    </p>
+    <div class="grid md:grid-cols-4 gap-3">
+      <div class="md:col-span-3">
+        <h3 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Description</h3>
+        {{ object.challenge.description | markdown }}
+      </div>
+      {% include "solve_challenge/leaderboard.html.jinja" %}
+    </div>
+    {% set challenge_name = object.challenge.name | slugify %}
+    {{ language_selector::language_selector(href=("/challenge/"~object.challenge.id ~ "/" ~ challenge_name ~ "/solve/") , selected=object.language) }}
+    <form method="post" class="challenge-submission-form">
+      {% if object.previous_solution_invalid %}
+        <div class="warning">
+          Your previous submitted solution has been made invalid due to updates in the challenge. Please fix your solution before it will
+          be added back to the leaderboard.
+        </div>
+      {% endif %}
+      {% if object.challenge.is_post_mortem %}
+        <div class="warning">
+          This challenge has ended. You are free to submit more solutions but they won't count for scoring.
+        </div>
+      {% endif %}
+      <div class="hidden w-full" id="editor-controls">
+        <div class="float-right">
+          <button type="button"
+                  id="restore-solution-button"
+                  class="btn btn-destructive">Restore solution</button>
+        </div>
+        <div>
+          <span id="byte-counter"></span> Bytes
+        </div>
+      </div>
+      <div class=" clear-both"></div>
+      <textarea name="code" class="codemirror" id="main-code" data-encoded-source="{% if object.code %}{{ object.code | urlencode_strict }}{% endif %}">
         {%- if object.code -%}
           {{- object.code | prepend_linebreak -}}
         {%- endif -%}
     </textarea>
-            {% if account %}
-              <button type="submit" class="btn btn-primary">Submit!</button>
-            {% else %}
-              <div class="warning">You must be logged in to submit a solution.</div>
-              <button type="submit" disabled>Submit!</button>
-            {% endif %}
-            <div class="error hidden solution-submit-error"></div>
-          </form>
-          {{ test_cases::test_cases(cases=object.tests) }}
-        </div>
-      </div>
-    </main>
+      {% if account %}
+        <button type="submit" class="btn btn-primary">Submit!</button>
+      {% else %}
+        <div class="warning">You must be logged in to submit a solution.</div>
+        <button type="submit" disabled>Submit!</button>
+      {% endif %}
+      <div class="error hidden solution-submit-error"></div>
+    </form>
+    {{ test_cases::test_cases(cases=object.tests) }}
   </div>
 {% endblock content %}

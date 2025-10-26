@@ -85,55 +85,49 @@
   {% if object.id %}
     {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author) }}
   {% endif %}
-  <div class="flex min-h-screen flex-col bg-byte-brown-950">
-    <main class="flex-1">
-      <div class="max-w-8xl mx-auto py-8 px-4 sm:px-6 md:px-8 lg:px-28 mt-10">
-        <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">{{ object.name }}</h1>
-        <div id="description-container">{{ object.description | markdown }}</div>
-        {% if account and account.has_solved_a_challenge %}
-          <div class="flex justify-end">
-            <button type="button"
-                    class="btn"
-                    data-for="description-container"
-                    data-name="description"
-                    data-value="{{- object.description -}}">edit</button>
-          </div>
-        {% endif %}
-        <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Judge</h2>
-        <div id="judge-container">{{- object.judge | syntax_highlight(lang="js") -}}</div>
-        {% if account and account.has_solved_a_challenge %}
-          <div class="flex justify-end">
-            <button type="button"
-                    class="btn"
-                    data-for="judge-container"
-                    data-name="judge"
-                    data-value="{{- object.judge -}}">edit</button>
-          </div>
-        {% endif %}
-        <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Example Code</h2>
-        <div id="example-container">{{- object.example_code | syntax_highlight(lang="js") -}}</div>
-        {% if account and account.has_solved_a_challenge %}
-          <div class="flex justify-end">
-            <button type="button"
-                    class="btn"
-                    data-for="example-container"
-                    data-name="example_code"
-                    data-value="{{- object.example_code -}}">edit</button>
-          </div>
-        {% endif %}
-        <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Comments</h2>
-        {% for comment in object.comments %}{{ self::comment(com=comment) }}{% endfor %}
-        {% if account and account.has_solved_a_challenge %}
-          <form class="comment-reply"
-                method="post"
-                action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
-            <textarea name="message" class="textarea"></textarea>
-            <button type="submit" class="btn btn-primary">Post new comment</button>
-          </form>
-        {% endif %}
-      </div>
-    </main>
-  </div>
+  <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">{{ object.name }}</h1>
+  <div id="description-container">{{ object.description | markdown }}</div>
+  {% if account and account.has_solved_a_challenge %}
+    <div class="flex justify-end">
+      <button type="button"
+              class="btn"
+              data-for="description-container"
+              data-name="description"
+              data-value="{{- object.description -}}">edit</button>
+    </div>
+  {% endif %}
+  <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Judge</h2>
+  <div id="judge-container">{{- object.judge | syntax_highlight(lang="js") -}}</div>
+  {% if account and account.has_solved_a_challenge %}
+    <div class="flex justify-end">
+      <button type="button"
+              class="btn"
+              data-for="judge-container"
+              data-name="judge"
+              data-value="{{- object.judge -}}">edit</button>
+    </div>
+  {% endif %}
+  <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Example Code</h2>
+  <div id="example-container">{{- object.example_code | syntax_highlight(lang="js") -}}</div>
+  {% if account and account.has_solved_a_challenge %}
+    <div class="flex justify-end">
+      <button type="button"
+              class="btn"
+              data-for="example-container"
+              data-name="example_code"
+              data-value="{{- object.example_code -}}">edit</button>
+    </div>
+  {% endif %}
+  <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Comments</h2>
+  {% for comment in object.comments %}{{ self::comment(com=comment) }}{% endfor %}
+  {% if account and account.has_solved_a_challenge %}
+    <form class="comment-reply"
+          method="post"
+          action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view">
+      <textarea name="message" class="textarea"></textarea>
+      <button type="submit" class="btn btn-primary">Post new comment</button>
+    </form>
+  {% endif %}
 {% endblock content %}
 {% block post_content %}
   {{ modules(modules="js/comments.ts") | safe }}
