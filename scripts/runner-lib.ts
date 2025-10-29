@@ -147,7 +147,13 @@ export type FilterCasesOptions = {
   numberOfRuns: number;
 };
 
+/**
+ * A class that allows you to interface with the lang runner to run code
+ */
 export class Context {
+  /**
+   * Starts as the original code submitted
+   */
   public code: string;
   private onRunCallback: (
     code: string,

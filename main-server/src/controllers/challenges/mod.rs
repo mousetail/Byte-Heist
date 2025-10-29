@@ -160,7 +160,16 @@ pub async fn new_challenge(
         return Ok(CustomResponseMetadata::new(ChallengeWithTests {
             challenge: new_challenge,
             tests: Some(tests.into()),
-            validation: None,
+            validation: Some(
+                [
+                    ("judge", "please fill in a judge for the challenge"),
+                    (
+                        "example-code",
+                        "Please fill in example code for the challenge",
+                    ),
+                ]
+                .into(),
+            ),
         })
         .with_status(StatusCode::BAD_REQUEST));
     }

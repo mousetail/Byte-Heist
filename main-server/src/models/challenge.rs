@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
+use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
 
 use crate::{error::Error, test_case_display::OutputDisplay};
 
-use super::{account::Account, GetById};
+use super::{GetById, account::Account};
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
@@ -62,6 +62,15 @@ impl NewChallenge {
         if self.description.is_empty() {
             errors.insert("description", "description can not be empty");
         }
+        if self.example_code.is_empty() {
+            errors.insert("example-code", "Please enter some example code that should pass your challenge. This ensures your challenge is possible and that your judge works.");
+        }
+        if self.judge.is_empty() || self.judge == DEFAULT_JUDGE {
+            errors.insert(
+                "judge",
+                "Please write a judge that can validate the correctness of a solution.",
+            );
+        }
         if self.status == ChallengeStatus::Public
             && !is_admin
             && previous.is_none_or(|k| k.challenge.status == ChallengeStatus::Public)
@@ -93,6 +102,26 @@ impl NewChallenge {
     }
 }
 
+const DEFAULT_JUDGE: &str = concat!(
+    "(async function*(context: Context): Challenge {\n",
+    "\t// Single Test\n",
+    "\tyield (await context.run(undefined)).assertEquals('Hello World!');\n\n",
+    "\t// Automatically shuffle and deal test cases over multiple runs\n",
+    "\tyield* context.runTestCases(\n",
+    "\t\t[\n",
+    "\t\t\t[\"Input\", \"Expected Output\"],\n",
+    "\t\t]\n",
+    "\t);\n",
+    "\t// For \"Filter\" Style challenges where the goal is to output all inputs that match some condition\n",
+    "\tyield* context.runFilterCases([\n",
+    "\t\t[\"This should be outputted\", true],\n",
+    "\t\t[\"This should not be outputted\", false],\n",
+    "\t]);\n",
+    "\t// Finally, the challenge is passed if no test cases failed\n",
+    "\treturn context.noFailures();\n",
+    "})"
+);
+
 impl Default for NewChallenge {
     fn default() -> Self {
         NewChallenge {
@@ -101,26 +130,7 @@ impl Default for NewChallenge {
                 "include examples and links to relevent resources. Markdown is supported"
             )
             .to_string(),
-            judge: concat!(
-                "(async function*(context: Context): Challenge {\n",
-                "\t// Single Test\n",
-                "\tyield (await context.run(undefined)).assertEquals('Hello World!');\n\n",
-                "\t// Automatically shuffle and deal test cases over multiple runs\n",
-                "\tyield* context.runTestCases(\n",
-                "\t\t[\n",
-                "\t\t\t[\"Input\", \"Expected Output\"],\n",
-                "\t\t]\n",
-                "\t);\n",
-                "\t// For \"Filter\" Style challenges where the goal is to output all inputs that match some condition\n",
-                "\tyield* context.runFilterCases([\n",
-                "\t\t[\"This should be outputted\", true],\n",
-                "\t\t[\"This should not be outputted\", false],\n",
-                "\t]);\n",
-                "\t// Finally, the challenge is passed if no test cases failed\n",
-                "\treturn context.noFailures();\n",
-                "})"
-            )
-            .to_string(),
+            judge: DEFAULT_JUDGE.to_string(),
             name: String::new(),
             example_code: String::new(),
             category: ChallengeCategory::RestrictedSource,

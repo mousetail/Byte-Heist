@@ -60,12 +60,12 @@ const setup_form = (
       return;
     }
 
-    if (response.redirected) {
-      console.log("redirected");
-      window.history.replaceState("", null, response.url);
-    }
-
     const data = await response.json();
+
+    if (response.status == 418) {
+      console.log("redirected");
+      window.history.replaceState("", null, data.location);
+    }
 
     handleResponse(data, form);
 
@@ -95,26 +95,37 @@ const handleResponse = (
   form: HTMLFormElement
 ) => {
   const validation = data.validation;
-  console.log(validation);
   const validationFields =
     form.querySelectorAll<HTMLDivElement>(".validation-error");
-  console.log(validationFields);
+
+  let firstFailedValidationField: HTMLDivElement | undefined = undefined;
 
   validationFields.forEach((element) => {
     if (validation && Object.hasOwn(validation, element.dataset.fieldName)) {
-      element.classList.remove("display-none");
+      element.classList.remove("display-none", "hidden");
       element.textContent = validation[element.dataset.fieldName];
+      firstFailedValidationField ??= element;
     } else {
-      element.classList.add("display-none");
+      element.classList.add("display-none", "hidden");
     }
   });
 
   const container = document.querySelector<HTMLDivElement>(
     "#test-case-container"
   );
+
   if (Object.hasOwn(data, "tests") && data.tests) {
     renderResultDisplay(data.tests, container);
   } else {
     container.replaceChildren();
+  }
+
+  // Switch to a tab containing the first error
+  if (firstFailedValidationField !== undefined) {
+    const tabPanel: HTMLDivElement =
+      firstFailedValidationField.closest("[role=tabpanel]");
+    const tab = ((tabPanel as any).ariaLabelledByElements ??
+      ([] as HTMLDivElement[]))[0];
+    tab?.click();
   }
 };
