@@ -46,12 +46,16 @@
               <div class="test-case-status">{{ test.status }}</div>
             </div>
             <div class="test-case-content">
-              <div class="test-case-columns test-case-{{ test.columns | length }}-columns">
-                {% for column in test.columns %}
-                  <div class="test-case-column">
-                    {% if column.title %}<h3>{{ column.title }}</h3>{% endif %}
-                    {{ diff_column(diff=column.content) }}
-                  </div>
+              <div class="test-case-column-headings test-case-{{ test.columns.column_titles | length }}-columns">
+                {% for heading in test.columns.column_titles %}<div>{{ heading }}</div>{% endfor %}
+              </div>
+              <div class="test-case-columns test-case-{{ test.columns.column_titles | length }}-columns">
+                {% for field in test.columns.fields %}
+                  <span class="test-case-column diff-tag-{{ field.kind }}"
+                        style="grid-row: span {{ field.row_span }};
+                               grid-column: {{ field.column + 1 }} / span {{ field.span }}">
+                    {{- field.content -}}
+                  </span>
                 {% endfor %}
               </div>
             </div>

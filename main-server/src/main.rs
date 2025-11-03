@@ -2,7 +2,6 @@ mod background_tasks;
 mod controllers;
 mod discord;
 mod error;
-mod filter_iterator_but_keep_context;
 mod models;
 mod strip_trailing_slashes;
 mod tera_utils;
