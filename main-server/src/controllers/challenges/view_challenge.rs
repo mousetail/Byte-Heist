@@ -10,7 +10,7 @@ use crate::{
     error::Error,
     models::{account::Account, challenge::NewOrExistingChallenge},
     tera_utils::auto_input::AutoInput,
-    test_case_formatting::{Columns, OutputDisplay},
+    test_case_formatting::{Columns, OutputDisplay, get_diff_elements},
 };
 
 use super::{
@@ -173,7 +173,7 @@ impl ProcessedComment {
                 let diff = e
                     .old_value
                     .zip(e.new_value)
-                    .map(|(left, right)| todo!()) // get_diff_elements(left, right, "\n")
+                    .map(|(left, right)| get_diff_elements(&left, &right, "\n", 0))
                     .zip(e.status)
                     .map(|(diff, status)| ProcessedDiff {
                         columns: diff,

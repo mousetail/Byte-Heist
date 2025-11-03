@@ -3,9 +3,8 @@ mod filter_iterator_but_keep_context;
 mod raw_itemwise_diff;
 mod test_case_display;
 
-
 use common::RunLangOutput;
-pub use diff_tools::inline_diff;
+pub use diff_tools::{get_diff_elements, inline_diff};
 use serde::Serialize;
 use test_case_display::TestCaseDisplay;
 
