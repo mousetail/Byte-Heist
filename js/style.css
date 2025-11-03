@@ -77,6 +77,7 @@
   overflow-y: auto;
   white-space: pre;
   grid-auto-rows: max-content;
+  font-family: monospace;
 }
 
 .diff-tag-identical,
