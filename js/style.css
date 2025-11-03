@@ -79,10 +79,10 @@
   grid-auto-rows: max-content;
 }
 
-.diff-tag-equal,
+.diff-tag-identical,
 .diff-tag-insert,
 .diff-tag-delete {
-  white-space-collapse: preserve;
+  white-space: pre-wrap;
 }
 
 .diff-tag-insert {

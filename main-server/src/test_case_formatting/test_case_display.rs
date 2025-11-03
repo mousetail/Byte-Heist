@@ -103,14 +103,14 @@ impl TestCaseDisplay {
                     column_titles: vec![Some("Output"), Some("Error")],
                     fields: vec![
                         Field {
-                            column: 1,
+                            column: 0,
                             span: 1,
                             content: output,
                             kind: FieldKind::Identical,
                             row_span: 1,
                         },
                         Field {
-                            column: 2,
+                            column: 1,
                             span: 2,
                             content: error,
                             kind: FieldKind::Identical,

@@ -41,8 +41,16 @@ impl RawItemwiseDiff {
     pub(super) fn new(left: &str, right: &str, sep: &str) -> RawItemwiseDiff {
         let strip_string = |k: &str| format!("{}{sep}", k.trim_end());
 
-        let left_split = left.split(&sep).map(strip_string).collect::<Vec<_>>();
-        let right_split = right.split(&sep).map(strip_string).collect::<Vec<_>>();
+        let left_split = left
+            .trim_end()
+            .split(&sep)
+            .map(strip_string)
+            .collect::<Vec<_>>();
+        let right_split = right
+            .trim_end()
+            .split(&sep)
+            .map(strip_string)
+            .collect::<Vec<_>>();
 
         let diff = capture_diff(
             similar::Algorithm::Myers,
