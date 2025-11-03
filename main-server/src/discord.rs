@@ -16,7 +16,7 @@ use crate::{
         challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
         solutions::{LeaderboardEntry, SolutionWithLanguage},
     },
-    test_case_display::inline_diff,
+    test_case_formatting::inline_diff,
 };
 
 #[allow(clippy::enum_variant_names)]

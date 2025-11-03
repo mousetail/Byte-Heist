@@ -119,6 +119,8 @@ const setupEditButtons = () => {
                 throw new Error(
                   "A change suggestion for this field is already pending"
                 );
+              } else if (res.status === 418) {
+                res.json().then((i) => (window.location.href = i.location));
               } else if (res.redirected) {
                 window.location.reload();
               } else if (res.status == 400) {

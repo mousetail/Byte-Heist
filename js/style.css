@@ -12,6 +12,18 @@
   width: 1rem;
 }
 
+.test-case-1-columns {
+  --columns: 1;
+}
+
+.test-case-2-columns {
+  --columns: 2;
+}
+
+.test-case-3-columns {
+  --columns: 3;
+}
+
 .test-case {
   border-radius: var(--radius-xl);
   border-style: var(--tw-border-style);
@@ -46,36 +58,44 @@
       vertical-align: middle;
     }
   }
+}
 
-  & .test-case-columns {
-    display: grid;
-    grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
-    gap: 0.5rem;
+.test-case-column-headings {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: 0.5rem;
 
-    &.test-case-1-columns {
-      --columns: 1;
-    }
+  font-size: 1.25rem;
+}
 
-    &.test-case-2-columns {
-      --columns: 2;
-    }
+.test-case-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: 0 0.5rem;
+  max-height: 25rem;
+  min-height: 15rem;
+  overflow-y: auto;
+  white-space: pre;
+  grid-auto-rows: max-content;
+}
 
-    &.test-case-3-columns {
-      --columns: 3;
-    }
-    & .code-pre {
-      overflow: auto;
-      min-height: 15rem;
-    }
-  }
+.diff-tag-equal,
+.diff-tag-insert,
+.diff-tag-delete {
+  white-space-collapse: preserve;
 }
 
 .diff-tag-insert {
-  color: green;
+  background-color: hsl(150, 80%, 10%);
 }
 
 .diff-tag-delete {
-  color: red;
+  background-color: #400600;
+}
+
+.diff-tag-meta {
+  background-color: #333;
+  text-align: center;
 }
 
 .validation-error {

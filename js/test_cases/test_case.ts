@@ -9,20 +9,24 @@ export type ResultDisplay = {
 };
 
 type Test = {
-  columns: Column[];
+  columns: Columns;
   status: string;
   title: string | null;
   defaultVisible: boolean;
 };
 
-type DiffCell = {
-  tag: "delete" | "insert" | "equal";
-  content: string;
+type Columns = {
+  height: number;
+  fields: Field[];
+  column_titles: string[];
 };
 
-type Column = {
-  content: DiffCell[];
-  title: string | null;
+type Field = {
+  column: number;
+  span: number;
+  row_span: number;
+  content: string;
+  kind: "identical" | "insert" | "delete" | "meta";
 };
 
 function getOrCreateElement(
@@ -95,13 +99,15 @@ function renderTestCase(testCase: Test): HTMLDivElement {
   body.classList.add("test-case-content");
   root.appendChild(body);
 
+  body.appendChild(renderHeadings(testCase.columns.column_titles));
+
   const columns = document.createElement("div");
   columns.classList.add(
     "test-case-columns",
-    `test-case-${testCase.columns.length}-columns`
+    `test-case-${testCase.columns.column_titles.length}-columns`
   );
-  for (let column of testCase.columns) {
-    columns.appendChild(renderColumn(column));
+  for (let field of testCase.columns.fields) {
+    columns.appendChild(renderField(field));
   }
   body.appendChild(columns);
 
@@ -110,27 +116,28 @@ function renderTestCase(testCase: Test): HTMLDivElement {
   return root;
 }
 
-function renderColumn(column: Column): HTMLDivElement {
-  const columnDiv = document.createElement("div");
-  columnDiv.classList.add("test-case-column");
+function renderHeadings(headings: string[]) {
+  const container = document.createElement("div");
+  container.classList.add(
+    "test-case-column-headings",
+    `test-case-${headings.length}-columns`
+  );
 
-  if (column.title) {
-    let title = document.createElement("h3");
-    title.textContent = column.title;
-    columnDiv.appendChild(title);
+  for (const heading of headings) {
+    const div = document.createElement("div");
+    div.textContent = heading;
+    container.appendChild(div);
   }
 
-  const pre = document.createElement("pre");
-  pre.classList.add("code-pre");
-  pre.replaceChildren(...column.content.map(renderDiffCell));
-  columnDiv.appendChild(pre);
-
-  return columnDiv;
+  return container;
 }
 
-function renderDiffCell(cell: DiffCell): HTMLSpanElement {
-  let span = document.createElement("span");
-  span.classList.add(`diff-tag-${cell.tag}`);
-  span.textContent = cell.content;
-  return span;
+function renderField(field: Field): HTMLDivElement {
+  const columnDiv = document.createElement("div");
+  columnDiv.classList.add("test-case-column", "diff-tag-" + field.kind);
+  columnDiv.style.gridColumn = `${field.column + 1} / span ${field.span}`;
+  columnDiv.style.gridRow = `span ${field.row_span}`;
+  columnDiv.textContent = field.content;
+
+  return columnDiv;
 }

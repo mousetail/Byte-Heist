@@ -1,6 +1,6 @@
 use axum::{
-    extract::{Path, Query},
     Extension,
+    extract::{Path, Query},
 };
 use serde::Serialize;
 use sqlx::PgPool;
@@ -8,12 +8,12 @@ use sqlx::PgPool;
 use crate::{
     error::Error,
     models::{
+        GetById,
         account::Account,
         challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, RankingMode},
-        GetById,
     },
-    test_case_display::OutputDisplay,
+    test_case_formatting::OutputDisplay,
 };
 
 use super::SolutionQueryParameters;

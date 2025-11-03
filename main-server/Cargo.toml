@@ -39,6 +39,7 @@ similar = { version = "2.6.0", features = ["serde"] }
 num-format = "0.4.4"
 time = { version = "0.3.41", features = ["macros"] }
 syntect = "5.3.0"
+itertools = "0.14.0"
 
 [lints.clippy]
 print_stdout = "deny"

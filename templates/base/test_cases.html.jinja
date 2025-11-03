@@ -45,28 +45,22 @@
               </h2>
               <div class="test-case-status">{{ test.status }}</div>
             </div>
-            <div class="test-case-content">
-              <div class="test-case-columns test-case-{{ test.columns | length }}-columns">
-                {% for column in test.columns %}
-                  <div class="test-case-column">
-                    {% if column.title %}<h3>{{ column.title }}</h3>{% endif %}
-                    {{ diff_column(diff=column.content) }}
-                  </div>
-                {% endfor %}
-              </div>
-            </div>
+            <div class="test-case-content">{{ self::test_case_content(columns=test.columns) }}</div>
           </div>
         {% endfor %}
       {% endif %}
     </div>
   </div>
 {% endmacro test_cases %}
-{% macro diff_column(content) %}
-  <pre class="code-pre">
-    {%- for value in content -%}
-      <span class="diff-tag-{{ value.tag }}">
-        {{- value.content -}}
-      </span>
-    {%- endfor -%}
-  </pre>
+{% macro test_case_content(columns) %}
+  <div class="test-case-column-headings test-case-{{ columns.column_titles | length }}-columns">
+    {% for heading in columns.column_titles %}<div>{{ heading }}</div>{% endfor %}
+  </div>
+  <div class="test-case-columns test-case-{{ columns.column_titles | length }}-columns">
+    {% for field in columns.fields %}
+      <span class="test-case-column diff-tag-{{ field.kind }}"
+            style="grid-row: span {{ field.row_span }};
+                   grid-column: {{ field.column + 1 }} / span {{ field.span }}">{{- field.content -}}</span>
+    {% endfor %}
+  </div>
 {% endmacro diff_column %}
