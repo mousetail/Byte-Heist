@@ -3,9 +3,8 @@ mod filter_iterator_but_keep_context;
 mod raw_itemwise_diff;
 mod test_case_display;
 
-use std::borrow::Cow;
 
-use common::{RunLangOutput, TestPassState};
+use common::RunLangOutput;
 pub use diff_tools::inline_diff;
 use serde::Serialize;
 use test_case_display::TestCaseDisplay;

@@ -1,13 +1,11 @@
-use std::{borrow::Cow, sync::LazyLock};
+use std::sync::LazyLock;
 
-use common::{ResultDisplay, RunLangOutput, TestCase, TestPassState};
 use itertools::Itertools;
-use serde::Serialize;
-use similar::{Change, ChangeTag, TextDiff, TextDiffConfig};
+use similar::{ChangeTag, TextDiff, TextDiffConfig};
 
-use crate::test_case_display::filter_iterator_but_keep_context::FilterIteratorButKeepContext;
-use crate::test_case_display::raw_itemwise_diff::{RawDoubleDiffElement, RawItemwiseDiff};
-use crate::test_case_display::{Field, FieldKind};
+use crate::test_case_formatting::filter_iterator_but_keep_context::FilterIteratorButKeepContext;
+use crate::test_case_formatting::raw_itemwise_diff::{RawDoubleDiffElement, RawItemwiseDiff};
+use crate::test_case_formatting::{Field, FieldKind};
 
 use super::Columns;
 
@@ -15,7 +13,7 @@ pub fn get_diff_elements(left: &str, right: &str, sep: &str, start_column: usize
     let iterator = FilterIteratorButKeepContext::new(
         RawItemwiseDiff::new(left, right, sep),
         |e| !e.is_boring(),
-        |number_skipped| RawDoubleDiffElement::new_skipped(number_skipped),
+        RawDoubleDiffElement::new_skipped,
         1,
     );
 
@@ -66,7 +64,7 @@ pub fn get_diff_elements(left: &str, right: &str, sep: &str, start_column: usize
                             },
                             column: index + start_column,
                             span: 1,
-                            content: content,
+                            content,
                             row_span: 1,
                         })
                     })
@@ -77,7 +75,7 @@ pub fn get_diff_elements(left: &str, right: &str, sep: &str, start_column: usize
             Box::new(
                 [Field {
                     kind: FieldKind::Meta,
-                    column: 0 + start_column,
+                    column: start_column,
                     span: 2,
                     content: format!("{} identical lines skipped", number),
                     row_span: 1,

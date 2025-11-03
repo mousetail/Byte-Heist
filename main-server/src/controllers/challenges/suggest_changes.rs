@@ -6,7 +6,7 @@ use sqlx::{PgPool, query, query_as, query_scalar};
 use crate::{
     background_tasks::solution_invalidation::queue_solution_retesting,
     discord::post_change_suggestion, error::Error, models::account::Account,
-    test_case_display::OutputDisplay, test_solution::test_solution,
+    test_case_formatting::OutputDisplay, test_solution::test_solution,
 };
 
 struct ChallengeFieldsNeededForValidation {

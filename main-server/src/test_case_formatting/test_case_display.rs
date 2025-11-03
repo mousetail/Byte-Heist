@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use common::{ResultDisplay, TestCase, TestPassState};
 use serde::Serialize;
 
-use crate::test_case_display::{Field, FieldKind, diff_tools::get_diff_elements};
+use crate::test_case_formatting::{Field, FieldKind, diff_tools::get_diff_elements};
 
 use super::Columns;
 
@@ -124,10 +124,10 @@ impl TestCaseDisplay {
     }
 
     pub fn with_visible(self, visible: bool) -> Self {
-        return TestCaseDisplay {
+        TestCaseDisplay {
             default_visible: visible,
             ..self
-        };
+        }
     }
 
     fn get_default_visible(test_case: &TestCase) -> bool {

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
 
-use crate::{error::Error, test_case_display::OutputDisplay};
+use crate::{error::Error, test_case_formatting::OutputDisplay};
 
 use super::{GetById, account::Account};
 

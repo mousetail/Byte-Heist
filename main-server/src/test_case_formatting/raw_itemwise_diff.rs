@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use similar::{Change, DiffOp, TextDiff, capture_diff};
+use similar::{DiffOp, capture_diff};
 
 pub(super) enum DoubleDiffKind {
     Identical(String),

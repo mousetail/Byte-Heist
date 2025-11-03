@@ -5,7 +5,7 @@ mod error;
 mod models;
 mod strip_trailing_slashes;
 mod tera_utils;
-mod test_case_display;
+mod test_case_formatting;
 mod test_solution;
 
 use axum::{

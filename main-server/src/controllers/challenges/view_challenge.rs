@@ -10,7 +10,7 @@ use crate::{
     error::Error,
     models::{account::Account, challenge::NewOrExistingChallenge},
     tera_utils::auto_input::AutoInput,
-    test_case_display::{Columns, OutputDisplay},
+    test_case_formatting::{Columns, OutputDisplay},
 };
 
 use super::{
