@@ -1,0 +1,43 @@
+name: Docker Image CI
+
+on:
+  push:
+    tags: [ "v-*" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+  
+    - name: Log in to Docker Hub
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.repository }}
+        restore-keys: |
+            ${{ runner.os }}-buildx-
+            
+    - name: Build the Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: lang-runner/Dockerfile
+        push: true
+        load: true
+        tags: mousetail/byte-heist-lang-runner:${{GITHUB_REF}} mousetail/byte-heist-lang-runner:latest
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+        
+    - name: Move cache for next build
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
