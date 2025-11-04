@@ -33,7 +33,7 @@ jobs:
         file: lang-runner/Dockerfile
         push: true
         load: true
-        tags: mousetail/byte-heist-lang-runner:${{ github.ref_name }} mousetail/byte-heist-lang-runner:latest
+        tags: mousetail/byte-heist-lang-runner:${{ github.ref_name }},mousetail/byte-heist-lang-runner:latest
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
         
