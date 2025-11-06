@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::ffi::{CStr, CString};
@@ -46,20 +47,22 @@ impl RunLangContext {
             compiled_programs: HashMap::new(),
             lang,
             lang_folder,
-            run_command: Self::run_substitutions(lang.run_command),
-            compile_command: (!lang.compile_command.is_empty())
-                .then_some(Self::run_substitutions(lang.compile_command)),
+            run_command: Self::run_substitutions(lang.run_command, lang.extension),
+            compile_command: (!lang.compile_command.is_empty()).then_some(Self::run_substitutions(
+                lang.compile_command,
+                lang.extension,
+            )),
         })
     }
 
-    fn run_substitutions(command: &[&str]) -> Vec<CString> {
+    fn run_substitutions(command: &[&str], extension: &str) -> Vec<CString> {
         command
             .iter()
             .map(|segment| {
                 CString::new(
                     segment
                         .replace("${LANG_LOCATION}", "/lang")
-                        .replace("${FILE_LOCATION}", "/code")
+                        .replace("${FILE_LOCATION}", &format!("/code{}", extension))
                         .replace("${OUTPUT_LOCATION}", "/artifact/1"),
                 )
                 .expect("Expected substitutions to not contain null bytes")
@@ -72,6 +75,14 @@ impl RunLangContext {
         code: &str,
         input: Option<&str>,
     ) -> Result<RunCodeResult, RunProcessError> {
+        let code_mount = match self.lang.extension {
+            "" => Cow::Borrowed(c"/code"),
+            e => Cow::Owned(
+                CString::new(format!("/code{e}"))
+                    .expect("Expected the extension to not contain null bytes"),
+            ),
+        };
+
         match &self.compile_command {
             None => {
                 let mut sandbox = RunInSandboxBuilder::new(
@@ -79,7 +90,7 @@ impl RunLangContext {
                     &self.lang_folder,
                     self.run_command.as_slice(),
                 )
-                .mount_string(c"/code", code.as_bytes());
+                .mount_string(&code_mount, code.as_bytes());
                 if let Some(input) = input {
                     sandbox = sandbox.set_input(input.as_bytes());
                 }
@@ -108,7 +119,7 @@ impl RunLangContext {
                         let result =
                             RunInSandboxBuilder::new(self.lang, &self.lang_folder, compile_command)
                                 .mount_folder(&folder_cstr, c"/artifact")
-                                .mount_string(c"/code", code.as_bytes())
+                                .mount_string(&code_mount, code.as_bytes())
                                 .run()
                                 .await?;
 
@@ -125,7 +136,7 @@ impl RunLangContext {
                 }
 
                 let mut result = sandbox.run().await?;
-                result.stderr.push_str(&stderr);
+                result.stderr.insert_str(0, &stderr);
                 Ok(result)
             }
         }

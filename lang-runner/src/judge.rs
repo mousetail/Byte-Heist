@@ -1,4 +1,7 @@
-use std::{process::Stdio, time::Duration};
+use std::{
+    process::Stdio,
+    time::{Duration, Instant},
+};
 
 use async_process::Command;
 use common::{JudgeResult, RunLangOutput, TestCase, langs::LANGS};
@@ -75,6 +78,7 @@ pub async fn run_lang_with_judge(
         .await
         .map_err(RunLangError::RunLang)?;
 
+    let start_time = Instant::now();
     let result = tokio::time::timeout(
         Duration::from_secs(TIMEOUT + lang.extra_runtime),
         async move {
@@ -121,6 +125,8 @@ pub async fn run_lang_with_judge(
     )
     .await;
 
+    let end_time = Instant::now();
+
     let (jude_result, timed_out) = match result {
         Ok(e) => (e?, false),
         Err(_) => (
@@ -146,8 +152,7 @@ pub async fn run_lang_with_judge(
     Ok(RunLangOutput {
         tests: jude_result,
         stderr: error,
-        //format!("Output:\n{stdout}\nError:\n{stderr}"),
         timed_out,
-        runtime: 0.0,
+        runtime: (end_time - start_time).as_secs_f32(),
     })
 }
