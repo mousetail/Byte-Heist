@@ -7,7 +7,7 @@ use discord_bot::{
 };
 use reqwest::StatusCode;
 use serde::Serialize;
-use sqlx::{PgPool, query_scalar};
+use sqlx::{PgPool, query_as};
 
 use crate::{
     models::{
@@ -346,9 +346,25 @@ pub async fn post_change_suggestion(
     challenge_id: i32,
     comment_id: i32,
 ) -> Result<(), sqlx::Error> {
-    let challenge_name = query_scalar!("SELECT name FROM challenges WHERE id=$1", challenge_id)
-        .fetch_one(pool)
-        .await?;
+    struct ChallengeInfo {
+        name: String,
+        status: Option<ChallengeStatus>,
+    }
+
+    let challenge_info = query_as!(
+        ChallengeInfo,
+        r#"SELECT name, status as "status:ChallengeStatus" FROM challenges WHERE id=$1"#,
+        challenge_id
+    )
+    .fetch_one(pool)
+    .await?;
+
+    if matches!(
+        challenge_info.status,
+        Some(ChallengeStatus::Draft | ChallengeStatus::Private)
+    ) {
+        return Ok(());
+    }
 
     match post_discord_webhook(
         DiscordWebhookChannel::ChangeRequest,
@@ -358,7 +374,7 @@ pub async fn post_change_suggestion(
             avatar_url: Some(&author.avatar),
             tts: None,
             embeds: Some(vec![Embed {
-                title: Some(&format!("Edit Suggested: {}", challenge_name)),
+                title: Some(&format!("Edit Suggested: {}", challenge_info.name)),
                 description: Some(&inline_diff(
                     &previous_value.replace("`", "`\u{200B}"),
                     &new_value.replace("`", "`\u{200B}"),
@@ -367,7 +383,7 @@ pub async fn post_change_suggestion(
                     "{}#comment-{}",
                     get_url_for_challenge(
                         challenge_id,
-                        Some(&challenge_name),
+                        Some(&challenge_info.name),
                         common::urls::ChallengePage::View
                     ),
                     comment_id
