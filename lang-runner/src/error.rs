@@ -17,6 +17,7 @@ pub enum RunProcessError {
         #[serde(serialize_with = "serialize_error")]
         std::io::Error,
     ),
+    NoSuchLanguage,
 }
 
 impl From<std::io::Error> for RunProcessError {
@@ -39,6 +40,7 @@ pub enum RunLangError {
         #[serde(serialize_with = "serialize_error")]
         tokio::sync::AcquireError,
     ),
+    MaxTestCasesExceeded,
 }
 
 impl From<std::io::Error> for RunLangError {

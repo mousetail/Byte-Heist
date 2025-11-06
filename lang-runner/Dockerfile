@@ -27,12 +27,13 @@ RUN apt-get update -y && apt-get install -y \
   # Vyxal and Kotlin Dependencies
   openjdk-17-jdk
 
+COPY --from=denoland/deno:bin-2.5.6 /deno /usr/local/bin/deno
+
 RUN adduser byte_heist
 
 USER byte_heist
 
 # Install asdf
-#RUN git clone --depth 1 https://github.com/asdf-vm/asdf.git ~/.asdf
 RUN curl -L https://github.com/asdf-vm/asdf/releases/download/v0.16.4/asdf-v0.16.4-linux-amd64.tar.gz -o /home/byte_heist/asdf.tar.gz
 RUN ls
 RUN mkdir -p ~/.bin
@@ -43,7 +44,7 @@ ENV PATH="$PATH:/home/byte_heist/.bin"
 
 USER root
 
-# Java tries to include a file un the users home directory which often fails. Disabling this functionality allows it to run more stabily.
+# Java tries to include a file in the users home directory which often fails. Disabling this functionality allows it to run more stabily.
 RUN sed -i '/policy.url.2=/d' ./usr/lib/jvm/java-17-openjdk-amd64/conf/security/java.security
 
 USER byte_heist
@@ -54,4 +55,4 @@ ENV PATH=$PATH:/home/byte_heist/.asdf/shims
 COPY --from=rust-build /usr/src/myapp/target/release/lang-runner /lang-runner
 COPY ./scripts /scripts
 
-ENTRYPOINT /lang-runner
+ENTRYPOINT ["/lang-runner"]

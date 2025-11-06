@@ -59,7 +59,6 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     "python" => Lang {
         plugin_name: "python",
         display_name: "Python",
-        compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/python", "${FILE_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-python.git",
         env: &[("LD_LIBRARY_PATH", "/lang/lib")],

@@ -1,15 +1,18 @@
+mod async_process_with_extra_pipes;
 mod cachemap;
 mod error;
-mod parse_output;
+mod install_lang;
+mod judge;
+mod process_message;
 mod run;
 
 use std::sync::Arc;
 
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{Json, Router, extract::State, routing::get};
 use cachemap::CacheMap;
 use common::RunLangOutput;
 use error::RunLangError;
-use run::{get_lang_versions, process_message};
+use process_message::{get_lang_versions, process_message};
 use serde::{Deserialize, Serialize};
 use tokio::signal;
 

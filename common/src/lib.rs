@@ -4,14 +4,14 @@ pub mod urls;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct JudgeResult {
     pub pass: bool,
     pub test_cases: Vec<TestCase>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RunLangOutput {
     pub tests: JudgeResult,
@@ -20,7 +20,7 @@ pub struct RunLangOutput {
     pub runtime: f32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum TestPassState {
     /// The test passed
     Pass,
@@ -33,7 +33,7 @@ pub enum TestPassState {
     Warning,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct TestCase {
     #[serde(default)]
@@ -52,7 +52,7 @@ fn create_default_sep() -> String {
     "\n".to_string()
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum ResultDisplay {
     Empty,
     Text(String),

@@ -1,301 +1,261 @@
-use std::{path::PathBuf, process::Stdio, time::Duration};
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
+use std::ffi::{CStr, CString};
 
-use async_process::Command;
-use common::{
-    langs::{Lang, LANGS},
-    RunLangOutput,
-};
-use futures_util::AsyncWriteExt;
+use common::langs::{LANGS, Lang};
+use nix::libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use serde::Serialize;
-use tokio::time::Instant;
+use tempfile::TempDir;
 
-use crate::{
-    cachemap::CacheMap,
-    error::{RunLangError, RunProcessError},
-    parse_output::parse_judge_result_from_stream,
-    Message,
-};
+use crate::async_process_with_extra_pipes::AsyncProcessWithCustomPipes;
+use crate::error::RunProcessError;
+use crate::install_lang::get_lang_directory;
 
-const MAX_CONCURRENT_RUNS: usize = 4;
-const TIMEOUT: u64 = 3;
-
-static RUNS_SEMAPHORE: tokio::sync::Semaphore =
-    tokio::sync::Semaphore::const_new(MAX_CONCURRENT_RUNS);
-
-async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
-    println!("Installing language version {}", lang.display_name);
-    let plugin_install_output = Command::new("asdf")
-        .args(["plugin", "add", lang.plugin_name, lang.plugin])
-        .stderr(Stdio::inherit())
-        .status()
-        .await?;
-    if !plugin_install_output.success() {
-        return Err(RunProcessError::NonZeroStatusCode(
-            plugin_install_output.code(),
-        ));
-    }
-    Ok(CacheMap::new())
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RunCodeResult {
+    pub stdout: String,
+    pub stderr: String,
+    pub exit_status: i32,
 }
 
-async fn install_language_version(lang: &Lang, version: &str) -> Result<(), RunProcessError> {
-    println!(
-        "Installing language version {} {}",
-        lang.display_name, version
-    );
-    let mut command = Command::new("asdf");
-    command
-        .args(["install", lang.plugin_name, version])
-        .stderr(Stdio::inherit());
-
-    for env in lang.install_env {
-        command.env(env.0, env.1);
-    }
-
-    let status = command.status().await?;
-
-    if !status.success() {
-        return Err(RunProcessError::NonZeroStatusCode(status.code()));
-    }
-    Ok(())
+pub struct RunLangContext {
+    tmp_folder: TempDir,
+    compiled_programs: HashMap<String, CString>,
+    lang: &'static Lang,
+    lang_folder: CString,
+    run_command: Vec<CString>,
+    compile_command: Option<Vec<CString>>,
 }
 
-async fn install_lang(
-    lang_name: String,
-    version: &str,
-    versions: &CacheMap<String, CacheMap<String, ()>>,
-) -> Result<(), RunProcessError> {
-    let lang = match LANGS.get(&lang_name) {
-        Some(e) => e,
-        None => panic!("Unexpected lang {lang_name}"),
-    };
-
-    let lang_version_token = versions.get(lang.plugin_name.to_owned());
-    let lang_versions = lang_version_token
-        .get_or_try_init(|| install_plugin(lang))
-        .await?;
-
-    let specific_version_token = lang_versions.get(version.to_owned());
-
-    let _specific_version = specific_version_token
-        .get_or_try_init(|| install_language_version(lang, version))
-        .await?;
-
-    Ok(())
-}
-
-async fn get_lang_directory(lang: &Lang, version: &str) -> Result<PathBuf, RunProcessError> {
-    let lang_folder = Command::new("asdf")
-        .args(["where", lang.plugin_name, version])
-        .stderr(Stdio::inherit())
-        .output()
-        .await?;
-    if !lang_folder.status.success() {
-        return Err(RunProcessError::NonZeroStatusCode(
-            lang_folder.status.code(),
-        ));
-    }
-
-    let buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
-    Ok(buff)
-}
-
-async fn run_lang(
-    lang_name: &str,
-    version: &str,
-    code: &str,
-    judge: &str,
-    judge_lang: &str,
-    judge_version: &str,
-) -> Result<RunLangOutput, RunProcessError> {
-    let lang = LANGS.get(lang_name).unwrap();
-    let judge_lang = LANGS.get(judge_lang).unwrap();
-
-    let code_lang_folder = get_lang_directory(lang, version).await?;
-    let judge_lang_folder = get_lang_directory(judge_lang, judge_version).await?;
-
-    let mut command = Command::new("bwrap");
-    command
-        .args([
-            "--die-with-parent",
-            //
-            "--chdir",
-            "/",
-            "--ro-bind",
-            "/lib64",
-            "/lib64",
-            "--ro-bind",
-            "/lib",
-            "/lib",
-            "--ro-bind",
-            "/usr/lib",
-            "/usr/lib",
-            "--tmpfs",
-            "/tmp",
-            "--tmpfs",
-            "/home/byte_heist",
-            "--setenv",
-            "HOME",
-            "/home/byte_heist",
-        ])
-        .args(["--ro-bind"])
-        .arg(code_lang_folder)
-        .args(["/lang"])
-        .args(["--ro-bind"])
-        .arg(judge_lang_folder)
-        .arg("/judge")
-        .args(["--ro-bind", "/scripts", "/scripts"]);
-
-    for (key, value) in judge_lang.env {
-        command.args(["--setenv", *key, *value]);
-    }
-
-    for (key, value) in judge_lang.extra_mounts.iter().chain(lang.extra_mounts) {
-        command.args(["--ro-bind", key, value]);
-    }
-
-    command.args(["--unshare-all", "--new-session"]);
-
-    command
-        .args(
-            judge_lang
-                .run_command
-                .iter()
-                .map(|k| {
-                    k.replace("${LANG_LOCATION}", "/judge")
-                        .replace("${FILE_LOCATION}", "/scripts/runner.ts")
-                })
-                .collect::<Vec<_>>(),
+impl RunLangContext {
+    pub async fn new(lang_name: &str, lang_version: &str) -> Result<Self, RunProcessError> {
+        let lang = LANGS
+            .get(lang_name)
+            .ok_or(RunProcessError::NoSuchLanguage)?;
+        let lang_folder = CString::new(
+            get_lang_directory(lang, lang_version)
+                .await?
+                .to_str()
+                .expect("Expected path to be valid unicode"),
         )
-        .stdout(Stdio::piped())
-        .stdin(Stdio::piped())
-        .stderr(Stdio::piped());
+        .expect("lang folder should not have null bytes");
 
-    // .args([&format!("/lang/{}", lang.bin_location), code as &str, judge]);
-
-    let mut child = command.spawn()?;
-    let Some(stdin) = &mut child.stdin else {
-        panic!("Child stdin should exist");
-    };
-
-    #[derive(Serialize)]
-    struct RunnerInput<'a> {
-        lang: &'a Lang,
-        code: &'a str,
-        judge: &'a str,
+        Ok(RunLangContext {
+            tmp_folder: TempDir::new()?,
+            compiled_programs: HashMap::new(),
+            lang,
+            lang_folder,
+            run_command: Self::run_substitutions(lang.run_command),
+            compile_command: (!lang.compile_command.is_empty())
+                .then_some(Self::run_substitutions(lang.compile_command)),
+        })
     }
 
-    let data = serde_json::to_string(&RunnerInput { lang, code, judge })
-        .map_err(RunProcessError::SerializationFailed)?;
-    stdin.write_all(data.as_bytes()).await?;
-    stdin.close().await?;
+    fn run_substitutions(command: &[&str]) -> Vec<CString> {
+        command
+            .iter()
+            .map(|segment| {
+                CString::new(
+                    segment
+                        .replace("${LANG_LOCATION}", "/lang")
+                        .replace("${FILE_LOCATION}", "/code")
+                        .replace("${OUTPUT_LOCATION}", "/artifact/1"),
+                )
+                .expect("Expected substitutions to not contain null bytes")
+            })
+            .collect()
+    }
 
-    let judge_result = tokio::spawn(parse_judge_result_from_stream(
-        child
-            .stdout
-            .take()
-            .expect("The child stdout is already consumed"),
-    ));
-    let id = child.id();
+    pub async fn run(
+        &mut self,
+        code: &str,
+        input: Option<&str>,
+    ) -> Result<RunCodeResult, RunProcessError> {
+        match &self.compile_command {
+            None => {
+                let mut sandbox = RunInSandboxBuilder::new(
+                    self.lang,
+                    &self.lang_folder,
+                    self.run_command.as_slice(),
+                )
+                .mount_string(c"/code", code.as_bytes());
+                if let Some(input) = input {
+                    sandbox = sandbox.set_input(input.as_bytes());
+                }
+                sandbox.run().await
+            }
+            Some(compile_command) => {
+                let compiled_programs_length = self.compiled_programs.len();
+                let entry = self.compiled_programs.entry(code.to_owned());
 
-    let start_time = Instant::now();
+                let (folder, stderr) = match entry {
+                    Entry::Occupied(ref value) => (value.get(), String::new()),
+                    Entry::Vacant(t) => {
+                        let folder = self
+                            .tmp_folder
+                            .path()
+                            .join(format!("{}", compiled_programs_length));
 
-    let timed_out = tokio::select! {
-        _status = child.status() => {
-            println!("Child finished normally {id}");
-            false
+                        std::fs::create_dir(&folder)?;
+
+                        let folder_cstr = CString::new(
+                            folder
+                                .to_str()
+                                .expect("Expected temp folder to be a valid string"),
+                        )
+                        .expect("Expected the temp folder to not contain null bytes");
+                        let result =
+                            RunInSandboxBuilder::new(self.lang, &self.lang_folder, compile_command)
+                                .mount_folder(&folder_cstr, c"/artifact")
+                                .mount_string(c"/code", code.as_bytes())
+                                .run()
+                                .await?;
+
+                        (t.insert(folder_cstr) as &CString, result.stderr)
+                    }
+                };
+
+                let mut sandbox =
+                    RunInSandboxBuilder::new(self.lang, &self.lang_folder, &self.run_command)
+                        .mount_ro_folder(folder, c"/artifact");
+
+                if let Some(input) = input {
+                    sandbox = sandbox.set_input(input.as_bytes());
+                }
+
+                let mut result = sandbox.run().await?;
+                result.stderr.push_str(&stderr);
+                Ok(result)
+            }
         }
-        _timeout = tokio::time::sleep(Duration::from_secs(TIMEOUT + lang.extra_runtime)) => {
-            child.kill().unwrap();
-            eprintln!("Timed out {id}");
-            true
+    }
+}
+
+struct RunInSandboxBuilder<'a> {
+    bubblewrap_args: Vec<u8>,
+    process: AsyncProcessWithCustomPipes<'a>,
+    pipe_number: i32,
+    command: &'a [CString],
+}
+
+impl<'a> RunInSandboxBuilder<'a> {
+    fn add_args(mut self, args: impl IntoIterator<Item = impl AsRef<CStr>>) -> Self {
+        for arg in args {
+            self.bubblewrap_args
+                .extend_from_slice(arg.as_ref().to_bytes_with_nul());
         }
-    };
-
-    let end_time = Instant::now();
-    let output = child.output().await?;
-
-    let mut stderr = output.stderr;
-    stderr.truncate(1000);
-
-    Ok(RunLangOutput {
-        stderr: String::from_utf8_lossy(&stderr).into_owned(),
-        tests: judge_result.await.unwrap(),
-        timed_out,
-        runtime: (end_time - start_time).as_secs_f32(),
-    })
-}
-
-pub async fn process_message(
-    message: Message,
-    lang_versions: &CacheMap<String, CacheMap<String, ()>>,
-) -> Result<RunLangOutput, RunLangError> {
-    let deno_latest_version = LANGS.get("deno").unwrap().latest_version;
-
-    // Runner Lang
-    install_lang("deno".to_owned(), deno_latest_version, lang_versions)
-        .await
-        .map_err(RunLangError::PluginInstallFailure)?;
-
-    install_lang(message.lang.clone(), &message.version, lang_versions)
-        .await
-        .map_err(RunLangError::PluginInstallFailure)?;
-
-    let _semaphore = RUNS_SEMAPHORE
-        .acquire()
-        .await
-        .map_err(RunLangError::SemaphoreError)?;
-    let output = run_lang(
-        &message.lang,
-        &message.version,
-        &message.code,
-        &message.judge,
-        "deno",
-        deno_latest_version,
-    )
-    .await
-    .map_err(RunLangError::RunLang)?;
-    Ok(output)
-}
-
-async fn get_versions_for_language(line: &str) -> (String, CacheMap<String, ()>) {
-    let parts = line.split_ascii_whitespace().collect::<Vec<_>>();
-    let Some(name) = parts.first() else {
-        panic!("bad output from asdf plugin list: {line} {parts:?}")
-    };
-
-    let versions = Command::new("asdf")
-        .args(["list", name])
-        .output()
-        .await
-        .unwrap();
-
-    if !versions.status.success() {
-        println!("Finding versions failed");
+        self
     }
 
-    (
-        (*name).to_owned(),
-        String::from_utf8(versions.stdout)
-            .unwrap()
-            .lines()
-            .map(|k| (k.trim().to_owned(), ()))
-            .collect::<CacheMap<_, ()>>(),
-    )
-}
+    fn new(lang: &'static Lang, lang_folder: &CStr, command: &'a [CString]) -> Self {
+        let mut result = RunInSandboxBuilder {
+            bubblewrap_args: vec![],
+            process: AsyncProcessWithCustomPipes::new(
+                c"/usr/bin/bwrap",
+                [c"/usr/bin/bwrap", c"--args", c"3"]
+                    .into_iter()
+                    .chain(command.iter().map(|k| k.as_c_str()))
+                    .collect::<Vec<_>>(),
+                &[] as &[&CStr],
+            )
+            .add_output(STDOUT_FILENO)
+            .add_output(STDERR_FILENO),
+            pipe_number: 4,
+            command,
+        }
+        .add_args([
+            c"--die-with-parent",
+            //
+            c"--chdir",
+            c"/",
+            c"--ro-bind",
+            c"/lib64",
+            c"/lib64",
+            c"--ro-bind",
+            c"/lib",
+            c"/lib",
+            c"--ro-bind",
+            c"/usr/lib",
+            c"/usr/lib",
+            c"--tmpfs",
+            c"/tmp",
+            c"--tmpfs",
+            c"/home/byte_heist",
+            c"--setenv",
+            c"HOME",
+            c"/home/byte_heist",
+            c"--ro-bind",
+            lang_folder,
+            c"/lang",
+            c"--unshare-all",
+            c"--new-session",
+        ]);
+        for (key, value) in lang.env {
+            result = result.add_args([
+                c"--setenv",
+                &CString::new(*key).expect("Env keys cannot contain null bytes"),
+                &CString::new(*value).expect("Env values can not contain null bytes"),
+            ]);
+        }
 
-pub async fn get_lang_versions() -> CacheMap<String, CacheMap<String, ()>> {
-    let output = Command::new("asdf")
-        .args(["plugin", "list"])
-        .output()
-        .await
-        .unwrap();
-    if !output.status.success() {
-        panic!("Finding the list of plugins failed");
+        for (external_folder, internal_folder) in lang.extra_mounts {
+            result = result.add_args([
+                c"--ro-bind",
+                &CString::new(*external_folder).expect("Mount folders cannot contain null bytes"),
+                &CString::new(*internal_folder).expect("Mount folders can not contain null bytes"),
+            ]);
+        }
+
+        result
     }
 
-    let output_text = String::from_utf8(output.stdout).unwrap();
-    futures_util::future::join_all(output_text.lines().map(get_versions_for_language))
-        .await
-        .into_iter()
-        .collect()
+    fn mount_string(mut self, path: &CStr, data: &'a [u8]) -> Self {
+        let pipe_number = self.pipe_number;
+        self.process = self.process.add_input(pipe_number, data);
+        self.pipe_number += 1;
+        self.add_args([c"--ro-bind-data"])
+            .add_args([CString::new(format!("{}", pipe_number))
+                .expect("Expected formating a number not to contain null bytes")])
+            .add_args([path])
+    }
+
+    fn mount_folder(self, external_path: &CStr, internal_path: &CStr) -> Self {
+        self.add_args([c"--bind", external_path, internal_path])
+    }
+
+    fn mount_ro_folder(self, external_path: &CStr, internal_path: &CStr) -> Self {
+        self.add_args([c"--ro-bind", external_path, internal_path])
+    }
+
+    fn set_input(mut self, input: &'a [u8]) -> Self {
+        self.process = self.process.add_input(STDIN_FILENO, input);
+        self
+    }
+
+    async fn run(self) -> Result<RunCodeResult, RunProcessError> {
+        let command = self.command;
+        let Self {
+            bubblewrap_args,
+            process,
+            ..
+        } = self.add_args([c"--"]).add_args(command);
+
+        let mut output = process
+            .add_input(3, &bubblewrap_args)
+            .output()?
+            .await
+            .map_err(RunProcessError::IOError)?;
+        Ok(RunCodeResult {
+            stdout: output
+                .outputs
+                .remove(&STDOUT_FILENO)
+                .unwrap_or(String::new()),
+            stderr: output
+                .outputs
+                .remove(&STDERR_FILENO)
+                .unwrap_or(String::new()),
+            exit_status: output.exit_code,
+        })
+    }
 }

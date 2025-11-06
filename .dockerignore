@@ -6,3 +6,4 @@ postgres-data/.
 node_modules
 .env
 .env.local
+target
