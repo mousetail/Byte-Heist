@@ -4,11 +4,11 @@ use std::{
 };
 
 use async_process::Command;
-use common::{JudgeResult, RunLangOutput, TestCase, langs::LANGS};
+use common::{JudgeResult, RunLangOutput, TestCase, Timers, langs::LANGS};
 use futures_util::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, StreamExt, io::BufReader};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::RunLangError, run::RunLangContext};
+use crate::{error::RunLangError, run::RunLangContext, stopwatch::start_stopwatch};
 
 const MAX_TEST_CASES: usize = 50;
 const TIMEOUT: u64 = 3;
@@ -79,9 +79,16 @@ pub async fn run_lang_with_judge(
         .map_err(RunLangError::RunLang)?;
 
     let start_time = Instant::now();
-    let result = tokio::time::timeout(
-        Duration::from_secs(TIMEOUT + lang.extra_runtime),
-        async move {
+
+    let (mut sender, receiver) = tokio::sync::mpsc::channel(16);
+    let (output, timers) = start_stopwatch(
+        Timers {
+            judge: Duration::from_secs(1) + lang.extra_runtime.judge,
+            run: Duration::from_secs(TIMEOUT) + lang.extra_runtime.run,
+            compile: Duration::from_secs(1) + lang.extra_runtime.compile,
+        },
+        receiver,
+        Box::pin(async move {
             let mut judge_result = JudgeResult {
                 pass: false,
                 test_cases: vec![],
@@ -95,7 +102,7 @@ pub async fn run_lang_with_judge(
                 match data {
                     JudgeResponse::RunRequest(run_request) => {
                         let result = context
-                            .run(&run_request.code, run_request.input.as_deref())
+                            .run(&run_request.code, run_request.input.as_deref(), &mut sender)
                             .await
                             .map_err(RunLangError::RunLang)?;
 
@@ -121,22 +128,17 @@ pub async fn run_lang_with_judge(
             }
 
             Ok::<JudgeResult, RunLangError>(judge_result)
-        },
+        }),
     )
     .await;
 
     let end_time = Instant::now();
 
-    let (jude_result, timed_out) = match result {
-        Ok(e) => (e?, false),
-        Err(_) => (
-            JudgeResult {
-                pass: false,
-                test_cases: vec![],
-            },
-            true,
-        ),
-    };
+    let timed_out = output.is_none();
+    let judge_result = output.unwrap_or(Ok(JudgeResult {
+        pass: false,
+        test_cases: vec![],
+    }))?;
 
     let mut stderr = command
         .stderr
@@ -150,9 +152,10 @@ pub async fn run_lang_with_judge(
     command.status().await?;
 
     Ok(RunLangOutput {
-        tests: jude_result,
+        tests: judge_result,
         stderr: error,
         timed_out,
         runtime: (end_time - start_time).as_secs_f32(),
+        timers,
     })
 }

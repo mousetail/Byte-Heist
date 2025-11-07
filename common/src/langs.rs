@@ -1,12 +1,16 @@
+use std::time::Duration;
+
 use phf::phf_map;
 use serde::Serialize;
+
+use crate::{DEFAULT_TIMERS, Timers};
 
 #[derive(Serialize, Default)]
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct Lang {
     pub plugin_name: &'static str,
     pub display_name: &'static str,
-    pub compile_command: &'static [&'static str],
+    pub compile_command: Option<&'static [&'static str]>,
     pub run_command: &'static [&'static str],
     pub plugin: &'static str,
     pub env: &'static [(&'static str, &'static str)],
@@ -15,13 +19,13 @@ pub struct Lang {
     pub icon: &'static str,
     pub extra_mounts: &'static [(&'static str, &'static str)],
     pub extension: &'static str,
-    pub extra_runtime: u64,
+    pub extra_runtime: Timers,
 }
 
 pub const DEFAULT_LANG: Lang = Lang {
     plugin_name: "",
     display_name: "",
-    compile_command: &[],
+    compile_command: None,
     run_command: &[],
     plugin: "",
     env: &[],
@@ -30,7 +34,11 @@ pub const DEFAULT_LANG: Lang = Lang {
     icon: "",
     extra_mounts: &[],
     extension: "",
-    extra_runtime: 0,
+    extra_runtime: Timers {
+        run: Duration::ZERO,
+        compile: Duration::ZERO,
+        judge: Duration::ZERO,
+    },
 };
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -69,7 +77,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     "rust" => Lang {
         plugin_name: "rust",
         display_name: "Rust",
-        compile_command: &["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "${OUTPUT_LOCATION}", "--edition", "2024"],
+        compile_command: Some(&["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "${OUTPUT_LOCATION}", "--edition", "2024"]),
         run_command: &["${OUTPUT_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-rust.git",
         env: &[
@@ -97,7 +105,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         plugin: "https://github.com/lyxal/vyxasdf.git",
         latest_version: "2.22.4.3",
         icon: "vyxal.svg",
-        extra_runtime: 2,
+        extra_runtime: Timers { run: Duration::from_secs(2), ..DEFAULT_TIMERS },
         ..DEFAULT_LANG
     },
     "vyxal3" => Lang {
@@ -114,7 +122,10 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         extra_mounts: &[
             ("/usr/lib/jvm/java-17-openjdk-amd64", "/java", )
         ],
-        extra_runtime: 2,
+        extra_runtime: Timers {
+            run: Duration::from_secs(2),
+            ..DEFAULT_TIMERS
+        },
         ..DEFAULT_LANG
     },
     "tinyapl" => Lang {
@@ -142,7 +153,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     "kotlin" => Lang {
         plugin_name: "kotlin",
         display_name: "Kotlin",
-        compile_command:&["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"],
+        compile_command: Some(&["${LANG_LOCATION}/kotlinc/bin/kotlinc", "${FILE_LOCATION}", "-include-runtime", "-d", "${OUTPUT_LOCATION}.jar"]),
         run_command: &["/usr/lib/jvm/java-17-openjdk-amd64/bin/java", "-jar", "${OUTPUT_LOCATION}.jar"],
         plugin: "https://github.com/asdf-community/asdf-kotlin.git",
         env: &[
@@ -163,7 +174,10 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             ("/usr/bin/dirname", "/usr/bin/dirname")
         ],
         extension: ".kt",
-        extra_runtime: 2,
+        extra_runtime: Timers {
+            compile: Duration::from_secs(3),
+            ..DEFAULT_TIMERS
+        },
         ..DEFAULT_LANG
     }
 };

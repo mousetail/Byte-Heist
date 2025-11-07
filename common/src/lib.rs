@@ -2,6 +2,8 @@ pub mod langs;
 pub mod slug;
 pub mod urls;
 
+use std::time::Duration;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -11,6 +13,44 @@ pub struct JudgeResult {
     pub test_cases: Vec<TestCase>,
 }
 
+#[derive(Clone, Copy)]
+pub enum TimerType {
+    Run,
+    Compile,
+    Judge,
+}
+
+#[derive(Clone, Copy, Serialize, Deserialize, Debug, Default)]
+pub struct Timers {
+    pub run: Duration,
+    pub compile: Duration,
+    pub judge: Duration,
+}
+
+pub static DEFAULT_TIMERS: Timers = Timers {
+    run: Duration::ZERO,
+    compile: Duration::ZERO,
+    judge: Duration::ZERO,
+};
+
+impl Timers {
+    pub fn get_mut_type(&mut self, timer_type: TimerType) -> &mut Duration {
+        match timer_type {
+            TimerType::Run => &mut self.run,
+            TimerType::Compile => &mut self.compile,
+            TimerType::Judge => &mut self.judge,
+        }
+    }
+
+    pub fn get_type(&self, timer_type: TimerType) -> &Duration {
+        match timer_type {
+            TimerType::Run => &self.run,
+            TimerType::Compile => &self.compile,
+            TimerType::Judge => &self.judge,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RunLangOutput {
@@ -18,6 +58,7 @@ pub struct RunLangOutput {
     pub stderr: String,
     pub timed_out: bool,
     pub runtime: f32,
+    pub timers: Timers,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

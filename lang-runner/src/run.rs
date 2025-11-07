@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::ffi::{CStr, CString};
 
+use common::TimerType;
 use common::langs::{LANGS, Lang};
 use nix::libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use serde::Serialize;
@@ -48,10 +49,9 @@ impl RunLangContext {
             lang,
             lang_folder,
             run_command: Self::run_substitutions(lang.run_command, lang.extension),
-            compile_command: (!lang.compile_command.is_empty()).then_some(Self::run_substitutions(
-                lang.compile_command,
-                lang.extension,
-            )),
+            compile_command: lang
+                .compile_command
+                .map(|compile_command| Self::run_substitutions(compile_command, lang.extension)),
         })
     }
 
@@ -74,6 +74,7 @@ impl RunLangContext {
         &mut self,
         code: &str,
         input: Option<&str>,
+        sender: &mut tokio::sync::mpsc::Sender<TimerType>,
     ) -> Result<RunCodeResult, RunProcessError> {
         let code_mount = match self.lang.extension {
             "" => Cow::Borrowed(c"/code"),
@@ -85,6 +86,7 @@ impl RunLangContext {
 
         match &self.compile_command {
             None => {
+                let _ = sender.send(TimerType::Run).await;
                 let mut sandbox = RunInSandboxBuilder::new(
                     self.lang,
                     &self.lang_folder,
@@ -94,7 +96,10 @@ impl RunLangContext {
                 if let Some(input) = input {
                     sandbox = sandbox.set_input(input.as_bytes());
                 }
-                sandbox.run().await
+                let result = sandbox.run().await;
+
+                let _ = sender.send(TimerType::Judge).await;
+                result
             }
             Some(compile_command) => {
                 let compiled_programs_length = self.compiled_programs.len();
@@ -103,6 +108,7 @@ impl RunLangContext {
                 let (folder, stderr) = match entry {
                     Entry::Occupied(ref value) => (value.get(), String::new()),
                     Entry::Vacant(t) => {
+                        let _ = sender.send(TimerType::Compile).await;
                         let folder = self
                             .tmp_folder
                             .path()
@@ -126,6 +132,7 @@ impl RunLangContext {
                         (t.insert(folder_cstr) as &CString, result.stderr)
                     }
                 };
+                let _ = sender.send(TimerType::Run).await;
 
                 let mut sandbox =
                     RunInSandboxBuilder::new(self.lang, &self.lang_folder, &self.run_command)
@@ -136,6 +143,7 @@ impl RunLangContext {
                 }
 
                 let mut result = sandbox.run().await?;
+                let _ = sender.send(TimerType::Judge).await;
                 result.stderr.insert_str(0, &stderr);
                 Ok(result)
             }

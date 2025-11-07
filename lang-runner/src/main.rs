@@ -5,6 +5,7 @@ mod install_lang;
 mod judge;
 mod process_message;
 mod run;
+mod stopwatch;
 
 use std::sync::Arc;
 
