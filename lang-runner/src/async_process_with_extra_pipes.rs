@@ -97,10 +97,15 @@ impl Future for AsyncChild {
 
 impl Drop for AsyncChild {
     fn drop(&mut self) {
-        if !self.exited
-            && let Err(e) = kill(self.child, Signal::SIGKILL) {
+        if !self.exited {
+            if let Err(e) = kill(self.child, Signal::SIGKILL) {
                 eprintln!("Error killing child: {e:?}")
             }
+            // clean up zombie process
+            if let Err(e) = nix::sys::wait::waitpid(self.child, None) {
+                eprintln!("Error harvesting child' corpse: {e:?}");
+            };
+        }
     }
 }
 
@@ -119,25 +124,22 @@ impl Future for OutputChild {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.process.poll_unpin(cx) {
-            Poll::Ready(result) => Poll::Ready(
-                result
-                    .and_then(|exit_status| {
-                        let pipes = std::mem::take(&mut self.pipes);
-                        let pipes = pipes
-                            .into_iter()
-                            .map(|(key, mut value)| {
-                                let mut str = String::new();
-                                value.read_to_string(&mut str)?;
-                                Ok((key, str))
-                            })
-                            .collect::<Result<HashMap<_, _>, std::io::Error>>()?;
+            Poll::Ready(result) => Poll::Ready(result.and_then(|exit_status| {
+                let pipes = std::mem::take(&mut self.pipes);
+                let pipes = pipes
+                    .into_iter()
+                    .map(|(key, mut value)| {
+                        let mut str = String::new();
+                        value.read_to_string(&mut str)?;
+                        Ok((key, str))
+                    })
+                    .collect::<Result<HashMap<_, _>, std::io::Error>>()?;
 
-                        Ok(ChildOutput {
-                            exit_code: exit_status,
-                            outputs: pipes,
-                        })
-                    }),
-            ),
+                Ok(ChildOutput {
+                    exit_code: exit_status,
+                    outputs: pipes,
+                })
+            })),
             Poll::Pending => Poll::Pending,
         }
     }
