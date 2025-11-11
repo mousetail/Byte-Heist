@@ -36,7 +36,7 @@ services:
       - ./scripts:/scripts
     entrypoint: ["/scripts/auto-reload.sh", "/debug/lang-runner"]
   postgres:
-    image: "postgres:latest"
+    image: "postgres:17"
     ports:
       - 5432:5432
     environment:
