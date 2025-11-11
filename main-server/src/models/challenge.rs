@@ -11,18 +11,15 @@ use super::{GetById, account::Account};
 #[serde(rename_all = "kebab-case")]
 #[derive(sqlx::Type)]
 #[sqlx(type_name = "challenge_status", rename_all = "kebab-case")]
+#[derive(Default)]
 pub enum ChallengeStatus {
+    #[default]
     Draft,
     Private,
     Beta,
     Public,
 }
 
-impl Default for ChallengeStatus {
-    fn default() -> Self {
-        Self::Draft
-    }
-}
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
