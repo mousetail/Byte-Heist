@@ -172,7 +172,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/user/{id}",
-            get(route_factory.handler("user.html.jinja", get_user)),
+            get(route_factory.handler("user/index.html.jinja", get_user)),
         )
         .route(
             "/{id}/{language}",

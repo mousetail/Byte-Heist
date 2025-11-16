@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            language as \"language!\",\n            CAST(sum(user_scoring_info_per_language.total_score) AS bigint) as \"total_score!\"\n        FROM user_scoring_info_per_language\n        WHERE author = $1\n        GROUP BY user_scoring_info_per_language.language\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "language!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "total_score!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      null
+    ]
+  },
+  "hash": "3346f385a52093775894d6974c35b069234304dbbc1c2c8d15f497e0fc3616f5"
+}

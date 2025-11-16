@@ -1,6 +1,6 @@
-use axum::{extract::Path, Extension};
+use axum::{Extension, extract::Path};
 use serde::Serialize;
-use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
+use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
 
 use crate::{
     error::Error,
@@ -32,7 +32,34 @@ pub struct UserInfo {
     account_info: AccountProfileInfo,
     solutions: Vec<UserPageLeaderboardEntry>,
     invalidated_solutions: Option<Vec<InvalidatedSolution>>,
+    per_language_stats: Vec<StatsForLanguage>,
     id: i32,
+}
+
+#[derive(Serialize)]
+struct StatsForLanguage {
+    language: String,
+    total_score: i64,
+}
+
+async fn get_account_stats(
+    pool: &PgPool,
+    user_id: i32,
+) -> Result<Vec<StatsForLanguage>, sqlx::Error> {
+    query_as!(
+        StatsForLanguage,
+        r#"
+        SELECT
+            language as "language!",
+            CAST(sum(user_scoring_info_per_language.total_score) AS bigint) as "total_score!"
+        FROM user_scoring_info_per_language
+        WHERE author = $1
+        GROUP BY user_scoring_info_per_language.language
+        "#,
+        user_id
+    )
+    .fetch_all(pool)
+    .await
 }
 
 pub async fn get_user(
@@ -95,5 +122,8 @@ pub async fn get_user(
         account_info,
         id,
         invalidated_solutions,
+        per_language_stats: get_account_stats(&pool, id)
+            .await
+            .map_err(Error::Database)?,
     })
 }

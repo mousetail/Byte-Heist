@@ -20,6 +20,7 @@ pub struct Lang {
     pub extra_mounts: &'static [(&'static str, &'static str)],
     pub extension: &'static str,
     pub extra_runtime: Timers,
+    pub color: &'static str,
 }
 
 pub const DEFAULT_LANG: Lang = Lang {
@@ -39,6 +40,7 @@ pub const DEFAULT_LANG: Lang = Lang {
         compile: Duration::ZERO,
         judge: Duration::ZERO,
     },
+    color: "transparent",
 };
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -49,6 +51,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         plugin: "https://github.com/asdf-vm/asdf-nodejs.git",
         latest_version: "22.9.0",
         icon: "nodejs.svg",
+        color: "#f1e05a",
         ..DEFAULT_LANG
     },
     "deno" => Lang {
@@ -62,6 +65,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         ],
         latest_version: "2.0.6",
         icon: "deno.svg",
+        color: "white",
         ..DEFAULT_LANG
     },
     "python" => Lang {
@@ -72,6 +76,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         env: &[("LD_LIBRARY_PATH", "/lang/lib")],
         latest_version: "3.12.0",
         icon: "python.svg",
+        color:  "#3572A5",
         ..DEFAULT_LANG
     },
     "rust" => Lang {
@@ -90,6 +95,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         )],
         latest_version: "1.85.0",
         icon: "rust.svg",
+        color:  "#dea584",
         extra_mounts: &[
             ("/usr/bin/x86_64-linux-gnu-gcc-14", "/usr/bin/cc"),
             ("/usr/bin/x86_64-linux-gnu-ld.bfd", "/usr/bin/ld"),
@@ -106,6 +112,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.22.4.3",
         icon: "vyxal.svg",
         extra_runtime: Timers { run: Duration::from_secs(2), ..DEFAULT_TIMERS },
+        color: "#3498db",
         ..DEFAULT_LANG
     },
     "vyxal3" => Lang {
@@ -126,6 +133,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             run: Duration::from_secs(2),
             ..DEFAULT_TIMERS
         },
+        color: "#3498db",
         ..DEFAULT_LANG
     },
     "tinyapl" => Lang {
@@ -135,6 +143,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         plugin: "https://github.com/RubenVerg/asdf-tinyapl.git",
         latest_version: "0.12.0.0",
         icon: "tinyapl.svg",
+        color: "#94e044",
         ..DEFAULT_LANG
     },
     "tcc" => Lang {
@@ -148,6 +157,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         ],
         latest_version: "0.9.27",
         icon: "c.svg",
+        color: "#555555",
         ..DEFAULT_LANG
     },
     "kotlin" => Lang {
@@ -174,6 +184,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             ("/usr/bin/dirname", "/usr/bin/dirname")
         ],
         extension: ".kt",
+        color: "#A97BFF",
         extra_runtime: Timers {
             compile: Duration::from_secs(3),
             ..DEFAULT_TIMERS

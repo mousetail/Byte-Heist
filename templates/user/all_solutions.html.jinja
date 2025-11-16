@@ -1,0 +1,42 @@
+{% if object.solutions %}
+      <div class="mt-8">
+        <div class="border border-byte-brown-500 bg-byte-brown-700 rounded-lg">
+          <div class="p-6">
+            <h3 class="text-white text-lg font-semibold mb-4">All Solutions</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-byte-brown-500">
+                    <th class="text-left py-3 px-4 text-byte-brown-200 font-medium">Challenge</th>
+                    <th class="text-left py-3 px-4 text-byte-brown-200 font-medium">Language</th>
+                    <th class="text-left py-3 px-4 text-byte-brown-200 font-medium">Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for solution in object.solutions %}
+                    <tr class="border-b border-byte-brown-500 hover:bg-byte-brown-500 transition-colors">
+                      <td class="py-3 px-4">
+                        <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}"
+                           class="text-white hover:text-green-400 transition-colors">{{ solution.challenge_name }}</a>
+                      </td>
+                      <td class="py-3 px-4">
+                        <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}"
+                           class="flex items-center gap-2 text-white hover:text-green-400 transition-colors">
+                          <img src="{%- if langs[solution.language] -%}/static/lang-icons/{{ langs[solution.language].icon }}{%- endif -%}"
+                               width="24"
+                               height="24"
+                               alt=""
+                               class="lang-icon" />
+                          {% if langs[solution.language] %}{{ langs[solution.language].displayName }}{% endif %}
+                        </a>
+                      </td>
+                      <td class="py-3 px-4 text-white">{{ solution.score }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
