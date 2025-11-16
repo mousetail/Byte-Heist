@@ -1,3 +1,4 @@
+use crate::models::challenge::ChallengeCategory;
 use axum::{Extension, extract::Path};
 use serde::Serialize;
 use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
@@ -33,6 +34,7 @@ pub struct UserInfo {
     solutions: Vec<UserPageLeaderboardEntry>,
     invalidated_solutions: Option<Vec<InvalidatedSolution>>,
     per_language_stats: Vec<StatsForLanguage>,
+    per_category_stats: Vec<StatsPerCategory>,
     id: i32,
 }
 
@@ -42,7 +44,7 @@ struct StatsForLanguage {
     total_score: i64,
 }
 
-async fn get_account_stats(
+async fn get_account_language_stats(
     pool: &PgPool,
     user_id: i32,
 ) -> Result<Vec<StatsForLanguage>, sqlx::Error> {
@@ -55,6 +57,34 @@ async fn get_account_stats(
         FROM user_scoring_info_per_language
         WHERE author = $1
         GROUP BY user_scoring_info_per_language.language
+        ORDER BY "total_score!" DESC
+        "#,
+        user_id
+    )
+    .fetch_all(pool)
+    .await
+}
+
+#[derive(Serialize)]
+struct StatsPerCategory {
+    total_score: i64,
+    category: ChallengeCategory,
+}
+
+async fn get_account_category_stats(
+    pool: &PgPool,
+    user_id: i32,
+) -> Result<Vec<StatsPerCategory>, sqlx::Error> {
+    query_as!(
+        StatsPerCategory,
+        r#"
+        SELECT
+            category as "category!: ChallengeCategory",
+            CAST(sum(user_scoring_info.total_score) AS bigint) as "total_score!"
+        FROM user_scoring_info
+        WHERE author = $1
+        GROUP BY user_scoring_info.category
+        ORDER BY "total_score!" DESC
         "#,
         user_id
     )
@@ -122,7 +152,10 @@ pub async fn get_user(
         account_info,
         id,
         invalidated_solutions,
-        per_language_stats: get_account_stats(&pool, id)
+        per_language_stats: get_account_language_stats(&pool, id)
+            .await
+            .map_err(Error::Database)?,
+        per_category_stats: get_account_category_stats(&pool, id)
             .await
             .map_err(Error::Database)?,
     })

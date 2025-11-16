@@ -48,20 +48,50 @@
             </div>
             <div class="space-y-2">
                 <div class="flex justify-between text-sm">
-                    <span class="text-byte-brown-200">Success Rate [Placeholder]</span>
-                    <span class="text-white">87%</span>
+                    <span class="text-byte-brown-200">Most popular category</span>
+                    <span class="text-white">
+                        {%- if object.per_category_stats | empty -%}
+                            No solutions
+                        {%- elif object.per_category_stats[0].category == 'code-golf' -%}
+                            Mostly Code Golf
+                        {%- else -%}
+                            Mostly restricted source
+                        {%- endif -%}
+                    </span>
                 </div>
-                <div class="w-full bg-byte-brown-500 rounded-full h-2">
-                    <div class="bg-blue-600 h-2 rounded-full" style="width: 87%"></div>
+                <div class="w-full flex bg-byte-brown-500 rounded-full h-2">
+                    {% for category in object.per_category_stats %}
+                        <div class="h-2
+                                    {% if loop.first %}rounded-l-full{% endif %}
+                                    {% if loop.last %}rounded-r-full{% endif %}"
+                             style="flex-grow: {{ category.total_score }};
+                                    background-color: {%- if category.category == 'code-golf' -%} green {%- else -%} blue {%- endif -%}"
+                             data-tooltip="{{ category.category }}"
+                             title="{{ category.category }}"></div>
+                    {% endfor %}
                 </div>
             </div>
             <div class="space-y-2">
                 <div class="flex justify-between text-sm">
-                    <span class="text-byte-brown-200">Speed (avg time to solve) [Placeholder]</span>
-                    <span class="text-white">23 minutes</span>
+                    <span class="text-byte-brown-200">Average Ranking</span>
+                    <span class="text-white">Fairly good</span>
                 </div>
-                <div class="w-full bg-byte-brown-500 rounded-full h-2">
-                    <div class="bg-amber-600 h-2 rounded-full" style="width: 60%"></div>
+                <div class="w-full flex bg-byte-brown-500 rounded-full h-2">
+                    <div class="h-2 rounded-l-full"
+                         style="flex-grow: {{ object.account_info.first_places }};
+                                background-color: gold"
+                         data-tooltip="First Places"
+                         title="First Places"></div>
+                    <div class="h-2"
+                         style="flex-grow: {{ object.account_info.top_ten_percents - object.account_info.first_places }};
+                                background-color: silver"
+                         data-tooltip="Top 10%"
+                         title="Top 10%"></div>
+                    <div class="h-2 rounded-r-full"
+                         style="flex-grow: {{ object.account_info.solutions - object.account_info.top_ten_percents }};
+                                background-color: green"
+                         data-tooltip="Other Solutions"
+                         title="Other Solutions"></div>
                 </div>
             </div>
         </div>

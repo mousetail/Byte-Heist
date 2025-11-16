@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            category as \"category!: ChallengeCategory\",\n            CAST(sum(user_scoring_info.total_score) AS bigint) as \"total_score!\"\n        FROM user_scoring_info\n        WHERE author = $1\n        GROUP BY user_scoring_info.category\n        ORDER BY \"total_score!\" DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "category!: ChallengeCategory",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "total_score!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      null
+    ]
+  },
+  "hash": "179ddcb2c7bf639460978b93b9d43476511b60f50a5ceee2aee92fc03ffe273b"
+}
