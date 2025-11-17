@@ -1,67 +1,64 @@
-
-    <!-- Profile Header -->
-    <div class="border border-byte-brown-500 bg-byte-brown-700 rounded-lg">
-      <div class="p-6">
-        <div class="flex flex-col md:flex-row gap-6 items-start">
-          <div class="flex flex-col items-center gap-4">
-            <div class="h-24 w-24 border-4 border-green-500 rounded-full overflow-hidden bg-byte-brown-500 flex items-center justify-center">
-              <img src="{{ object.account_info.avatar }}&size=96"
-                   alt="{{ object.account_info.username }}"
-                   class="w-full h-full object-cover" />
+<!-- Profile Header -->
+<div class="border border-byte-brown-500 bg-byte-brown-700 rounded-lg">
+  <div class="p-6">
+    <div class="flex flex-col md:flex-row gap-6 items-start">
+      <div class="flex flex-col items-center gap-4">
+        <div class="h-24 w-24 border-4 border-green-500 rounded-full overflow-hidden bg-byte-brown-500 flex items-center justify-center">
+          <img src="{{ object.account_info.avatar }}&size=96"
+               alt="{{ object.account_info.username }}"
+               class="w-full h-full object-cover" />
+        </div>
+      </div>
+      <div class="flex-1 space-y-4">
+        <div>
+          <h1 class="text-3xl font-bold text-white">{{ object.account_info.username }}</h1>
+          <p class="text-byte-brown-200">Joined {{ object.account_info.join_date | format_date(include_day=false) }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
+            {% include "icons/Cup-First--Streamline-Solar.svg" %}
+            {% if object.account_info.rank %}
+              Rank #{{ object.account_info.rank }}
+            {% else %}
+              Not ranked yet
+            {% endif %}
+          </span>
+          <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
+            {% include "icons/clock.svg" %}
+            {{ object.solutions | length }} Heists Completed
+          </span>
+          {% if object.account_info.first_places %}
+            <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
+              {% include "icons/Medal-Ribbons-Star--Streamline-Solar.svg" %}
+              {{ object.account_info.first_places }} First Places
+            </span>
+          {% endif %}
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-byte-green-700">
+              {% if object.account_info.solutions %}
+                {{ object.account_info.solutions }}
+              {% else %}
+                0
+              {% endif %}
             </div>
+            <div class="text-sm text-byte-brown-200">Solutions</div>
           </div>
-          <div class="flex-1 space-y-4">
-            <div>
-              <h1 class="text-3xl font-bold text-white">{{ object.account_info.username }}</h1>
-              <p class="text-byte-brown-200">Joined {{ object.account_info.join_date | format_date(include_day=false) }}</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
-                {% include "icons/Cup-First--Streamline-Solar.svg" %}
-                {% if object.account_info.rank %}
-                  Rank #{{ object.account_info.rank }}
-                {% else %}
-                  Not ranked yet
-                {% endif %}
-              </span>
-              <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
-                {% include "icons/clock.svg" %}
-                {{ object.solutions | length }} Heists Completed
-              </span>
-              <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
-                {% include "icons/Medal-Ribbons-Star--Streamline-Solar.svg" %}
-                {% if object.account_info.first_places %}
-                  {{ object.account_info.first_places }} First Places
-                {% else %}
-                  Not Ranked Yet
-                {% endif %}
-              </span>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div class="text-center">
-                <div class="text-2xl font-bold text-byte-green-700">
-                  {% if object.account_info.solutions %}
-                    {{ object.account_info.solutions }}
-                  {% else %}
-                    0
-                  {% endif %}
-                </div>
-                <div class="text-sm text-byte-brown-200">Solutions</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.distinct_challenges }}</div>
-                <div class="text-sm text-byte-brown-200">Challenges</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.first_places }}</div>
-                <div class="text-sm text-byte-brown-200">First Places</div>
-              </div>
-              <div class="text-center">
-                <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.top_ten_percents }}</div>
-                <div class="text-sm text-byte-brown-200">Top 10%</div>
-              </div>
-            </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.distinct_challenges }}</div>
+            <div class="text-sm text-byte-brown-200">Challenges</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.first_places }}</div>
+            <div class="text-sm text-byte-brown-200">First Places</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.top_ten_percents }}</div>
+            <div class="text-sm text-byte-brown-200">Top 10%</div>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</div>
