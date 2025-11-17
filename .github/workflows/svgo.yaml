@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "Starting"
           echo "Changed Files = $changed_files"
-          svg_files=$(echo $changed_files | grep '\.svg$')
+          svg_files=$(echo $changed_files | tr ' ' '\n' | grep '\.svg$')
 
           for file in $svg_files; do
             echo "Checking $file..."
