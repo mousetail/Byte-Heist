@@ -13,32 +13,14 @@
             {% if account %}
                 <a href="/challenge"
                    class="inline-flex h-10 items-center justify-center rounded-md border border-byte-green-700 bg-transparent px-8 text-sm font-medium shadow-sm transition-colors hover:bg-green-900 text-white gap-2">
-                    <svg viewBox="0 0 16 16"
-                         fill="none"
-                         xmlns="http://www.w3.org/2000/svg"
-                         id="Plus--Streamline-Unicons"
-                         height="12"
-                         width="12">
-                        <path d="M14.86 7.02h-5.88V1.14c0 -0.25993333333333335 -0.10326666666666667 -0.5092 -0.28706666666666664 -0.6930000000000001C8.5092 0.26326666666666665 8.259866666666666 0.15999999999999998 8 0.15999999999999998c-0.25986666666666663 0 -0.5092 0.10326666666666667 -0.6929333333333334 0.287 -0.1838 0.1838 -0.28706666666666664 0.4330666666666666 -0.28706666666666664 0.6930000000000001v5.88H1.14c-0.25993333333333335 0 -0.5092 0.10326666666666667 -0.6930000000000001 0.28706666666666664C0.26326666666666665 7.4908 0.15999999999999998 7.7401333333333335 0.15999999999999998 8c0 0.25986666666666663 0.10326666666666667 0.5092 0.287 0.6929333333333334 0.1838 0.1838 0.4330666666666666 0.28706666666666664 0.6930000000000001 0.28706666666666664h5.88v5.88c0 0.25986666666666663 0.10326666666666667 0.5092 0.28706666666666664 0.6929333333333334s0.4330666666666666 0.28706666666666664 0.6929333333333334 0.28706666666666664c0.25986666666666663 0 0.5092 -0.10326666666666667 0.6929333333333334 -0.28706666666666664s0.28706666666666664 -0.4330666666666666 0.28706666666666664 -0.6929333333333334v-5.88h5.88c0.25986666666666663 0 0.5092 -0.10326666666666667 0.6929333333333334 -0.28706666666666664S15.84 8.259866666666666 15.84 8c0 -0.25986666666666663 -0.10326666666666667 -0.5092 -0.28706666666666664 -0.6929333333333334s-0.4330666666666666 -0.28706666666666664 -0.6929333333333334 -0.28706666666666664Z" fill="currentColor" stroke-width="0.6667">
-                        </path>
-                    </svg>
+                    {% include "icons/Plus--Streamline-Unicons.svg" %}
                     Create Heist
                 </a>
             {% endif %}
         </div>
         <div class="flex flex-col sm:flex-row gap-4 mt-4">
             <div class="relative flex-grow flex">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     width="16"
-                     height="16"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     stroke-width="2"
-                     class="absolute left-2.5 top-3 h-4 w-4 text-byte-brown-200">
-                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none" />
-                    <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+                {% include "icons/magnifying-glass.svg" %}
                 <input type="search"
                        placeholder="Search challenges..."
                        data-search-input
@@ -59,9 +41,7 @@
                             <option value="long">Long (3+ months)</option>
                         </select>
                         <button class="border border-byte-brown-500 text-byte-brown-200 hover:text-white px-3 py-2 rounded-md transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="inline-block">
-                                <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" stroke="currentColor" stroke-width="2" fill="none" />
-                            </svg>
+                            {% include "icons/filter.svg" %}
                         </button>
                     </div> #}
         </div>
