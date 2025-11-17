@@ -189,3 +189,7 @@
     cursor: pointer;
   }
 }
+
+.cm-editor {
+  min-height: 8rem;
+}

@@ -174,7 +174,9 @@ const setupEditorControls = (
   editorControls.classList.remove("hidden");
 
   const byteCountElement = editorControls.querySelector("#byte-counter")!;
-  const resetButton = editorControls.querySelector("#restore-solution-button")!;
+  const resetButton = editorControls.querySelector<HTMLButtonElement>(
+    "#restore-solution-button"
+  )!;
   let originalText = mainTextArea.state.doc.toString();
 
   byteCountElement.textContent = lengthInBytes(originalText).toString();
@@ -182,6 +184,10 @@ const setupEditorControls = (
   onByteCountChange(mainTextArea, (byteCount) => {
     byteCountElement.textContent = byteCount.toString();
   });
+
+  if (originalText === "") {
+    resetButton.style.display = "none";
+  }
 
   resetButton.addEventListener("click", () => {
     mainTextArea.dispatch({
@@ -194,6 +200,7 @@ const setupEditorControls = (
   });
 
   setupJsSubmitOnForm(mainTextArea!, (e) => {
+    resetButton.style.display = "block";
     originalText = e;
   });
 };
