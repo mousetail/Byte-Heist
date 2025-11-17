@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::OnceLock};
 use axum::response::{IntoResponse, Response};
 use common::langs::LANGS;
 use sqlx::types::time::OffsetDateTime;
-use tera::{to_value, Tera, Value};
+use tera::{Tera, Value, to_value};
 use tower_sessions::cookie::time::macros::format_description;
 
 use crate::tera_utils::syntax_highlighting::SyntaxHighight;
@@ -30,7 +30,7 @@ impl IntoResponse for GetTerraError {
 
 pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
     let value = TERA.get_or_init(|| {
-        Tera::new("templates/**/*.jinja").map(|mut tera| {
+        Tera::new("templates/**/*").map(|mut tera| {
             tera.autoescape_on(vec![".html.jinja", ".xml.jinja", ".html", ".xml"]);
             tera.register_function("languages", get_langs);
             tera.register_function("modules", load_assets);
