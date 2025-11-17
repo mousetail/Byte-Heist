@@ -50,19 +50,19 @@
                 {% if challenge.user_has_submitted %}
                 <!-- User has submitted - show green checkmark -->
                 <span class="text-byte-green-200 font-medium flex items-center gap-1">
-                    {% include "icons/B50DeplH4g7GE5PH7E4sXJr6CLBm6Ghe8pepJ2zRkHA=.svg" %}
+                    {% include "icons/check.svg" %}
                     Submitted
                 </span>
                 {% else %}
                 <!-- User hasn't submitted - show time info -->
                 {% if challenge.is_post_mortem %}
                 <span class="text-byte-brown-200 flex items-center gap-1">
-                    {% include "icons/OAv1dbZuQ0YVw8Rlpbcs5zAH3-Q6UPrzLXNb5QDcvIY=.svg" %}
+                    {% include "icons/clock.svg" %}
                     Ended
                 </span>
                 {% elif challenge.post_mortem_date %}
                 <span class="text-amber-500 flex items-center gap-1">
-                    {% include "icons/OAv1dbZuQ0YVw8Rlpbcs5zAH3-Q6UPrzLXNb5QDcvIY=.svg" %}
+                    {% include "icons/clock.svg" %}
                     {{ challenge.post_mortem_date | format_date }}
                 </span>
                 {% else %}
