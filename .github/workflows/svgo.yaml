@@ -33,7 +33,10 @@ jobs:
       - name: Check SVG files
         env:
           changed_files: ${{ steps.changed-files.outputs.all_changed_files }}
+        shell: bash
         run: |
+          echo "Starting"
+          echo "Changed Files = $changed_files"
           svg_files=$(echo $changed_files | grep '\.svg$')
 
           for file in $svg_files; do
