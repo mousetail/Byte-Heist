@@ -75,6 +75,7 @@ I do now actually know much about golfing in Kotlin so of someone is willing to 
 
 TinyAPL is specifically designed for code golf so the official documentation is quite helpful.
 
+- [TinyAPL Documentation](https://tinyapl.rubenverg.com/)
 - [TinyAPL on GitHub](https://github.com/rubenVerg/tinyAPL)
 - [TinyAPL on RubenVerg (Madeline)'s Blog](https://blog.rubenverg.com/?tag=tinyapl)
 
@@ -83,8 +84,9 @@ TinyAPL is specifically designed for code golf so the official documentation is 
 
 Vyxal is specifically designed for code golf so the official documentation is quite helpful.
 
-- [Tips for Golfing in Vyxal 3 on Code Golf Stack Exchange](https://codegolf.stackexchange.com/questions/267048/tips-for-golfing-in-vyxal-3)
 - [Official Vyxal 3 Tour](https://github.com/Vyxal/Vyxal/blob/version-3/documentation/Tour.md)
+- [Tips for Golfing in Vyxal 3 on Code Golf Stack Exchange](https://codegolf.stackexchange.com/questions/267048/tips-for-golfing-in-vyxal-3)
+- [Official Vyxal 3 Tips and Tricks page](https://github.com/Vyxal/Vyxal/blob/version-3/documentation/tipsandtricks.md)
 - [Wiki Page on code.golf](https://code.golf/wiki/langs/vyxal) - A few basic tips only
 
 Note Vyxal 2 will probably be removed from the site eventually.
