@@ -153,6 +153,8 @@
 }
 
 .markdown {
+  color: oklch(0.75 0 0);
+
   & h1 {
     font-size: 1.5rem;
   }
@@ -181,12 +183,42 @@
   h3,
   h4,
   blockquote {
-    margin-bottom: 1.5rem;
+    &:not(:first-child) {
+      margin-top: 1.5rem;
+    }
+    margin-bottom: 0.5rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  th, code {
+    color: var(--color-foreground);
+  }
+
+  & p {
+    margin-left: 0.5rem;
   }
 
   & a {
     text-decoration: underline;
     cursor: pointer;
+  }
+
+  & table {
+    table-layout: fixed;
+    width: 100%;
+    margin-bottom: 1rem;
+
+    & td {
+      padding: 0.25rem;
+    }
+  }
+
+  & li {
+    list-style-type: disc;
+    margin-left: 2rem;
   }
 }
 

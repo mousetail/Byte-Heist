@@ -27,6 +27,7 @@ use controllers::{
         all_challenges, compose_challenge, get_homepage, new_challenge, post_comment,
         post_reaction, view_challenge,
     },
+    docs::get_doc,
     global_leaderboard::{global_leaderboard, global_leaderboard_per_language},
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
@@ -106,6 +107,14 @@ async fn main() -> anyhow::Result<()> {
         )
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
+        .route(
+            "/doc",
+            get(route_factory.handler("docs.html.jinja", get_doc)),
+        )
+        .route(
+            "/doc/{*page}",
+            get(route_factory.handler("docs.html.jinja", get_doc)),
+        )
         .route(
             "/heists",
             get(route_factory.handler("heists.html.jinja", all_challenges)),
