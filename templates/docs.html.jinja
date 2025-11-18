@@ -1,0 +1,42 @@
+{% extends "base/base.html.jinja" %}
+{% block head %}
+  <base href="/doc/{{ object.canonical_path }}">
+  {{ super() }}
+  <link rel="canonical" href="/doc/{{ object.canonical_path }}">
+{% endblock head %}
+{% block title %}
+  <title>{{ object.display_name }} - Byte Heist</title>
+{% endblock title %}
+{% block content %}
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+    {% set documentation = object.content | markdown_with_table_of_contents %}
+    <article class="lg:col-span-3">{{ documentation.content | safe }}</article>
+    <nav>
+      <h3 class="text-lg">Byte Heist Documentation</h3>
+      {% for page in object.files %}
+        <a href="{{ page.path }}"
+           class="block mt-2 mb-2 underline text-gray-400">{{ page.display_name }}</a>
+      {% endfor %}
+      <h3 class="text-lg">On this page</h3>
+      {% for page in documentation.headings %}
+        <a href="#{{ page.text | slugify }}"
+           class="block mt-2 mb-2 underline text-gray-400
+                  {% if page.level > 3 %}
+                    ml-4
+                  {% elif page.level > 2 %}
+                    ml-2
+                  {% endif %}">{{ page.text }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+  <hr class="mb-4 mt-4">
+  <div class="flex justify-between">
+    <a href="{{ object.prev }}" class="block p-2 underline">« Previous</a>
+    <a href="https://github.com/mousetail/byte-heist/blob/master/doc/{{ object.canonical_path }}"
+       class="block p-2 flex gap-3 underline items-center">
+      {% include "icons/github.svg" %}
+      Edit this page on GitHub
+    </a>
+    <a href="{{ object.next }}" class="block p-2 underline">Next »</a>
+  </div>
+{% endblock content %}
