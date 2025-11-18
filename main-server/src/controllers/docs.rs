@@ -1,13 +1,4 @@
-use std::{
-    borrow::Cow,
-    ffi::{OsStr, OsString},
-    fs::read_to_string,
-    io::ErrorKind,
-    ops::Deref,
-    os::unix::ffi::OsStrExt,
-    path::PathBuf,
-    sync::LazyLock,
-};
+use std::{borrow::Cow, fs::read_to_string, io::ErrorKind, path::PathBuf, sync::LazyLock};
 
 use axum::extract::Path;
 use serde::Serialize;
@@ -20,15 +11,14 @@ struct File {
     display_name: String,
 }
 
-const FILES: LazyLock<std::io::Result<Vec<File>>> = LazyLock::new(|| {
+static FILES: LazyLock<std::io::Result<Vec<File>>> = LazyLock::new(|| {
     std::fs::read_dir("doc").map(|i| {
         i.flatten()
-            .map(|d| d.file_name().into_string())
-            .flatten()
+            .flat_map(|d| d.file_name().into_string())
             .map(|k| File {
                 display_name: k
                     .split('/')
-                    .last()
+                    .next_back()
                     .and_then(|d| d.split_once('.'))
                     .map(|z| z.0.replace('_', " "))
                     .unwrap_or_default(),
@@ -41,16 +31,15 @@ const FILES: LazyLock<std::io::Result<Vec<File>>> = LazyLock::new(|| {
 #[derive(Serialize)]
 pub struct GetDocOutput {
     content: String,
-    prev: Option<String>,
-    next: Option<String>,
-    canonical_path: String,
-    display_name: String,
-    files: Vec<File>,
+    prev: &'static str,
+    next: &'static str,
+    canonical_path: &'static str,
+    display_name: &'static str,
+    files: &'static [File],
 }
 
 pub async fn get_doc(path: Option<Path<String>>) -> Result<GetDocOutput, Error> {
-    let files = FILES;
-    let files = files.as_ref().map_err(|_| Error::ServerError)?;
+    let files = FILES.as_ref().map_err(|_| Error::ServerError)?;
 
     let original_path = path
         .map(|Path(e)| e)
@@ -80,12 +69,8 @@ pub async fn get_doc(path: Option<Path<String>>) -> Result<GetDocOutput, Error> 
     }
 
     let (prev, next) = (
-        Some(
-            files[(position + files.len() - 1) % files.len()]
-                .path
-                .clone(),
-        ),
-        Some(files[(position + 1) % files.len()].path.clone()),
+        &files[(position + files.len() - 1) % files.len()].path,
+        &files[(position + 1) % files.len()].path,
     );
 
     let mut root = PathBuf::new();
@@ -103,10 +88,10 @@ pub async fn get_doc(path: Option<Path<String>>) -> Result<GetDocOutput, Error> 
 
     Ok(GetDocOutput {
         content: s,
-        prev: prev.to_owned(),
-        next: next.to_owned(),
-        canonical_path: files[position].path.clone(),
-        display_name: files[position].display_name.clone(),
-        files: files.clone(),
+        prev: prev,
+        next: next,
+        canonical_path: &files[position].path,
+        display_name: &files[position].display_name,
+        files: files.as_slice(),
     })
 }
