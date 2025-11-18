@@ -88,8 +88,8 @@ pub async fn get_doc(path: Option<Path<String>>) -> Result<GetDocOutput, Error> 
 
     Ok(GetDocOutput {
         content: s,
-        prev: prev,
-        next: next,
+        prev,
+        next,
         canonical_path: &files[position].path,
         display_name: &files[position].display_name,
         files: files.as_slice(),
