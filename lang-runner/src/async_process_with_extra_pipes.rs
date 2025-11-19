@@ -168,13 +168,13 @@ impl<'a> AsyncProcessWithCustomPipes<'a> {
         }
     }
 
-    pub fn add_input(mut self, pid: i32, data: &'a [u8]) -> Self {
-        self.process_input.insert(pid, data);
+    pub fn add_input(mut self, fd: i32, data: &'a [u8]) -> Self {
+        self.process_input.insert(fd, data);
         self
     }
 
-    pub fn add_output(mut self, pid: i32) -> Self {
-        self.process_output.push(pid);
+    pub fn add_output(mut self, fd: i32) -> Self {
+        self.process_output.push(fd);
         self
     }
 
@@ -185,19 +185,19 @@ impl<'a> AsyncProcessWithCustomPipes<'a> {
         let mut readers_to_be_dropped = Vec::with_capacity(self.process_input.len());
         let mut writers_to_be_dropped = Vec::with_capacity(self.process_output.len());
 
-        for (pid, data) in self.process_input {
+        for (fd, data) in self.process_input {
             let (reader, mut writer) = std::io::pipe()?;
-            file_actions.add_dup2(reader.as_raw_fd(), pid)?;
+            file_actions.add_dup2(reader.as_raw_fd(), fd)?;
             writer.write_all(data)?;
             readers_to_be_dropped.push(reader);
         }
 
         let mut readers = HashMap::new();
 
-        for pid in self.process_output {
+        for fd in self.process_output {
             let (reader, writer) = std::io::pipe()?;
-            file_actions.add_dup2(writer.as_raw_fd(), pid)?;
-            readers.insert(pid, reader);
+            file_actions.add_dup2(writer.as_raw_fd(), fd)?;
+            readers.insert(fd, reader);
 
             writers_to_be_dropped.push(writer);
         }
