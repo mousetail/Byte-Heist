@@ -46,8 +46,8 @@ impl AsyncChild {
 
     fn understand_wait_status(status: WaitStatus) -> Option<i32> {
         match status {
-            WaitStatus::Exited(_, status) => Some(status),
-            WaitStatus::Stopped(_, _) => Some(-1),
+            WaitStatus::Exited(_pid, status) => Some(status),
+            WaitStatus::Signaled(_pid, _signal, _core_dump_avalible) => Some(-1),
             _ => None,
         }
     }
@@ -65,7 +65,10 @@ impl Future for AsyncChild {
                     Err(err) => return Poll::Ready(Err(err.into())),
                 };
                 match exit_code {
-                    Some(e) => Poll::Ready(Ok(e)),
+                    Some(e) => {
+                        self.exited = true;
+                        Poll::Ready(Ok(e))
+                    }
                     None => {
                         let child = self.child;
                         let waker = cx.waker().clone();
@@ -101,8 +104,11 @@ impl Drop for AsyncChild {
             if let Err(e) = kill(self.child, Signal::SIGKILL) {
                 eprintln!("Error killing child: {e:?}")
             }
-            // clean up zombie process
-            if let Err(e) = nix::sys::wait::waitpid(self.child, None) {
+            // clean up zombie process if the thread was not started yet
+            if self.thread.is_none()
+                && !self.exited
+                && let Err(e) = nix::sys::wait::waitpid(self.child, None)
+            {
                 eprintln!("Error harvesting child' corpse: {e:?}");
             };
         }
