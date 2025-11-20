@@ -55,7 +55,6 @@ impl AsyncChild {
 
 impl Future for AsyncChild {
     type Output = Result<i32, std::io::Error>;
-
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.thread.take() {
             None => {
@@ -75,8 +74,8 @@ impl Future for AsyncChild {
                         let waker = cx.waker().clone();
                         self.thread = Some(std::thread::spawn(move || {
                             let status = nix::sys::wait::waitpid(child, None);
-                            waker.wake();
                             eprintln!("Child process exited normally");
+                            waker.wake();
                             status
                         }));
                         Poll::Pending
@@ -93,6 +92,7 @@ impl Future for AsyncChild {
                 Poll::Ready(Ok(exit_code.unwrap_or(-2)))
             }
             Some(e) => {
+                eprintln!("Process polled but thread has not yet finished");
                 self.thread = Some(e);
                 Poll::Pending
             }
