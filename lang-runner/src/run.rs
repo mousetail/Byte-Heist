@@ -87,6 +87,7 @@ impl RunLangContext {
         match &self.compile_command {
             None => {
                 let _ = sender.send(TimerType::Run).await;
+                eprintln!("Starting run with lang {}", self.lang.display_name);
                 let mut sandbox = RunInSandboxBuilder::new(
                     self.lang,
                     &self.lang_folder,
@@ -97,6 +98,7 @@ impl RunLangContext {
                     sandbox = sandbox.set_input(input.as_bytes());
                 }
                 let result = sandbox.run().await;
+                eprintln!("Finished run with lang {}", self.lang.display_name);
 
                 let _ = sender.send(TimerType::Judge).await;
                 result
