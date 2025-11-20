@@ -69,7 +69,10 @@ where
         match self.future.poll_unpin(cx) {
             Poll::Ready(r) => {
                 self.subtract_time(poll_start_time);
-                eprintln!("Process finished normally");
+                eprintln!(
+                    "Stopwatch: Process finished normally (time since poll start: {:?})",
+                    (Instant::now() - poll_start_time)
+                );
                 return Poll::Ready((Some(r), self.elapsed_timers));
             }
             Poll::Pending => (),
@@ -79,7 +82,10 @@ where
             Poll::Pending => (),
             Poll::Ready(_) => {
                 self.subtract_time(poll_start_time);
-                eprintln!("Process finished with timeout");
+                eprintln!(
+                    "Stopwatch: Process finished with timeout (time since poll: {:?})",
+                    (Instant::now() - poll_start_time)
+                );
 
                 return Poll::Ready((None, self.elapsed_timers));
             }
@@ -105,6 +111,7 @@ where
                 ));
             }
             Poll::Ready(None) => {
+                // It shouldn't be possible to actually reach this branch I think
                 self.subtract_time(poll_start_time);
                 return Poll::Ready((None, self.elapsed_timers));
             }
