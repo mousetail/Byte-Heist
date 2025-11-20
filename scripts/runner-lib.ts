@@ -254,7 +254,7 @@ export class Context {
   }
 
   async run(input?: string | undefined): Promise<RunResult> {
-    return this.runCode(this.code, input);
+    return await this.runCode(this.code, input);
   }
 
   async runCode(code: string, input?: string | undefined) {

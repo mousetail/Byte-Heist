@@ -69,6 +69,7 @@ where
         match self.future.poll_unpin(cx) {
             Poll::Ready(r) => {
                 self.subtract_time(poll_start_time);
+                eprintln!("Process finished normally");
                 return Poll::Ready((Some(r), self.elapsed_timers));
             }
             Poll::Pending => (),
@@ -78,6 +79,7 @@ where
             Poll::Pending => (),
             Poll::Ready(_) => {
                 self.subtract_time(poll_start_time);
+                eprintln!("Process finished with timeout");
 
                 return Poll::Ready((None, self.elapsed_timers));
             }

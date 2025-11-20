@@ -67,6 +67,7 @@ impl Future for AsyncChild {
                 match exit_code {
                     Some(e) => {
                         self.exited = true;
+                        eprintln!("Child exited before first poll");
                         Poll::Ready(Ok(e))
                     }
                     None => {
@@ -75,6 +76,7 @@ impl Future for AsyncChild {
                         self.thread = Some(std::thread::spawn(move || {
                             let status = nix::sys::wait::waitpid(child, None);
                             waker.wake();
+                            eprintln!("Child process exited normally");
                             status
                         }));
                         Poll::Pending
@@ -101,6 +103,7 @@ impl Future for AsyncChild {
 impl Drop for AsyncChild {
     fn drop(&mut self) {
         if !self.exited {
+            eprintln!("Child timed out, killing child...");
             if let Err(e) = kill(self.child, Signal::SIGKILL) {
                 eprintln!("Error killing child: {e:?}")
             }
