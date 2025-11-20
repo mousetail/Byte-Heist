@@ -14,6 +14,7 @@ use std::{
     io::{PipeReader, Read, Write},
     os::fd::AsRawFd,
     pin::Pin,
+    sync::{Arc, OnceLock},
     task::{Context, Poll},
 };
 
@@ -31,7 +32,8 @@ use nix::{
 /// A future that waits for a child process with a given PID to complete
 struct AsyncChild {
     child: Pid,
-    thread: Option<std::thread::JoinHandle<Result<WaitStatus, Errno>>>,
+    thread: Option<std::thread::JoinHandle<()>>,
+    result: Arc<OnceLock<Result<WaitStatus, Errno>>>,
     exited: bool,
 }
 
@@ -41,6 +43,7 @@ impl AsyncChild {
             child,
             thread: None,
             exited: false,
+            result: Arc::new(OnceLock::new()),
         }
     }
 
@@ -72,29 +75,34 @@ impl Future for AsyncChild {
                     None => {
                         let child = self.child;
                         let waker = cx.waker().clone();
+                        let result = self.result.clone();
                         self.thread = Some(std::thread::spawn(move || {
                             let status = nix::sys::wait::waitpid(child, None);
+                            result
+                                .set(status)
+                                .expect("Exit status was already previously set");
                             eprintln!("Child process exited normally");
                             waker.wake();
-                            status
                         }));
                         Poll::Pending
                     }
                 }
             }
-            Some(e) if e.is_finished() => {
-                self.exited = true;
-                let status = e.join().expect("Watcher thread panicked");
-                let exit_code = match status {
-                    Ok(e) => Self::understand_wait_status(e),
-                    Err(err) => return Poll::Ready(Err(err.into())),
-                };
-                Poll::Ready(Ok(exit_code.unwrap_or(-2)))
-            }
             Some(e) => {
-                eprintln!("Process polled but thread has not yet finished");
-                self.thread = Some(e);
-                Poll::Pending
+                let status = self.result.get();
+                if let Some(status) = status.cloned() {
+                    self.exited = true;
+                    e.join().expect("Watcher thread panicked");
+                    let exit_code = match status {
+                        Ok(e) => Self::understand_wait_status(e),
+                        Err(err) => return Poll::Ready(Err(err.into())),
+                    };
+                    Poll::Ready(Ok(exit_code.unwrap_or(-2)))
+                } else {
+                    eprintln!("Process polled but thread has not yet finished");
+                    self.thread = Some(e);
+                    Poll::Pending
+                }
             }
         }
     }
