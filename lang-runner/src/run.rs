@@ -269,15 +269,15 @@ impl<'a> RunInSandboxBuilder<'a> {
             .await
             .map_err(RunProcessError::IOError)?;
 
-        if let SignalOrStatus::Signal(signal) = output.result {
-            if let Some(child_stderr) = output.outputs.get_mut(&STDERR_FILENO) {
-                write!(
-                    child_stderr,
-                    "\nProcess was possibly killed by signal {}",
-                    signal.as_str()
-                )
-                .expect("Formatting string should never fail")
-            }
+        if let SignalOrStatus::Signal(signal) = output.result
+            && let Some(child_stderr) = output.outputs.get_mut(&STDERR_FILENO)
+        {
+            write!(
+                child_stderr,
+                "\nProcess was possibly killed by signal {}",
+                signal.as_str()
+            )
+            .expect("Formatting string should never fail")
         }
 
         Ok(RunCodeResult {
