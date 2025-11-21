@@ -47,17 +47,35 @@ impl AsyncChild {
         }
     }
 
-    fn understand_wait_status(status: WaitStatus) -> Option<i32> {
+    fn understand_wait_status(status: WaitStatus) -> Option<SignalOrStatus> {
         match status {
-            WaitStatus::Exited(_pid, status) => Some(status),
-            WaitStatus::Signaled(_pid, _signal, _core_dump_avalible) => Some(-1),
+            WaitStatus::Exited(_pid, status) => {
+                if status < 129 {
+                    Some(SignalOrStatus::Status(status))
+                } else {
+                    Some(
+                        (status - 128)
+                            .try_into()
+                            .map(SignalOrStatus::Signal)
+                            .unwrap_or(SignalOrStatus::Status(status)),
+                    )
+                }
+            }
+            WaitStatus::Signaled(_pid, signal, _core_dump_avalible) => {
+                Some(SignalOrStatus::Signal(signal))
+            }
             _ => None,
         }
     }
 }
 
+pub enum SignalOrStatus {
+    Signal(Signal),
+    Status(i32),
+}
+
 impl Future for AsyncChild {
-    type Output = Result<i32, std::io::Error>;
+    type Output = Result<SignalOrStatus, std::io::Error>;
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.thread.take() {
             None => {
@@ -97,7 +115,9 @@ impl Future for AsyncChild {
                         Ok(e) => Self::understand_wait_status(e),
                         Err(err) => return Poll::Ready(Err(err.into())),
                     };
-                    Poll::Ready(Ok(exit_code.unwrap_or(-2)))
+                    Poll::Ready(Ok(
+                        exit_code.unwrap_or(SignalOrStatus::Signal(Signal::SIGUSR1))
+                    ))
                 } else {
                     eprintln!("Process polled but thread has not yet finished");
                     self.thread = Some(e);
@@ -127,7 +147,7 @@ impl Drop for AsyncChild {
 }
 
 pub struct ChildOutput {
-    pub exit_code: i32,
+    pub result: SignalOrStatus,
     pub outputs: HashMap<i32, String>,
 }
 
@@ -153,7 +173,7 @@ impl Future for OutputChild {
                     .collect::<Result<HashMap<_, _>, std::io::Error>>()?;
 
                 Ok(ChildOutput {
-                    exit_code: exit_status,
+                    result: exit_status,
                     outputs: pipes,
                 })
             })),

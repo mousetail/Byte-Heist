@@ -158,6 +158,9 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.9.27",
         icon: "c.svg",
         color: "#555555",
+        extra_mounts: &[
+            ("/usr/include", "/usr/include")
+        ],
         ..DEFAULT_LANG
     },
     "kotlin" => Lang {

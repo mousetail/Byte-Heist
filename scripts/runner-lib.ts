@@ -260,7 +260,10 @@ export class Context {
   async runCode(code: string, input?: string | undefined) {
     console.error("Starting onRunCallback", new Date().toISOString());
     const result = await this.onRunCallback(code, input);
-    console.error("Finished onRunCallback", new Date().toISOString());
+    console.error(
+      `Finished onRunCallback (Exit Status: ${result.exitStatus})`,
+      new Date().toISOString()
+    );
     let { stderr, stdout, compilationResult } = result;
     const compilationFailed =
       compilationResult && compilationResult.exitStatus !== 0;

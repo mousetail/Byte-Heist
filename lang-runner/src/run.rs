@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::ffi::{CStr, CString};
+use std::fmt::Write;
 
 use common::TimerType;
 use common::langs::{LANGS, Lang};
@@ -9,7 +10,7 @@ use nix::libc::{STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
 use serde::Serialize;
 use tempfile::TempDir;
 
-use crate::async_process_with_extra_pipes::AsyncProcessWithCustomPipes;
+use crate::async_process_with_extra_pipes::{AsyncProcessWithCustomPipes, SignalOrStatus};
 use crate::error::RunProcessError;
 use crate::install_lang::get_lang_directory;
 
@@ -267,6 +268,18 @@ impl<'a> RunInSandboxBuilder<'a> {
             .output()?
             .await
             .map_err(RunProcessError::IOError)?;
+
+        if let SignalOrStatus::Signal(signal) = output.result {
+            if let Some(child_stderr) = output.outputs.get_mut(&STDERR_FILENO) {
+                write!(
+                    child_stderr,
+                    "\nProcess was possibly killed by signal {}",
+                    signal.as_str()
+                )
+                .expect("Formatting string should never fail")
+            }
+        }
+
         Ok(RunCodeResult {
             stdout: output
                 .outputs
@@ -276,7 +289,11 @@ impl<'a> RunInSandboxBuilder<'a> {
                 .outputs
                 .remove(&STDERR_FILENO)
                 .unwrap_or(String::new()),
-            exit_status: output.exit_code,
+            exit_status: match output.result {
+                // Seems signal + 128 is a standard way to report processes that where killed by a signal
+                SignalOrStatus::Signal(e) => (e as i32) + 128,
+                SignalOrStatus::Status(status) => status,
+            },
         })
     }
 }
