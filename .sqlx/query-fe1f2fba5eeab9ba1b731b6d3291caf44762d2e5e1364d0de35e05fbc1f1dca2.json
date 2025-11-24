@@ -32,7 +32,7 @@
       {
         "ordinal": 3,
         "name": "score",
-        "type_info": "Int8"
+        "type_info": "Int4"
       },
       {
         "ordinal": 4,

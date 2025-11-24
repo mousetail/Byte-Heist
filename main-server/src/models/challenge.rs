@@ -20,7 +20,6 @@ pub enum ChallengeStatus {
     Public,
 }
 
-
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
 #[derive(sqlx::Type)]
@@ -188,7 +187,7 @@ pub struct HomePageChallenge {
     id: i32,
     name: String,
     category: ChallengeCategory,
-    score: Option<i64>,
+    score: Option<i32>,
     description: String,
     post_mortem_date: Option<OffsetDateTime>,
     is_post_mortem: bool,

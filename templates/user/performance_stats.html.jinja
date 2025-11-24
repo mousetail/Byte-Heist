@@ -41,7 +41,7 @@
                 <div class="flex justify-between text-sm">
                     <span class="text-byte-brown-200">Most popular category</span>
                     <span class="text-white">
-                        {%- if object.per_category_stats | empty -%}
+                        {%- if object.per_category_stats | length == 0 -%}
                             No solutions
                         {%- elif object.per_category_stats[0].category == 'code-golf' -%}
                             Mostly Code Golf
@@ -66,52 +66,58 @@
                 <div class="flex justify-between text-sm">
                     <span class="text-byte-brown-200">Average Ranking</span>
                     <span class="text-white">
-                        {% set ranking_funny_name_index = (object.account_info.first_places + object.account_info.top_ten_percents * 3 + object.account_info.solutions * 5) % 13 %}
-                        {% if ranking_funny_name_index == 0 %}
-                            Fairly Good
-                        {% elif ranking_funny_name_index == 1 %}
-                            Mediocre
-                        {% elif ranking_funny_name_index == 2 %}
-                            Savory
-                        {% elif ranking_funny_name_index == 3 %}
-                            Strange
-                        {% elif ranking_funny_name_index == 4 %}
-                            Special
-                        {% elif ranking_funny_name_index == 5 %}
-                            Magnificent
-                        {% elif ranking_funny_name_index == 6 %}
-                            Concerning
-                        {% elif ranking_funny_name_index == 7 %}
-                            Mismatched
-                        {% elif ranking_funny_name_index == 8 %}
-                            Cool
-                        {% elif ranking_funny_name_index == 9 %}
-                            Fresh
-                        {% elif ranking_funny_name_index == 10 %}
-                            Rough
-                        {% elif ranking_funny_name_index == 11 %}
-                            Wise
-                        {% elif ranking_funny_name_index == 12 %}
-                            Impatient
+                        {% if object.account_info.first_places %}
+                            {% set ranking_funny_name_index = (object.account_info.first_places + object.account_info.top_ten_percents * 3 + object.account_info.solutions * 5) % 13 %}
+                            {% if ranking_funny_name_index == 0 %}
+                                Fairly Good
+                            {% elif ranking_funny_name_index == 1 %}
+                                Mediocre
+                            {% elif ranking_funny_name_index == 2 %}
+                                Savory
+                            {% elif ranking_funny_name_index == 3 %}
+                                Strange
+                            {% elif ranking_funny_name_index == 4 %}
+                                Special
+                            {% elif ranking_funny_name_index == 5 %}
+                                Magnificent
+                            {% elif ranking_funny_name_index == 6 %}
+                                Concerning
+                            {% elif ranking_funny_name_index == 7 %}
+                                Mismatched
+                            {% elif ranking_funny_name_index == 8 %}
+                                Cool
+                            {% elif ranking_funny_name_index == 9 %}
+                                Fresh
+                            {% elif ranking_funny_name_index == 10 %}
+                                Rough
+                            {% elif ranking_funny_name_index == 11 %}
+                                Wise
+                            {% elif ranking_funny_name_index == 12 %}
+                                Impatient
+                            {% endif %}
+                        {% else %}
+                            Unranked
                         {% endif %}
                     </span>
                 </div>
                 <div class="w-full flex bg-byte-brown-500 rounded-full h-2">
-                    <div class="h-2 rounded-l-full"
-                         style="flex-grow: {{ object.account_info.first_places }};
-                                background-color: gold"
-                         data-tooltip="{{ object.account_info.first_places }} First Places"
-                         title="{{ object.account_info.first_places }} First Places"></div>
-                    <div class="h-2"
-                         style="flex-grow: {{ object.account_info.top_ten_percents - object.account_info.first_places }};
-                                background-color: silver"
-                         data-tooltip="{{ object.account_info.top_ten_percents - object.account_info.first_places }} Top 10%"
-                         title="Top 10%"></div>
-                    <div class="h-2 rounded-r-full"
-                         style="flex-grow: {{ object.account_info.solutions - object.account_info.top_ten_percents }};
-                                background-color: green"
-                         data-tooltip="{{ object.account_info.solutions - object.account_info.top_ten_percents }} Other Solutions"
-                         title="Other Solutions"></div>
+                    {% if object.account_info.first_places %}
+                        <div class="h-2 rounded-l-full"
+                             style="flex-grow: {{ object.account_info.first_places }};
+                                    background-color: gold"
+                             data-tooltip="{{ object.account_info.first_places }} First Places"
+                             title="{{ object.account_info.first_places }} First Places"></div>
+                        <div class="h-2"
+                             style="flex-grow: {{ object.account_info.top_ten_percents - object.account_info.first_places }};
+                                    background-color: silver"
+                             data-tooltip="{{ object.account_info.top_ten_percents - object.account_info.first_places }} Top 10%"
+                             title="Top 10%"></div>
+                        <div class="h-2 rounded-r-full"
+                             style="flex-grow: {{ object.account_info.solutions - object.account_info.top_ten_percents }};
+                                    background-color: green"
+                             data-tooltip="{{ object.account_info.solutions - object.account_info.top_ten_percents }} Other Solutions"
+                             title="Other Solutions"></div>
+                    {% endif %}
                 </div>
             </div>
         </div>
