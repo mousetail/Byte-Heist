@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_activities(account, challenge, old_points, new_points, language)\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT (account, challenge, date, language) DO UPDATE SET new_points=$4\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4",
+        "Int4",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "66c79980b135004c6ed6fb316a9731dfd9511a1fa2c6717e53173d0918b19e75"
+}

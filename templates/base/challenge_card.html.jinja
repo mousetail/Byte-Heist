@@ -1,88 +1,75 @@
 {% macro challenge_box(challenge, beta=false) %}
-<a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve" data-challenge-card
-    data-challenge-id="{{ challenge.id }}" data-challenge-category="{{ challenge.category }}" {% if beta
-    %}data-challenge-beta{% endif %}{% if challenge.score %} data-challenge-score="{{ challenge.score }}" {% endif %}
-    class="h-full transition-all hover:shadow-md hover:border-byte-green-700 border border-byte-brown-500 bg-byte-brown-700 rounded-lg flex flex-col">
-    <div class="p-5 flex flex-col h-full">
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="font-bold text-white text-lg" data-challenge-name>{{ challenge.name }}</h3>
-            <div class="flex items-center gap-1">
-                {% if challenge.user_has_submitted %}
-                <!-- Unlocked lock when user has submitted -->
-                <div class="text-byte-green-700">
-                    {% include "icons/Lock-Open-Alt--Streamline-Unicons.svg" %}
-                </div>
-                {% else %}
-                <!-- Locked lock when user hasn't submitted -->
-                <div class="text-yellow-300">
-                    {% include "icons/Lock-Alt--Streamline-Unicons.svg" %}
-                </div>
-
-                {% endif %}
-                {% if beta %}
-                <span class="bg-yellow-900 text-yellow-300 text-xs px-2 py-1 rounded">BETA</span>
-                {% endif %}
-            </div>
-        </div>
-
-
-        <!-- Description -->
-        <p class="text-sm text-byte-brown-200 flex-grow line-clamp-2" data-challenge-description>
-            {{ challenge.description | default(value="Challenge description will be loaded when you click to solve.") }}
-        </p>
-
-        <!-- Category Badge -->
-        <div class="flex items-center gap-2 mt-4">
-            <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded-full">
-                {% if challenge.category == 'code-golf' %}
-                Code Golf
-                {% elif challenge.category == 'restricted-source' %}
-                Restricted Source
-                {% else %}
-                {{ challenge.category }}
-                {% endif %}
-            </span>
-        </div>
-
-        <div class="flex flex-col gap-2 mt-4">
-            <!-- Score and Time Info -->
-            <div class="flex items-center justify-between text-xs">
-                {% if challenge.user_has_submitted %}
-                <!-- User has submitted - show green checkmark -->
-                <span class="text-byte-green-200 font-medium flex items-center gap-1">
-                    {% include "icons/check.svg" %}
-                    Submitted
-                </span>
-                {% else %}
-                <!-- User hasn't submitted - show time info -->
-                {% if challenge.is_post_mortem %}
-                <span class="text-byte-brown-200 flex items-center gap-1">
-                    {% include "icons/clock.svg" %}
-                    Ended
-                </span>
-                {% elif challenge.post_mortem_date %}
-                <span class="text-amber-500 flex items-center gap-1">
-                    {% include "icons/clock.svg" %}
-                    {{ challenge.post_mortem_date | format_date }}
-                </span>
-                {% else %}
-                <span class="text-byte-brown-200 flex items-center gap-1">
-                    N/A
-                </span>
-                {% endif %}
-
-                {% endif %}
-
-                <!-- Submission count -->
-                <span class="text-byte-brown-200">
-                    {% if challenge.submission_count > 0 %}
-                    {{ challenge.submission_count }} submission{% if challenge.submission_count != 1 %}s{% endif %}
+    <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve" data-challenge-card
+        data-challenge-id="{{ challenge.id }}" data-challenge-category="{{ challenge.category }}" {% if beta
+        %}data-challenge-beta{% endif %}{% if challenge.points %} data-challenge-points="{{ challenge.points }}" {% endif %}
+        class="h-full transition-all hover:shadow-md hover:border-byte-green-700 border border-byte-brown-500 bg-byte-brown-700 rounded-lg flex flex-col">
+        <div class="p-5 flex flex-col h-full">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-white text-lg" data-challenge-name>{{ challenge.name }}</h3>
+                <div class="flex items-center gap-1">
+                    {% if challenge.user_has_submitted %}
+                        <!-- Unlocked lock when user has submitted -->
+                        <div class="text-byte-green-700">{% include "icons/Lock-Open-Alt--Streamline-Unicons.svg" %}</div>
                     {% else %}
-                    No submissions yet
+                        <!-- Locked lock when user hasn't submitted -->
+                        <div class="text-yellow-300">{% include "icons/Lock-Alt--Streamline-Unicons.svg" %}</div>
+                    {% endif %}
+                    {% if beta %}<span class="bg-yellow-900 text-yellow-300 text-xs px-2 py-1 rounded">BETA</span>{% endif %}
+                </div>
+            </div>
+            <!-- Description -->
+            <p class="text-sm text-byte-brown-200 flex-grow line-clamp-2"
+               data-challenge-description>
+                {{ challenge.description | default(value="Challenge description will be loaded when you click to solve.") }}
+            </p>
+            <!-- Category Badge -->
+            <div class="flex items-center gap-2 mt-4">
+                <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded-full">
+                    {% if challenge.category == 'code-golf' %}
+                        Code Golf
+                    {% elif challenge.category == 'restricted-source' %}
+                        Restricted Source
+                    {% else %}
+                        {{ challenge.category }}
                     {% endif %}
                 </span>
             </div>
-        </div>
-    </div>
-</a>
-{% endmacro %}
+            <div class="flex flex-col gap-2 mt-4">
+                <!-- Score and Time Info -->
+                <div class="flex items-center justify-between text-xs">
+                    {% if challenge.user_has_submitted %}
+                        <!-- User has submitted - show green checkmark -->
+                        <span class="text-byte-green-200 font-medium flex items-center gap-1">
+                            {% include "icons/check.svg" %}
+                            Submitted
+                        </span>
+                    {% else %}
+                        <!-- User hasn't submitted - show time info -->
+                        {% if challenge.is_post_mortem %}
+                            <span class="text-byte-brown-200 flex items-center gap-1">
+                                {% include "icons/clock.svg" %}
+                                Ended
+                            </span>
+                        {% elif challenge.post_mortem_date %}
+                            <span class="text-amber-500 flex items-center gap-1">
+                                {% include "icons/clock.svg" %}
+                                {{ challenge.post_mortem_date | format_date }}
+                            </span>
+                        {% else %}
+                            <span class="text-byte-brown-200 flex items-center gap-1">N/A</span>
+                        {% endif %}
+                    {% endif %}
+                    <!-- Submission count -->
+                    <span class="text-byte-brown-200">
+                        {% if challenge.submission_count > 0 %}
+                            {{ challenge.submission_count }} submission
+                            {% if challenge.submission_count != 1 %}s{% endif %}
+                            {% else %}
+                                No submissions yet
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+    {% endmacro %}

@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{query_as, query_scalar, PgPool};
+use sqlx::{PgPool, query_as, query_scalar};
 use tower_sessions::cookie::time::OffsetDateTime;
 
 use super::GetById;
 
 pub struct SolutionWithLanguage {
-    pub score: i32,
+    pub points: i32,
     pub is_post_mortem: bool,
     pub language: String,
     pub author: i32,
@@ -21,7 +21,7 @@ impl SolutionWithLanguage {
             SolutionWithLanguage,
             r#"
                 SELECT DISTINCT ON (language)
-                    score,
+                    points,
                     is_post_mortem,
                     language,
                     author,
@@ -29,7 +29,7 @@ impl SolutionWithLanguage {
                 FROM solutions
                 LEFT JOIN accounts ON solutions.author = accounts.id
                 WHERE valid AND not is_post_mortem AND challenge=$1
-                ORDER BY language ASC, score ASC, solutions.created_at ASC
+                ORDER BY language ASC, points ASC, solutions.created_at ASC
             "#,
             challenge_id
         )
@@ -44,7 +44,7 @@ impl GetById for SolutionWithLanguage {
             SolutionWithLanguage,
             r#"
                 SELECT
-                    score,
+                    points,
                     is_post_mortem,
                     language,
                     author,
@@ -68,11 +68,12 @@ pub struct NewSolution {
 #[derive(Serialize)]
 pub struct Code {
     pub code: String,
-    pub score: i32,
+    pub points: i32,
     pub id: i32,
     pub valid: bool,
     pub last_improved_date: OffsetDateTime,
     pub is_post_mortem: bool,
+    pub leaderboard_points: Option<i32>,
 }
 
 impl Code {
@@ -87,12 +88,16 @@ impl Code {
             r#"
                 SELECT
                     code, 
-                    score,
-                    id,
+                    solutions.points,
+                    solutions.id,
                     valid,
                     last_improved_date,
-                    is_post_mortem as "is_post_mortem!" from solutions
-                WHERE author=$1 AND challenge=$2 AND language=$3
+                    is_post_mortem as "is_post_mortem!",
+                    scores.score as leaderboard_points
+                FROM solutions
+                LEFT JOIN scores
+                ON scores.id = solutions.id
+                WHERE solutions.author=$1 AND solutions.challenge=$2 AND solutions.language=$3
                 ORDER BY is_post_mortem DESC, score ASC
                 LIMIT 1
             "#,
@@ -113,7 +118,7 @@ pub struct LeaderboardEntry {
     pub author_id: i32,
     pub author_name: String,
     pub author_avatar: String,
-    pub score: i32,
+    pub points: i32,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
@@ -172,11 +177,11 @@ impl LeaderboardEntry {
                 accounts.username as author_name,
                 accounts.avatar as author_avatar,
                 1 as "rank!",
-                score
+                points
             FROM solutions
                 LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
-            ORDER BY solutions.score ASC, last_improved_date ASC
+            ORDER BY solutions.points ASC, last_improved_date ASC
             LIMIT 1
             "#,
             challenge_id,
@@ -199,12 +204,12 @@ impl LeaderboardEntry {
                 solutions.author as author_id,
                 accounts.username as author_name,
                 accounts.avatar as author_avatar,
-                score,
-                rank() OVER (ORDER BY solutions.score ASC) as "rank!"
+                points,
+                rank() OVER (ORDER BY solutions.points ASC) as "rank!"
             FROM solutions
                 LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
-            ORDER BY solutions.score ASC, last_improved_date ASC
+            ORDER BY solutions.points ASC, last_improved_date ASC
             "#,
             challenge_id,
             language

@@ -1,6 +1,6 @@
 use serenity::all::MessageId;
 
-use crate::{message_id_from_i64, queries::NewScore, LastMessage, ScoreImproved};
+use crate::{LastMessage, ScoreImproved, message_id_from_i64, queries::NewScore};
 
 pub(crate) fn should_edit_message(
     latest_message: Option<i32>,
@@ -34,7 +34,7 @@ pub(crate) fn get_last_best_score_fields(
                     .clone()
                     .unwrap_or(curent_score.username),
                 score: previous_message
-                    .previous_author_score
+                    .previous_author_points
                     .unwrap_or(curent_score.score),
                 user_id: previous_message
                     .previous_author_id
@@ -43,7 +43,7 @@ pub(crate) fn get_last_best_score_fields(
         }
         Some(previous_message) => NewScore {
             user_id: previous_message.author_id,
-            score: previous_message.score,
+            score: previous_message.points,
             username: previous_message.author_name.clone(),
         },
         None => curent_score,

@@ -31,7 +31,7 @@ async fn insert_new_solution(
     challenge_id: i32,
     code: &str,
     account_id: i32,
-    new_score: i32,
+    new_points: i32,
     runtime: f32,
     is_post_mortem: bool,
 ) -> Result<i32, Error> {
@@ -42,7 +42,7 @@ async fn insert_new_solution(
             challenge, 
             code,
             author, 
-            score, 
+            points, 
             last_improved_date,
             runtime,
             is_post_mortem
@@ -53,7 +53,7 @@ async fn insert_new_solution(
         challenge_id,
         code,
         account_id,
-        new_score,
+        new_points,
         OffsetDateTime::now_utc(),
         runtime,
         is_post_mortem
@@ -68,14 +68,14 @@ async fn insert_new_solution(
 async fn update_solution(
     pool: &PgPool,
     solution: &NewSolution,
-    new_score: i32,
+    new_points: i32,
     previous_solution_code: &Code,
     runtime: f32,
 ) -> Result<(), Error> {
     let result = sqlx::query!(
         "UPDATE solutions SET 
             code=$1,
-            score=$2,
+            points=$2,
             valid=true,
             validated_at=now(),
             last_improved_date=$3,
@@ -83,8 +83,8 @@ async fn update_solution(
             is_post_mortem=$5
         WHERE id=$6",
         solution.code,
-        new_score,
-        if new_score < previous_solution_code.score || !previous_solution_code.valid {
+        new_points,
+        if new_points < previous_solution_code.points || !previous_solution_code.valid {
             OffsetDateTime::now_utc()
         } else {
             previous_solution_code.last_improved_date
@@ -126,7 +126,7 @@ async fn should_update_solution<'a>(
             // Always replace an invalid solution
             !w.valid
             // Replace a solution if the score is better
-            || w.score >= new_score => {
+            || w.points >= new_score => {
                 ShouldUpdateSolution::Update(w)
         }
         Some(_) => {
@@ -147,7 +147,7 @@ async fn post_activity(
 ) -> Result<(), sqlx::Error> {
     let old_score = previous_solution_code
         .as_ref()
-        .and_then(|d| d.valid.then_some(d.score));
+        .and_then(|d| d.valid.then_some(d.points));
 
     save_activity_log(
         pool,

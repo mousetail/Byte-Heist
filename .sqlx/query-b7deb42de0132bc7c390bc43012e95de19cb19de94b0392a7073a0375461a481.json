@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO solutions (\n            language,\n            version,\n            challenge, \n            code,\n            author, \n            score, \n            last_improved_date,\n            runtime,\n            is_post_mortem\n        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n         RETURNING id",
+  "query": "INSERT INTO solutions (\n            language,\n            version,\n            challenge, \n            code,\n            author, \n            points, \n            last_improved_date,\n            runtime,\n            is_post_mortem\n        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n         RETURNING id",
   "describe": {
     "columns": [
       {
@@ -26,5 +26,5 @@
       false
     ]
   },
-  "hash": "506180774bf52b7ba5512360bd630233ef412695fac44a4577adb454fc5bc17c"
+  "hash": "b7deb42de0132bc7c390bc43012e95de19cb19de94b0392a7073a0375461a481"
 }

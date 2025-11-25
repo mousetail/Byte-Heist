@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    code, \n                    solutions.points,\n                    solutions.id,\n                    valid,\n                    last_improved_date,\n                    is_post_mortem as \"is_post_mortem!\",\n                    scores.score as leaderboard_points\n                FROM solutions\n                LEFT JOIN scores\n                ON scores.id = solutions.id\n                WHERE solutions.author=$1 AND solutions.challenge=$2 AND solutions.language=$3\n                ORDER BY is_post_mortem DESC, score ASC\n                LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "code",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "valid",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_improved_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_post_mortem!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "leaderboard_points",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "bc2bd9f5e7f9caaff6dcd4e24a825cdd7392e37d72985ba0939d115ce8664b25"
+}

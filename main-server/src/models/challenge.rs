@@ -206,7 +206,7 @@ impl HomePageChallenge {
             HomePageChallenge,
             r#"
             SELECT
-                id,
+                challenges.id,
                 name,
                 category as "category!: ChallengeCategory",
                 scores.score,

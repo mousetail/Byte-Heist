@@ -1,7 +1,7 @@
 use serenity::all::{ChannelId, MessageId};
 use sqlx::PgPool;
 
-use crate::{channel_id_to_i64, message_id_to_i64, LastMessage, ScoreImproved};
+use crate::{LastMessage, ScoreImproved, channel_id_to_i64, message_id_to_i64};
 
 pub(crate) async fn get_challenge_name_by_id(
     pool: &PgPool,
@@ -60,9 +60,9 @@ pub(crate) async fn get_last_message_for_challenge(
             discord_messages.challenge as challenge_id,
             accounts.username as author_name,
             discord_messages.previous_author as previous_author_id,
-            discord_messages.score as score,
+            discord_messages.points as points,
             previous_account.username as "previous_author_name?",
-            discord_messages.previous_author_score,
+            discord_messages.previous_author_points,
             discord_messages.message_id,
             discord_messages.channel_id
         FROM discord_messages
@@ -94,7 +94,7 @@ pub(crate) async fn save_new_message_info(
     message: ScoreImproved,
     message_id: Option<MessageId>,
     last_author_id: Option<i32>,
-    last_score: Option<i32>,
+    last_points: Option<i32>,
     final_channel_id: ChannelId,
 ) -> Result<(), sqlx::Error> {
     match &last_message {
@@ -102,16 +102,16 @@ pub(crate) async fn save_new_message_info(
             sqlx::query!(
                 "UPDATE discord_messages
                 SET author=$1,
-                score=$2,
+                points=$2,
                 previous_author=$3,
-                previous_author_score=$4,
+                previous_author_points=$4,
                 message_id=$5,
                 channel_id=$6
                 WHERE id=$7",
                 message.author,
                 message.score,
                 last_author_id,
-                last_score,
+                last_points,
                 message_id.map(message_id_to_i64),
                 channel_id_to_i64(final_channel_id),
                 e.id
@@ -127,8 +127,8 @@ pub(crate) async fn save_new_message_info(
                     challenge,
                     author,
                     previous_author,
-                    previous_author_score,
-                    score,
+                    previous_author_points,
+                    points,
                     message_id,
                     channel_id
                 ) VALUES (
@@ -145,7 +145,7 @@ pub(crate) async fn save_new_message_info(
                 message.challenge_id,
                 message.author,
                 last_author_id,
-                last_score,
+                last_points,
                 message.score,
                 message_id.map(message_id_to_i64),
                 channel_id_to_i64(final_channel_id)

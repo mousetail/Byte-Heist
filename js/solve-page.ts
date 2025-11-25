@@ -107,7 +107,7 @@ type LeaderboardEntry = {
   author_avatar: string;
   author_name: string;
   author_id: number;
-  score: number;
+  points: number;
 };
 
 function updateLeaderbaord(ranking: LeaderboardEntry[]) {
@@ -134,9 +134,9 @@ function updateLeaderbaord(ranking: LeaderboardEntry[]) {
       authorNameCell.appendChild(link);
       row.appendChild(authorNameCell);
 
-      const scoreCell = document.createElement("td");
-      scoreCell.textContent = `${entry.score}`;
-      row.appendChild(scoreCell);
+      const pointsCell = document.createElement("td");
+      pointsCell.textContent = `${entry.points}`;
+      row.appendChild(pointsCell);
 
       return row;
     })

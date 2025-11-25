@@ -8,7 +8,6 @@
     <div class="mt-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {% include "user/performance_stats.html.jinja" %}
-        
         <!-- Recent Submissions -->
         <div class="border border-byte-brown-500 bg-byte-brown-700 rounded-lg lg:col-span-2">
           <div class="p-6">
@@ -33,7 +32,7 @@
                                height="16"
                                alt=""
                                class="inline-block mr-1" />
-                          {{ langs[solution.language].displayName }} • {{ solution.score }} characters
+                          {{ langs[solution.language].displayName }} • {{ solution.points }} bytes
                         </div>
                       </div>
                     </div>
@@ -54,9 +53,7 @@
         </div>
       </div>
     </div>
-
     {% include "user/all_solutions.html.jinja" %}
-
     <!-- Invalid Solutions (if user is viewing their own profile) -->
     {% include "user/invalid_solutions.html.jinja" %}
   </div>

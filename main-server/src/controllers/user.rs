@@ -11,7 +11,7 @@ use crate::{
 #[derive(Serialize)]
 pub struct UserPageLeaderboardEntry {
     language: String,
-    score: i32,
+    points: i32,
     challenge_id: i32,
     challenge_name: String,
 }
@@ -137,7 +137,7 @@ pub async fn get_user(
 
     let solutions = query_as!(
         UserPageLeaderboardEntry,
-        "SELECT solutions.language, solutions.score, solutions.challenge as challenge_id, challenges.name as challenge_name
+        "SELECT solutions.language, solutions.points, solutions.challenge as challenge_id, challenges.name as challenge_name
         FROM solutions
         LEFT JOIN challenges ON challenges.id = solutions.challenge
         WHERE solutions.author=$1

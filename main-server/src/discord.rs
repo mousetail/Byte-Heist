@@ -189,7 +189,7 @@ async fn post_best_scores_for_challenge(
                 author_id: k.author,
                 author_name: k.author_name,
                 language: k.language,
-                score: k.score,
+                score: k.points,
             })
             .collect(),
         reason,
@@ -326,12 +326,12 @@ async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, 
                 return;
             }
         };
-    if top_solution.is_none_or(|k| k.score == solution.score && k.author_id == solution.author) {
+    if top_solution.is_none_or(|k| k.points == solution.points && k.author_id == solution.author) {
         bot.on_score_improved(ScoreImproved {
             challenge_id,
             author: solution.author,
             language: solution.language,
-            score: solution.score,
+            score: solution.points,
             is_post_mortem: solution.is_post_mortem,
         })
         .await;

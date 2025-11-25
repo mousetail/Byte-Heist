@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT\n                    score,\n                    is_post_mortem,\n                    language,\n                    author,\n                    accounts.username as author_name\n                FROM solutions\n                LEFT JOIN accounts on solutions.author = accounts.id\n                WHERE solutions.id=$1\n            ",
+  "query": "\n                SELECT DISTINCT ON (language)\n                    points,\n                    is_post_mortem,\n                    language,\n                    author,\n                    accounts.username as author_name\n                FROM solutions\n                LEFT JOIN accounts ON solutions.author = accounts.id\n                WHERE valid AND not is_post_mortem AND challenge=$1\n                ORDER BY language ASC, points ASC, solutions.created_at ASC\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "score",
+        "name": "points",
         "type_info": "Int4"
       },
       {
@@ -42,5 +42,5 @@
       false
     ]
   },
-  "hash": "7b62836107cc7e186cb1c3e3274732f57bffe5729b272d3aa80760bf00b70027"
+  "hash": "c51cade454049f1dac361ac8ca33aee96a02bb7d620a759a04c08eaa25b59905"
 }

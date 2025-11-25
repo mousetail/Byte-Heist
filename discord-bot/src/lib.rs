@@ -38,10 +38,10 @@ struct LastMessage {
     challenge_id: i32,
     author_id: i32,
     author_name: String,
-    score: i32,
+    points: i32,
     previous_author_id: Option<i32>,
     previous_author_name: Option<String>,
-    previous_author_score: Option<i32>,
+    previous_author_points: Option<i32>,
     message_id: Option<i64>,
     channel_id: i64,
 }
@@ -154,7 +154,7 @@ async fn handle_message(
 
     if let Some(last_message) = &last_message_for_challenge
         && last_message.author_id == score_improved_event.author
-        && last_message.score == score_improved_event.score
+        && last_message.points == score_improved_event.score
     {
         return Ok(());
     }
@@ -174,7 +174,7 @@ async fn handle_message(
     );
 
     if last_message_for_challenge.as_ref().is_some_and(|message| {
-        message.score == score_improved_event.score
+        message.points == score_improved_event.score
             && message.author_id == score_improved_event.author
     }) {
         return Ok(());

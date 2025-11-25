@@ -1,10 +1,10 @@
-use axum::{extract::Path, response::Redirect, Extension};
+use axum::{Extension, extract::Path, response::Redirect};
 use serde::Serialize;
-use sqlx::{query_as, PgPool};
+use sqlx::{PgPool, query_as};
 
 use crate::{
     error::Error,
-    models::{account::Account, challenge::ChallengeWithAuthorInfo, GetById},
+    models::{GetById, account::Account, challenge::ChallengeWithAuthorInfo},
 };
 
 #[derive(Serialize)]
@@ -23,7 +23,7 @@ struct PostMortemSolutionView {
     author_id: i32,
     author_name: String,
     author_avatar: String,
-    score: i32,
+    points: i32,
     runtime: f32,
     is_post_mortem: bool,
     valid: bool,
@@ -77,7 +77,7 @@ async fn post_mortem_query(
         PostMortemSolutionView,
         r#"
             SELECT solutions.code,
-                solutions.score,
+                solutions.points,
                 solutions.runtime,
                 solutions.valid,
                 solutions.is_post_mortem as "is_post_mortem!",
@@ -87,7 +87,7 @@ async fn post_mortem_query(
             FROM solutions
                 INNER JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2
-            ORDER BY valid DESC, score ASC
+            ORDER BY valid DESC, points ASC
         "#,
         challenge_id,
         language
@@ -105,7 +105,7 @@ async fn pre_mortem_query(
         PostMortemSolutionView,
         r#"
             SELECT null as code,
-                solutions.score,
+                solutions.points,
                 solutions.runtime,
                 accounts.id as author_id,
                 solutions.valid,
@@ -115,7 +115,7 @@ async fn pre_mortem_query(
             FROM solutions
                 INNER JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2
-            ORDER BY valid DESC, score ASC
+            ORDER BY valid DESC, points ASC
         "#,
         challenge_id,
         language
