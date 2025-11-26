@@ -63,7 +63,7 @@
         </div>
       </div>
       <div class="clear-both"></div>
-      <textarea name="code" class="codemirror" id="main-code" data-local-storage-id="main-code-{{object.language}}-{{object.challenge.id}}" data-encoded-source=" {% if object.code %} {{ object.code | urlencode_strict }} {% endif %}" data-last-improved-date="{% if object.last_improved_date %}{{ object.last_improved_date}}{% endif %}">
+      <textarea name="code" class="codemirror" id="main-code" data-local-storage-id="main-code-{{object.language}}-{{object.challenge.id}}" data-encoded-source="{%- if object.code -%} {{- object.code | urlencode_strict -}} {%- endif -%}" data-last-improved-date="{%- if object.last_improved_date -%} {{- object.last_improved_date -}}{%- endif -%}">
           {%- if object.code -%}
             {{- object.code | prepend_linebreak -}}
           {%- endif -%}

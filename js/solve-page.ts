@@ -74,7 +74,6 @@ function displayToast(
     new CustomEvent("basecoat:toast", {
       detail: {
         config: {
-          duration: 10000000,
           category: category,
           title: title,
           description: description,
