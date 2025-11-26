@@ -7,7 +7,7 @@ use axum::{
 use common::langs::LANGS;
 use serde::{Serialize, Serializer};
 use sqlx::PgPool;
-use time::{Date, OffsetDateTime};
+use time::OffsetDateTime;
 
 use crate::{
     error::Error,
