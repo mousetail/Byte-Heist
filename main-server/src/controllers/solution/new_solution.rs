@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use axum::{
     Extension,
     extract::{Path, Query},
@@ -177,6 +179,7 @@ async fn new_solution_inner(
         ChallengeWithAuthorInfo,
         bool,
         Option<ScoreInfo>,
+        Option<OffsetDateTime>,
     ),
     Error,
 > {
@@ -186,9 +189,7 @@ async fn new_solution_inner(
         .latest_version;
 
     if let Some(account) = account {
-        account
-            .save_preferred_language(pool, language_name)
-            .await?;
+        account.save_preferred_language(pool, language_name).await?;
     }
 
     let challenge = ChallengeWithAuthorInfo::get_by_id(pool, challenge_id)
@@ -215,12 +216,14 @@ async fn new_solution_inner(
             challenge,
             false,
             None,
+            None,
         ));
     };
 
     let previous_code =
         Code::get_best_code_for_user(pool, account.id, challenge_id, language_name).await;
     let previous_solution_invalid = previous_code.as_ref().is_some_and(|e| !e.valid);
+    let last_improved_date = previous_code.as_ref().map(|i| i.last_improved_date);
 
     if !test_result.tests.pass {
         return Ok((
@@ -229,6 +232,7 @@ async fn new_solution_inner(
             challenge,
             previous_solution_invalid,
             None,
+            last_improved_date,
         ));
     }
 
@@ -298,6 +302,7 @@ async fn new_solution_inner(
                     challenge,
                     previous_solution_invalid,
                     None,
+                    last_improved_date,
                 ));
             }
         };
@@ -326,6 +331,7 @@ async fn new_solution_inner(
                 score: score as usize,
                 points,
             }),
+        last_improved_date,
     ))
 }
 
@@ -337,7 +343,7 @@ pub async fn new_solution(
     Extension(bot): Extension<DiscordEventSender>,
     AutoInput(solution): AutoInput<NewSolution>,
 ) -> Result<CustomResponseMetadata<AllSolutionsOutput>, Error> {
-    let (status, test_result, challenge, previous_solution_invalid, previous_scores) =
+    let (status, test_result, challenge, previous_solution_invalid, previous_scores, last_modified) =
         new_solution_inner(
             challenge_id,
             &language_name,
@@ -352,7 +358,7 @@ pub async fn new_solution(
         &pool,
         challenge_id,
         &language_name,
-        account.map(|i| i.id),
+        account.as_ref().map(|i| i.id),
         ranking,
     )
     .await
@@ -362,14 +368,16 @@ pub async fn new_solution(
         challenge,
         leaderboard: leaderboard.leaderboard,
         tests: Some(test_result.into()),
-        code: Some(solution.code),
+        code: Cow::Owned(solution.code),
         language: language_name,
         previous_solution_invalid,
+        last_improved_date: last_modified,
         ranking,
         toast: leaderboard.score_info.map(|new_scores| ImprovedScoreToast {
             old_scores: previous_scores,
             new_scores,
         }),
+        account_id: account.map(|i| i.id),
     })
     .with_status(status))
 }

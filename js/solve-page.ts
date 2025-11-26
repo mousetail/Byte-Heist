@@ -6,6 +6,7 @@ import {
   lengthInBytes,
   onByteCountChange,
 } from "./code_editing/code_editor";
+import { stringify } from "node:querystring";
 
 type ScoreInfo = {
   rank: number;
@@ -18,14 +19,32 @@ type Toast = {
   new_scores: ScoreInfo;
 };
 
-function displayToast(toast: Toast | undefined, status_code: number) {
+function displayToast(
+  toast: Toast | undefined,
+  status_code: number,
+  account_id: number | undefined
+) {
   let category: "success" | "warning" | "info" | "error" = "success";
   let title: string;
   let description: string;
+  let action:
+    | {
+        label: string;
+        onclick: string;
+      }
+    | undefined = undefined;
   if (status_code == 400) {
     category = "error";
     title = "Invalid Solution";
     description = "At least one test failed, see output window for details";
+  } else if (!account_id) {
+    category = "warning";
+    title = "Passed";
+    description = "Log in to save your score";
+    action = {
+      label: "Create Account",
+      onclick: 'window.open("/login/github", "_blank")'.replace(/"/g, "&quot;"),
+    };
   } else if (status_code == 200 || !toast) {
     category = "info";
     title = "Passed";
@@ -55,12 +74,14 @@ function displayToast(toast: Toast | undefined, status_code: number) {
     new CustomEvent("basecoat:toast", {
       detail: {
         config: {
+          duration: 10000000,
           category: category,
           title: title,
           description: description,
           cancel: {
             label: "Dismiss",
           },
+          action,
         },
       },
     })
@@ -71,11 +92,20 @@ function displayToast(toast: Toast | undefined, status_code: number) {
 async function submitNewSolution(
   mainTextArea: EditorView,
   submitButton: HTMLButtonElement,
-  setOriginalText: (e: string) => void
+  setOriginalText: (e: string) => void,
+  localStorageId: string
 ) {
   submitButton.disabled = true;
   try {
     const content = mainTextArea.state.doc.toString();
+
+    localStorage.setItem(
+      localStorageId,
+      JSON.stringify({
+        content,
+        submittedDate: new Date().valueOf(),
+      })
+    );
 
     const response = await fetch(window.location.href, {
       method: "POST",
@@ -96,14 +126,16 @@ async function submitNewSolution(
     }
     errorDiv.classList.add("hidden");
 
-    const { tests, leaderboard, toast } = (await response.json()) as {
-      tests: ResultDisplay;
-      leaderboard: LeaderboardEntry[];
-      toast: Toast | undefined;
-    };
+    const { tests, leaderboard, toast, account_id } =
+      (await response.json()) as {
+        tests: ResultDisplay;
+        leaderboard: LeaderboardEntry[];
+        toast?: Toast | undefined;
+        account_id?: number | undefined;
+      };
     updateLeaderboard(leaderboard);
 
-    displayToast(toast, response.status);
+    displayToast(toast, response.status, account_id);
 
     if (tests.passed && response.status === 201) {
       setOriginalText(content);
@@ -120,6 +152,7 @@ async function submitNewSolution(
 
 function setupJsSubmitOnForm(
   mainTextArea: EditorView,
+  localStorageId: string,
   setOriginalText: (e: string) => void
 ) {
   const form = document.querySelector("form.challenge-submission-form");
@@ -130,7 +163,12 @@ function setupJsSubmitOnForm(
   form.addEventListener("submit", (ev) => {
     ev.preventDefault();
 
-    submitNewSolution(mainTextArea, submitButton, setOriginalText);
+    submitNewSolution(
+      mainTextArea,
+      submitButton,
+      setOriginalText,
+      localStorageId
+    );
   });
 }
 
@@ -217,6 +255,10 @@ function changeActiveLeaderboardTab(tab: string) {
 }
 
 globalThis.addEventListener("load", async () => {
+  const mainCodeTextArea = document.getElementById("main-code");
+  const originalCode = mainCodeTextArea.dataset.encodedSource;
+  const originalLocalStorageId = mainCodeTextArea.dataset.localStorageId;
+
   let leaderboardForm: HTMLFormElement | undefined;
   if ((leaderboardForm = document.querySelector(".leaderboard-tabs-form"))) {
     setupLeaderboardForm(leaderboardForm);
@@ -227,13 +269,20 @@ globalThis.addEventListener("load", async () => {
 
   const editorControls = document.getElementById("editor-controls");
   if (editorControls !== null) {
-    setupEditorControls(editorControls, mainTextArea!);
+    setupEditorControls(
+      editorControls,
+      mainTextArea!,
+      originalCode,
+      originalLocalStorageId
+    );
   }
 });
 
 const setupEditorControls = (
   editorControls: HTMLElement,
-  mainTextArea: EditorView
+  mainTextArea: EditorView,
+  originalCode: string,
+  localStorageId: string
 ) => {
   editorControls.classList.remove("hidden");
 
@@ -241,15 +290,15 @@ const setupEditorControls = (
   const resetButton = editorControls.querySelector<HTMLButtonElement>(
     "#restore-solution-button"
   )!;
-  let originalText = mainTextArea.state.doc.toString();
+  let currentCode = mainTextArea.state.doc.toString();
 
-  byteCountElement.textContent = lengthInBytes(originalText).toString();
+  byteCountElement.textContent = lengthInBytes(currentCode).toString();
 
   onByteCountChange(mainTextArea, (byteCount) => {
     byteCountElement.textContent = byteCount.toString();
   });
 
-  if (originalText === "") {
+  if (currentCode === "") {
     resetButton.style.display = "none";
   }
 
@@ -258,13 +307,13 @@ const setupEditorControls = (
       changes: {
         from: 0,
         to: mainTextArea.state.doc.length,
-        insert: originalText,
+        insert: originalCode,
       },
     });
   });
 
-  setupJsSubmitOnForm(mainTextArea!, (e) => {
+  setupJsSubmitOnForm(mainTextArea!, localStorageId, (e) => {
     resetButton.style.display = "block";
-    originalText = e;
+    currentCode = e;
   });
 };

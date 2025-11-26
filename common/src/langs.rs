@@ -21,6 +21,7 @@ pub struct Lang {
     pub extension: &'static str,
     pub extra_runtime: Timers,
     pub color: &'static str,
+    pub placeholder_text: &'static str,
 }
 
 pub const DEFAULT_LANG: Lang = Lang {
@@ -41,6 +42,7 @@ pub const DEFAULT_LANG: Lang = Lang {
         judge: Duration::ZERO,
     },
     color: "transparent",
+    placeholder_text: "",
 };
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -52,6 +54,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "22.9.0",
         icon: "nodejs.svg",
         color: "#f1e05a",
+        placeholder_text: include_str!("./placeholders/nodejs"),
         ..DEFAULT_LANG
     },
     "deno" => Lang {
@@ -66,6 +69,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "2.0.6",
         icon: "deno.svg",
         color: "white",
+        placeholder_text: include_str!("./placeholders/nodejs"),
         ..DEFAULT_LANG
     },
     "python" => Lang {
@@ -77,6 +81,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "3.12.0",
         icon: "python.svg",
         color:  "#3572A5",
+        placeholder_text: include_str!("./placeholders/python"),
         ..DEFAULT_LANG
     },
     "rust" => Lang {
@@ -102,6 +107,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             ("/usr/libexec/gcc/x86_64-linux-gnu/14", "/usr/libexec/gcc/x86_64-linux-gnu/14"),
             //("/usr/lib/gcc/x86_64-linux-gnu/14/", "/usr/lib/gcc/x86_64-linux-gnu/14/")
         ],
+        placeholder_text: include_str!("./placeholders/rust"),
         ..DEFAULT_LANG
     },
     "vyxal" => Lang {
@@ -158,6 +164,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.9.27",
         icon: "c.svg",
         color: "#555555",
+        placeholder_text: include_str!("./placeholders/c"),
         extra_mounts: &[
             ("/usr/include", "/usr/include")
         ],
@@ -192,6 +199,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             compile: Duration::from_secs(3),
             ..DEFAULT_TIMERS
         },
+        placeholder_text: include_str!("./placeholders/kotlin"),
         ..DEFAULT_LANG
     }
 };

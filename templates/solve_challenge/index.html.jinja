@@ -62,18 +62,13 @@
           <span id="byte-counter"></span> Bytes
         </div>
       </div>
-      <div class=" clear-both"></div>
-      <textarea name="code" class="codemirror" id="main-code" data-encoded-source="{% if object.code %}{{ object.code | urlencode_strict }}{% endif %}">
-        {%- if object.code -%}
-          {{- object.code | prepend_linebreak -}}
-        {%- endif -%}
-    </textarea>
-      {% if account %}
-        <button type="submit" class="btn btn-primary">Submit!</button>
-      {% else %}
-        <div class="warning">You must be logged in to submit a solution.</div>
-        <button type="submit" disabled>Submit!</button>
-      {% endif %}
+      <div class="clear-both"></div>
+      <textarea name="code" class="codemirror" id="main-code" data-local-storage-id="main-code-{{object.language}}-{{object.challenge.id}}" data-encoded-source=" {% if object.code %} {{ object.code | urlencode_strict }} {% endif %}" data-last-improved-date="{{ object.last_improved_date}}">
+          {%- if object.code -%}
+            {{- object.code | prepend_linebreak -}}
+          {%- endif -%}
+      </textarea>
+      <button type="submit" class="btn btn-primary">Submit!</button>
       <div class="error hidden solution-submit-error"></div>
     </form>
     {{ test_cases::test_cases(cases=object.tests) }}

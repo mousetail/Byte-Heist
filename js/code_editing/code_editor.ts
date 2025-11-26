@@ -92,6 +92,17 @@ function editorFromTextArea(
   extensions: typeof minimalSetup,
   swapOnSubmit: boolean
 ): EditorView {
+  const localStorageId = textarea.dataset.localStorageId;
+  if (localStorageId !== undefined) {
+    const lastImprovedDate = +textarea.dataset.lastImprovedDate;
+
+    const data = JSON.parse(window.localStorage.getItem(localStorageId));
+
+    if (data && data.submittedDate > lastImprovedDate) {
+      content = data.content;
+    }
+  }
+
   let view = createDefaultEditor(content, extensions);
   textarea.parentNode?.insertBefore(view.dom, textarea);
   if (swapOnSubmit) {
