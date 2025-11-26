@@ -166,7 +166,7 @@ impl LeaderboardEntry {
         (if rank == 1 { 10 } else { 0 })
             + (percentile_90th.saturating_sub(points).max(0) / 4).min(50)
             + (percentile_50th.saturating_sub(points).max(0) / 2).min(50)
-            + (percentile_10th.saturating_sub(points).clamp(0, 49)
+            + percentile_10th.saturating_sub(points).clamp(0, 49)
             + 1
     }
 
