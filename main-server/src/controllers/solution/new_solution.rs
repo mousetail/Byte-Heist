@@ -181,24 +181,24 @@ async fn new_solution_inner(
     Error,
 > {
     let version = LANGS
-        .get(&language_name)
+        .get(language_name)
         .ok_or(Error::NotFound)?
         .latest_version;
 
     if let Some(account) = account {
         account
-            .save_preferred_language(&pool, &language_name)
+            .save_preferred_language(pool, language_name)
             .await?;
     }
 
-    let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
+    let challenge = ChallengeWithAuthorInfo::get_by_id(pool, challenge_id)
         .await
         .map_err(Error::Database)?
         .ok_or(Error::NotFound)?;
 
     let test_result = test_solution(
         &solution.code,
-        &language_name,
+        language_name,
         version,
         &challenge.challenge.challenge.judge,
     )
@@ -219,7 +219,7 @@ async fn new_solution_inner(
     };
 
     let previous_code =
-        Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
+        Code::get_best_code_for_user(pool, account.id, challenge_id, language_name).await;
     let previous_solution_invalid = previous_code.as_ref().is_some_and(|e| !e.valid);
 
     if !test_result.tests.pass {
@@ -243,8 +243,8 @@ async fn new_solution_inner(
         match should_update_solution(&previous_code, &challenge, new_points).await {
             ShouldUpdateSolution::CreateNew => {
                 let solution_id = insert_new_solution(
-                    &pool,
-                    &language_name,
+                    pool,
+                    language_name,
                     version,
                     challenge_id,
                     &solution.code,
@@ -256,12 +256,12 @@ async fn new_solution_inner(
                 .await?;
 
                 post_activity(
-                    &pool,
+                    pool,
                     previous_code.as_ref(),
                     challenge_id,
                     new_points,
-                    &language_name,
-                    &account,
+                    language_name,
+                    account,
                 )
                 .await
                 .map_err(Error::Database)?;
@@ -270,8 +270,8 @@ async fn new_solution_inner(
             }
             ShouldUpdateSolution::Update(previous_code) => {
                 update_solution(
-                    &pool,
-                    &solution,
+                    pool,
+                    solution,
                     new_points,
                     previous_code,
                     test_result.runtime,
@@ -279,12 +279,12 @@ async fn new_solution_inner(
                 .await?;
 
                 post_activity(
-                    &pool,
+                    pool,
                     Some(previous_code),
                     challenge_id,
                     new_points,
-                    &language_name,
-                    &account,
+                    language_name,
+                    account,
                 )
                 .await
                 .map_err(Error::Database)?;
@@ -324,7 +324,7 @@ async fn new_solution_inner(
             .map(|((rank, score), points)| ScoreInfo {
                 rank: rank as usize,
                 score: score as usize,
-                points: points,
+                points,
             }),
     ))
 }

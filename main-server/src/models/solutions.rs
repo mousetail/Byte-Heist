@@ -162,13 +162,12 @@ impl LeaderboardEntry {
             9999
         };
         let points = leaderboard[rank - 1].points;
-        println!("{percentile_10th} {percentile_50th} {percentile_90th}");
 
-        return (if rank == 1 { 10 } else { 0 })
+        (if rank == 1 { 10 } else { 0 })
             + (percentile_90th.saturating_sub(points).max(0) / 4).min(50)
             + (percentile_50th.saturating_sub(points).max(0) / 2).min(50)
-            + (percentile_10th.saturating_sub(points).max(0) / 1).min(49)
-            + 1;
+            + (percentile_10th.saturating_sub(points).clamp(0, 49)
+            + 1
     }
 
     fn truncate_leaderboard(
