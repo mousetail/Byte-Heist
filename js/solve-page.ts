@@ -55,7 +55,6 @@ function displayToast(toast: Toast | undefined, status_code: number) {
     new CustomEvent("basecoat:toast", {
       detail: {
         config: {
-          duration: 100000000,
           category: category,
           title: title,
           description: description,
