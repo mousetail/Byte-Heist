@@ -2,7 +2,7 @@ use axum::{
     Extension,
     extract::{Path, Query},
 };
-use common::langs::LANGS;
+use common::{RunLangOutput, langs::LANGS};
 use macros::CustomResponseMetadata;
 use reqwest::StatusCode;
 use sqlx::{PgPool, types::time::OffsetDateTime};
@@ -15,13 +15,16 @@ use crate::{
         account::Account,
         activity_log::save_activity_log,
         challenge::ChallengeWithAuthorInfo,
-        solutions::{Code, LeaderboardEntry, NewSolution},
+        solutions::{Code, LeaderboardEntry, NewSolution, ScoreInfo},
     },
     tera_utils::auto_input::AutoInput,
     test_solution::test_solution,
 };
 
-use super::{SolutionQueryParameters, all_solutions::AllSolutionsOutput};
+use super::{
+    SolutionQueryParameters,
+    all_solutions::{AllSolutionsOutput, ImprovedScoreToast},
+};
 
 #[allow(clippy::too_many_arguments)]
 async fn insert_new_solution(
@@ -141,7 +144,7 @@ async fn post_activity(
     pool: &PgPool,
     previous_solution_code: Option<&Code>,
     challenge_id: i32,
-    new_score: i32,
+    new_points: i32,
     language_name: &str,
     account: &Account,
 ) -> Result<(), sqlx::Error> {
@@ -155,27 +158,38 @@ async fn post_activity(
         account.id,
         language_name,
         old_score,
-        new_score,
+        new_points,
     )
     .await
 }
 
-pub async fn new_solution(
-    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
-    Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
-    account: Account,
-    Extension(pool): Extension<PgPool>,
-    Extension(bot): Extension<DiscordEventSender>,
-    AutoInput(solution): AutoInput<NewSolution>,
-) -> Result<CustomResponseMetadata<AllSolutionsOutput>, Error> {
+async fn new_solution_inner(
+    challenge_id: i32,
+    language_name: &str,
+    account: &Option<Account>,
+    pool: &PgPool,
+    solution: &NewSolution,
+    bot: &DiscordEventSender,
+) -> Result<
+    (
+        StatusCode,
+        RunLangOutput,
+        ChallengeWithAuthorInfo,
+        bool,
+        Option<ScoreInfo>,
+    ),
+    Error,
+> {
     let version = LANGS
         .get(&language_name)
         .ok_or(Error::NotFound)?
         .latest_version;
 
-    account
-        .save_preferred_language(&pool, &language_name)
-        .await?;
+    if let Some(account) = account {
+        account
+            .save_preferred_language(&pool, &language_name)
+            .await?;
+    }
 
     let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
         .await
@@ -190,19 +204,43 @@ pub async fn new_solution(
     )
     .await?;
 
+    let Some(account) = account else {
+        return Ok((
+            if test_result.tests.pass {
+                StatusCode::OK
+            } else {
+                StatusCode::BAD_REQUEST
+            },
+            test_result,
+            challenge,
+            false,
+            None,
+        ));
+    };
+
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
     let previous_solution_invalid = previous_code.as_ref().is_some_and(|e| !e.valid);
+
+    if !test_result.tests.pass {
+        return Ok((
+            StatusCode::BAD_REQUEST,
+            test_result,
+            challenge,
+            previous_solution_invalid,
+            None,
+        ));
+    }
 
     // Currently the web browser turns all line breaks into "\r\n" when a solution
     // is submitted. This should eventually be fixed in the frontend, but for now
     // we just replace "\r\n" with "\n" when calculating the score to make it match
     // the byte counter in the editor.
     // Related: https://github.com/mousetail/Byte-Heist/issues/34
-    let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
+    let new_points = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
 
-    let (status, solution_id) = if test_result.tests.pass {
-        match should_update_solution(&previous_code, &challenge, new_score).await {
+    let (status, solution_id) =
+        match should_update_solution(&previous_code, &challenge, new_points).await {
             ShouldUpdateSolution::CreateNew => {
                 let solution_id = insert_new_solution(
                     &pool,
@@ -211,7 +249,7 @@ pub async fn new_solution(
                     challenge_id,
                     &solution.code,
                     account.id,
-                    new_score,
+                    new_points,
                     test_result.runtime,
                     challenge.challenge.is_post_mortem,
                 )
@@ -221,20 +259,20 @@ pub async fn new_solution(
                     &pool,
                     previous_code.as_ref(),
                     challenge_id,
-                    new_score,
+                    new_points,
                     &language_name,
                     &account,
                 )
                 .await
                 .map_err(Error::Database)?;
 
-                (StatusCode::CREATED, Some(solution_id))
+                (StatusCode::CREATED, solution_id)
             }
             ShouldUpdateSolution::Update(previous_code) => {
                 update_solution(
                     &pool,
                     &solution,
-                    new_score,
+                    new_points,
                     previous_code,
                     test_result.runtime,
                 )
@@ -244,46 +282,94 @@ pub async fn new_solution(
                     &pool,
                     Some(previous_code),
                     challenge_id,
-                    new_score,
+                    new_points,
                     &language_name,
                     &account,
                 )
                 .await
                 .map_err(Error::Database)?;
 
-                (StatusCode::CREATED, Some(previous_code.id))
+                (StatusCode::CREATED, previous_code.id)
             }
-            ShouldUpdateSolution::None => (StatusCode::OK, None),
-        }
-    } else {
-        (StatusCode::BAD_REQUEST, None)
-    };
+            ShouldUpdateSolution::None => {
+                return Ok((
+                    StatusCode::OK,
+                    test_result,
+                    challenge,
+                    previous_solution_invalid,
+                    None,
+                ));
+            }
+        };
 
-    if let Some(solution_id) = solution_id {
-        bot.send(crate::discord::DiscordEvent::NewBestScore {
+    bot.send(crate::discord::DiscordEvent::NewBestScore {
+        challenge_id,
+        solution_id,
+    })
+    .await
+    .unwrap();
+
+    Ok((
+        status,
+        test_result,
+        challenge,
+        previous_solution_invalid,
+        previous_code
+            .and_then(|previous_code| {
+                previous_code
+                    .rank
+                    .zip(previous_code.score)
+                    .zip(Some(previous_code.points))
+            })
+            .map(|((rank, score), points)| ScoreInfo {
+                rank: rank as usize,
+                score: score as usize,
+                points: points,
+            }),
+    ))
+}
+
+pub async fn new_solution(
+    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
+    Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
+    account: Option<Account>,
+    Extension(pool): Extension<PgPool>,
+    Extension(bot): Extension<DiscordEventSender>,
+    AutoInput(solution): AutoInput<NewSolution>,
+) -> Result<CustomResponseMetadata<AllSolutionsOutput>, Error> {
+    let (status, test_result, challenge, previous_solution_invalid, previous_scores) =
+        new_solution_inner(
             challenge_id,
-            solution_id,
-        })
-        .await
-        .unwrap();
-    }
+            &language_name,
+            &account,
+            &pool,
+            &solution,
+            &bot,
+        )
+        .await?;
+
+    let leaderboard = LeaderboardEntry::get_leaderboard_and_scores_near(
+        &pool,
+        challenge_id,
+        &language_name,
+        account.map(|i| i.id),
+        ranking,
+    )
+    .await
+    .map_err(Error::Database)?;
 
     Ok(CustomResponseMetadata::new(AllSolutionsOutput {
         challenge,
-        leaderboard: LeaderboardEntry::get_leaderboard_near(
-            &pool,
-            challenge_id,
-            &language_name,
-            Some(account.id),
-            ranking,
-        )
-        .await
-        .map_err(Error::Database)?,
+        leaderboard: leaderboard.leaderboard,
         tests: Some(test_result.into()),
         code: Some(solution.code),
         language: language_name,
         previous_solution_invalid,
         ranking,
+        toast: leaderboard.score_info.map(|new_scores| ImprovedScoreToast {
+            old_scores: previous_scores,
+            new_scores,
+        }),
     })
     .with_status(status))
 }

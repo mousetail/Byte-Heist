@@ -28,6 +28,18 @@ html {
   --columns: 3;
 }
 
+.toaster {
+  & .toast {
+    & .toast-content {
+      & section {
+        & p {
+          word-break: unset;
+        }
+      }
+    }
+  }
+}
+
 .test-case {
   border-radius: var(--radius-xl);
   border-style: var(--tw-border-style);

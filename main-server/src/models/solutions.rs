@@ -73,7 +73,8 @@ pub struct Code {
     pub valid: bool,
     pub last_improved_date: OffsetDateTime,
     pub is_post_mortem: bool,
-    pub leaderboard_points: Option<i32>,
+    pub score: Option<i32>,
+    pub rank: Option<i64>,
 }
 
 impl Code {
@@ -93,7 +94,8 @@ impl Code {
                     valid,
                     last_improved_date,
                     is_post_mortem as "is_post_mortem!",
-                    scores.score as leaderboard_points
+                    score,
+                    rank
                 FROM solutions
                 LEFT JOIN scores
                 ON scores.id = solutions.id
@@ -130,27 +132,59 @@ pub enum RankingMode {
     Me,
 }
 
-impl LeaderboardEntry {
-    pub async fn get_leaderboard_near(
-        pool: &PgPool,
-        challenge_id: i32,
-        language: &str,
-        user_id: Option<i32>,
-        mode: RankingMode,
-    ) -> Result<Vec<Self>, sqlx::Error> {
-        let mut leaderboard =
-            Self::get_leadeboard_for_challenge_and_language(pool, challenge_id, language).await?;
+#[derive(Serialize)]
+pub struct ScoreInfo {
+    pub rank: usize,
+    pub points: i32,
+    pub score: usize,
+}
 
+pub struct LeaderboardNearOutput {
+    pub leaderboard: Vec<LeaderboardEntry>,
+    pub score_info: Option<ScoreInfo>,
+}
+
+impl LeaderboardEntry {
+    fn calculate_user_score(rank: usize, leaderboard: &[LeaderboardEntry]) -> i32 {
+        let percentile_50th = if leaderboard.len() > 2 {
+            leaderboard[leaderboard.len() / 2].points
+        } else {
+            9999
+        };
+        let percentile_90th = if leaderboard.len() > 1 {
+            leaderboard[leaderboard.len() * 9 / 10].points
+        } else {
+            9999
+        };
+        let percentile_10th = if leaderboard.len() > 9 {
+            leaderboard[leaderboard.len() / 10].points
+        } else {
+            9999
+        };
+        let points = leaderboard[rank - 1].points;
+        println!("{percentile_10th} {percentile_50th} {percentile_90th}");
+
+        return (if rank == 1 { 10 } else { 0 })
+            + (percentile_90th.saturating_sub(points).max(0) / 4).min(50)
+            + (percentile_50th.saturating_sub(points).max(0) / 2).min(50)
+            + (percentile_10th.saturating_sub(points).max(0) / 1).min(49)
+            + 1;
+    }
+
+    fn truncate_leaderboard(
+        mut leaderboard: Vec<LeaderboardEntry>,
+        mode: RankingMode,
+        user_id: Option<i32>,
+    ) -> Vec<LeaderboardEntry> {
+        let user_rank =
+            user_id.and_then(|user_id| leaderboard.iter().position(|e| e.author_id == user_id));
         match mode {
             RankingMode::Top => {
                 leaderboard.truncate(10);
-                Ok(leaderboard)
+                leaderboard
             }
             RankingMode::Me => {
-                let index = leaderboard
-                    .iter()
-                    .position(|k| Some(k.author_id) == user_id)
-                    .unwrap_or(0);
+                let index = user_rank.unwrap_or(0);
                 let mut start = index.saturating_sub(5);
                 let mut end = start + 10;
                 if end >= leaderboard.len() {
@@ -158,9 +192,49 @@ impl LeaderboardEntry {
                     start -= diff;
                     end = (end - diff).min(leaderboard.len());
                 }
-                Ok(leaderboard[start..end].to_vec())
+                leaderboard[start..end].to_vec()
             }
         }
+    }
+
+    pub async fn get_leaderboard_near(
+        pool: &PgPool,
+        challenge_id: i32,
+        language: &str,
+        user_id: Option<i32>,
+        mode: RankingMode,
+    ) -> Result<Vec<Self>, sqlx::Error> {
+        let leaderboard =
+            Self::get_leadeboard_for_challenge_and_language(pool, challenge_id, language).await?;
+
+        Ok(Self::truncate_leaderboard(leaderboard, mode, user_id))
+    }
+
+    pub async fn get_leaderboard_and_scores_near(
+        pool: &PgPool,
+        challenge_id: i32,
+        language: &str,
+        user_id: Option<i32>,
+        mode: RankingMode,
+    ) -> Result<LeaderboardNearOutput, sqlx::Error> {
+        let leaderboard =
+            Self::get_leadeboard_for_challenge_and_language(pool, challenge_id, language).await?;
+        let user_rank = user_id
+            .and_then(|user_id| leaderboard.iter().position(|e| e.author_id == user_id))
+            .map(|i| i + 1);
+        let user_score =
+            user_rank.map(|user_rank| Self::calculate_user_score(user_rank, &leaderboard));
+
+        let score_info = user_rank.zip(user_score).map(|(rank, score)| ScoreInfo {
+            rank,
+            points: leaderboard[rank - 1].points as i32,
+            score: score as usize,
+        });
+
+        Ok(LeaderboardNearOutput {
+            leaderboard: Self::truncate_leaderboard(leaderboard, mode, user_id),
+            score_info,
+        })
     }
 
     pub async fn get_top_entry(

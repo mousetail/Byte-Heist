@@ -11,12 +11,18 @@ use crate::{
         GetById,
         account::Account,
         challenge::ChallengeWithAuthorInfo,
-        solutions::{Code, LeaderboardEntry, RankingMode},
+        solutions::{Code, LeaderboardEntry, RankingMode, ScoreInfo},
     },
     test_case_formatting::OutputDisplay,
 };
 
 use super::SolutionQueryParameters;
+
+#[derive(Serialize)]
+pub struct ImprovedScoreToast {
+    pub old_scores: Option<ScoreInfo>,
+    pub new_scores: ScoreInfo,
+}
 
 #[derive(Serialize)]
 pub struct AllSolutionsOutput {
@@ -27,6 +33,7 @@ pub struct AllSolutionsOutput {
     pub(super) previous_solution_invalid: bool,
     pub(super) language: String,
     pub(super) ranking: RankingMode,
+    pub(super) toast: Option<ImprovedScoreToast>,
 }
 
 pub async fn all_solutions(
@@ -64,5 +71,6 @@ pub async fn all_solutions(
         code: code.map(|d| d.code),
         language: language_name,
         ranking,
+        toast: None,
     })
 }

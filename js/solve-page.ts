@@ -7,6 +7,67 @@ import {
   onByteCountChange,
 } from "./code_editing/code_editor";
 
+type ScoreInfo = {
+  rank: number;
+  points: number;
+  score: number;
+};
+
+type Toast = {
+  old_scores: ScoreInfo | undefined;
+  new_scores: ScoreInfo;
+};
+
+function displayToast(toast: Toast | undefined, status_code: number) {
+  let category: "success" | "warning" | "info" | "error" = "success";
+  let title: string;
+  let description: string;
+  if (status_code == 400) {
+    category = "error";
+    title = "Invalid Solution";
+    description = "At least one test failed, see output window for details";
+  } else if (status_code == 200 || !toast) {
+    category = "info";
+    title = "Passed";
+    description = "Solution passed but is worse than previous best score";
+  } else if (!toast.old_scores) {
+    title = `${toast.new_scores.points} bytes (#${toast.new_scores.rank})`;
+    description = `Earned ${toast.new_scores.score} score (#${toast.new_scores.rank} rank, ${toast.new_scores.points} points)`;
+  } else if (toast.new_scores.rank < toast.old_scores.rank) {
+    title = `Saved ${
+      toast.old_scores.points - toast.new_scores.points
+    } bytes (Rank #${toast.old_scores.rank} -> #${toast.new_scores.rank})`;
+    description = `+${
+      toast.new_scores.score - toast.old_scores.score
+    } score (#${toast.new_scores.rank}, ${toast.new_scores.points} points)`;
+  } else if (toast.new_scores.points < toast.old_scores.points) {
+    title = `Saved ${toast.old_scores.points - toast.new_scores.points} bytes`;
+    description = `+${
+      toast.new_scores.score - toast.old_scores.score
+    } score (#${toast.new_scores.rank}, ${toast.new_scores.points} points)`;
+  } else {
+    category = "info";
+    title = "Score matched";
+    description = "Score equal to your previous best score";
+  }
+
+  document.dispatchEvent(
+    new CustomEvent("basecoat:toast", {
+      detail: {
+        config: {
+          duration: 100000000,
+          category: category,
+          title: title,
+          description: description,
+          cancel: {
+            label: "Dismiss",
+          },
+        },
+      },
+    })
+  );
+}
+
 /// Only works from the solutions page
 async function submitNewSolution(
   mainTextArea: EditorView,
@@ -36,11 +97,14 @@ async function submitNewSolution(
     }
     errorDiv.classList.add("hidden");
 
-    const { tests, leaderboard } = (await response.json()) as {
+    const { tests, leaderboard, toast } = (await response.json()) as {
       tests: ResultDisplay;
       leaderboard: LeaderboardEntry[];
+      toast: Toast | undefined;
     };
-    updateLeaderbaord(leaderboard);
+    updateLeaderboard(leaderboard);
+
+    displayToast(toast, response.status);
 
     if (tests.passed && response.status === 201) {
       setOriginalText(content);
@@ -48,6 +112,7 @@ async function submitNewSolution(
     const testsContainer = document.querySelector(
       "div.result-display-wrapper"
     ) as HTMLDivElement;
+
     renderResultDisplay(tests, testsContainer);
   } finally {
     submitButton.disabled = false;
@@ -97,7 +162,7 @@ function setupLeaderboardForm(form: HTMLFormElement) {
         console.error(await response.json());
       }
 
-      updateLeaderbaord(await response.json());
+      updateLeaderboard(await response.json());
     });
   });
 }
@@ -110,7 +175,7 @@ type LeaderboardEntry = {
   points: number;
 };
 
-function updateLeaderbaord(ranking: LeaderboardEntry[]) {
+function updateLeaderboard(ranking: LeaderboardEntry[]) {
   const leaderboard = document.querySelector(".leaderboard table tbody");
 
   leaderboard.replaceChildren(
@@ -152,7 +217,7 @@ function changeActiveLeaderboardTab(tab: string) {
   ).ariaSelected = "false";
 }
 
-window.addEventListener("load", async () => {
+globalThis.addEventListener("load", async () => {
   let leaderboardForm: HTMLFormElement | undefined;
   if ((leaderboardForm = document.querySelector(".leaderboard-tabs-form"))) {
     setupLeaderboardForm(leaderboardForm);
@@ -161,7 +226,7 @@ window.addEventListener("load", async () => {
   const mainTextArea = createCodemirrorFromTextAreas()["main-code"];
   initTestCaseHideShow();
 
-  let editorControls = document.getElementById("editor-controls");
+  const editorControls = document.getElementById("editor-controls");
   if (editorControls !== null) {
     setupEditorControls(editorControls, mainTextArea!);
   }
