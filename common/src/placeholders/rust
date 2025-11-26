@@ -1,0 +1,7 @@
+fn main() {
+    // Take input
+    for input in std::io::stdin().lines() {
+        // print output
+        println!("{output}")
+    }
+}

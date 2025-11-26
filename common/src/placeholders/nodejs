@@ -1,0 +1,6 @@
+// take input
+process.stdin.on('input', (e)=>{
+    const input = ''+e;
+    // Output
+    console.log(input);
+})

@@ -1,0 +1,4 @@
+# take input
+in = input()
+# print output
+print(in)

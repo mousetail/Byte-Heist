@@ -1,0 +1,10 @@
+#include <stdio.h>
+
+int main() {
+    // take input
+    char input[99];
+    fgets(input, 100, stdin);
+
+    // output
+    puts(input);
+}
