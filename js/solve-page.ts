@@ -256,7 +256,9 @@ function changeActiveLeaderboardTab(tab: string) {
 
 globalThis.addEventListener("load", async () => {
   const mainCodeTextArea = document.getElementById("main-code");
-  const originalCode = mainCodeTextArea.dataset.encodedSource;
+  const originalCode = decodeURIComponent(
+    mainCodeTextArea.dataset.encodedSource
+  );
   const originalLocalStorageId = mainCodeTextArea.dataset.localStorageId;
 
   let leaderboardForm: HTMLFormElement | undefined;

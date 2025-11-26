@@ -226,7 +226,7 @@ impl LeaderboardEntry {
 
         let score_info = user_rank.zip(user_score).map(|(rank, score)| ScoreInfo {
             rank,
-            points: leaderboard[rank - 1].points as i32,
+            points: leaderboard[rank - 1].points,
             score: score as usize,
         });
 
