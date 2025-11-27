@@ -119,8 +119,8 @@
         <div class="toast-content">
           {{ achievement | get_achievement_icon | safe }}
           <section>
-            <h2>You have earned the {{ achievement }} achievement</h2>
-            <p>Congratulations.</p>
+            <h2>Achievement "{{ achievement | get_achievement_name }}" earned</h2>
+            <p>{{ achievement | get_achievement_description }}</p>
           </section>
           <footer>
             <button type="button" class="btn" data-toast-action>Dismiss</button>

@@ -1,4 +1,4 @@
-use crate::models::challenge::ChallengeCategory;
+use crate::{achievements::AchievementType, models::challenge::ChallengeCategory};
 use axum::{Extension, extract::Path};
 use serde::Serialize;
 use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
@@ -35,6 +35,7 @@ pub struct UserInfo {
     invalidated_solutions: Option<Vec<InvalidatedSolution>>,
     per_language_stats: Vec<StatsForLanguage>,
     per_category_stats: Vec<StatsPerCategory>,
+    recent_achievements: Vec<UserAchievement>,
     id: i32,
 }
 
@@ -85,6 +86,31 @@ async fn get_account_category_stats(
         WHERE author = $1
         GROUP BY user_scoring_info.category
         ORDER BY "total_score!" DESC
+        "#,
+        user_id
+    )
+    .fetch_all(pool)
+    .await
+}
+
+#[derive(Serialize)]
+struct UserAchievement {
+    achievement: String,
+    awarded_at: OffsetDateTime,
+}
+
+async fn get_user_achievements(
+    pool: &PgPool,
+    user_id: i32,
+) -> Result<Vec<UserAchievement>, sqlx::Error> {
+    query_as!(
+        UserAchievement,
+        r#"
+            SELECT achievement,
+            awarded_at as "awarded_at!"
+            FROM achievements
+            WHERE user_id=$1 AND awarded_at IS NOT NULL
+            ORDER BY awarded_at DESC
         "#,
         user_id
     )
@@ -152,6 +178,9 @@ pub async fn get_user(
         account_info,
         id,
         invalidated_solutions,
+        recent_achievements: get_user_achievements(&pool, id)
+            .await
+            .map_err(Error::Database)?,
         per_language_stats: get_account_language_stats(&pool, id)
             .await
             .map_err(Error::Database)?,

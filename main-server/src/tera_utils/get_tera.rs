@@ -57,6 +57,26 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
                     },
                 },
             );
+            tera.register_filter(
+                "get_achievement_name",
+                MappingStringToStringFilter {
+                    f: |e| {
+                        AchievementType::from_str(e)
+                            .map(|k| k.get_achievement_name())
+                            .unwrap_or_default()
+                    },
+                },
+            );
+            tera.register_filter(
+                "get_achievement_description",
+                MappingStringToStringFilter {
+                    f: |e| {
+                        AchievementType::from_str(e)
+                            .map(|k| k.get_achievement_description())
+                            .unwrap_or_default()
+                    },
+                },
+            );
             tera
         })
     });
