@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use sqlx::{PgPool, query};
 
-use crate::controllers::challenges::handle_reactions;
+use crate::{achievements::award_achievements, controllers::challenges::handle_reactions};
 
 pub async fn refresh_views_task(pool: PgPool) {
     loop {
@@ -49,6 +49,13 @@ pub async fn refresh_views_task(pool: PgPool) {
                 eprintln!("Error processing reactions: {e:?}");
             }
         }
+
+        match award_achievements(&pool).await {
+            Ok(_) => (),
+            Err(e) => {
+                eprintln!("Error awarding achievements: {e:?}")
+            }
+        };
 
         tokio::time::sleep(Duration::from_secs(30)).await;
     }

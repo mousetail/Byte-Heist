@@ -6,7 +6,6 @@ import {
   lengthInBytes,
   onByteCountChange,
 } from "./code_editing/code_editor";
-import { stringify } from "node:querystring";
 
 type ScoreInfo = {
   rank: number;

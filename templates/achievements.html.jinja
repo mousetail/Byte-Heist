@@ -1,0 +1,4 @@
+{% extends "base/base.html.jinja" %}
+{% block content %}
+    {% for achievement in object %}{{ achievement.icon | safe }}{% endfor %}
+{% endblock content %}

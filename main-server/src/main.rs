@@ -1,3 +1,4 @@
+mod achievements;
 mod background_tasks;
 mod controllers;
 mod discord;
@@ -22,6 +23,7 @@ use tower_sessions::session_store::ExpiredDeletion;
 
 use anyhow::Context;
 use controllers::{
+    achievements::list_achievements,
     auth::{github_callback, github_login},
     challenges::{
         all_challenges, compose_challenge, get_homepage, new_challenge, post_comment,
@@ -110,6 +112,10 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/doc",
             get(route_factory.handler("docs.html.jinja", get_doc)),
+        )
+        .route(
+            "/achievements",
+            get(route_factory.handler("achievements.html.jinja", list_achievements)),
         )
         .route(
             "/doc/{*page}",

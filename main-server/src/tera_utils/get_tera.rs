@@ -1,11 +1,13 @@
+use std::str::FromStr;
 use std::{collections::HashMap, sync::OnceLock};
 
 use axum::response::{IntoResponse, Response};
 use common::langs::LANGS;
 use sqlx::types::time::OffsetDateTime;
-use tera::{Tera, Value, to_value};
+use tera::{Filter, Tera, Value, to_value};
 use tower_sessions::cookie::time::macros::format_description;
 
+use crate::achievements::AchievementType;
 use crate::tera_utils::markdown::MarkdownFilterWithTableOfContents;
 use crate::tera_utils::syntax_highlighting::SyntaxHighight;
 
@@ -45,6 +47,16 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
             tera.register_filter("format_date", format_date);
             tera.register_tester("empty", empty);
             tera.register_filter("syntax_highlight", SyntaxHighight);
+            tera.register_filter(
+                "get_achievement_icon",
+                MappingStringToStringFilter {
+                    f: |e| {
+                        AchievementType::from_str(e)
+                            .map(|k| k.get_icon())
+                            .unwrap_or_default()
+                    },
+                },
+            );
             tera
         })
     });
@@ -154,4 +166,25 @@ fn empty(value: Option<&Value>, args: &[Value]) -> tera::Result<bool> {
         },
         None => false,
     })
+}
+
+struct MappingStringToStringFilter<E: AsRef<str> + Send, F: Fn(&str) -> E + Send + Sync> {
+    f: F,
+}
+
+impl<E: AsRef<str> + Send, F: Fn(&str) -> E + Send + Sync> Filter
+    for MappingStringToStringFilter<E, F>
+{
+    fn filter(&self, value: &Value, args: &HashMap<String, Value>) -> tera::Result<Value> {
+        if args.len() > 0 {
+            return Err(tera::Error::msg("This filter takes no arguments"));
+        }
+
+        let data = match value {
+            tera::Value::String(e) => (self.f)(e),
+            _ => return Err(tera::Error::msg("This filter expects a string")),
+        };
+
+        Ok(tera::Value::String(data.as_ref().to_string()))
+    }
 }

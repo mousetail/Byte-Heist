@@ -109,5 +109,24 @@
     {% block post_content %}
     {% endblock post_content %}
   </body>
-  <div id="toaster" class="toaster" data-align="center"></div>
+  <div id="toaster" class="toaster" data-align="center">
+    {% for achievement in unread_achievements %}
+      <div class="toast"
+           role="status"
+           aria-atomic="true"
+           aria-hidden="false"
+           data-category="success">
+        <div class="toast-content">
+          {{ achievement | get_achievement_icon | safe }}
+          <section>
+            <h2>You have earned the {{ achievement }} achievement</h2>
+            <p>Congratulations.</p>
+          </section>
+          <footer>
+            <button type="button" class="btn" data-toast-action>Dismiss</button>
+          </footer>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
 </html>

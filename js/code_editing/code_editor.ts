@@ -103,7 +103,7 @@ function editorFromTextArea(
     }
   }
 
-  let view = createDefaultEditor(content, extensions);
+  const view = createDefaultEditor(content, extensions);
   textarea.parentNode?.insertBefore(view.dom, textarea);
   if (swapOnSubmit) {
     textarea.style.display = "none";

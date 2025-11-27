@@ -9,7 +9,6 @@ use serde::Serialize;
 use std::error::Error;
 use tera::{Context, escape_html};
 
-
 pub mod auto_input;
 mod get_tera;
 mod html_context;
@@ -51,6 +50,7 @@ impl TeraHtmlRenderer {
         let mut tera_context = Context::new();
         tera_context.insert("object", &data);
         tera_context.insert("account", &context.account);
+        tera_context.insert("unread_achievements", &context.unread_achievements);
         tera_context.insert("dev", &cfg!(debug_assertions));
 
         let html = match tera.render(template, &tera_context) {
@@ -94,16 +94,14 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
         let representation = err.get_representaiton();
         let status_code = representation.status_code;
         match context {
-            html_context::Format::Json => {
-                Self::render_json(
-                    representation,
-                    if status_code.is_redirection() {
-                        axum::http::StatusCode::IM_A_TEAPOT
-                    } else {
-                        status_code
-                    },
-                )
-            }
+            html_context::Format::Json => Self::render_json(
+                representation,
+                if status_code.is_redirection() {
+                    axum::http::StatusCode::IM_A_TEAPOT
+                } else {
+                    status_code
+                },
+            ),
             html_context::Format::Html(ctx) => {
                 if let Some(location) = representation.location {
                     return Redirect::temporary(&location).into_response();
