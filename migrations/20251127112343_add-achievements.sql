@@ -5,7 +5,7 @@ CREATE TABLE achievements (
     awarded_at TIMESTAMP WITH TIME ZONE,
     related_challenge INTEGER REFERENCES challenges(id),
     related_language VARCHAR(32),
-    read BOOLEAN NOT NULL DEFAULT false,
+    read BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE UNIQUE INDEX achievement_one_per_user ON achievements(user_id, achievement);
