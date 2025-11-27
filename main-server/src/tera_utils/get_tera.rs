@@ -196,7 +196,7 @@ impl<E: AsRef<str> + Send, F: Fn(&str) -> E + Send + Sync> Filter
     for MappingStringToStringFilter<E, F>
 {
     fn filter(&self, value: &Value, args: &HashMap<String, Value>) -> tera::Result<Value> {
-        if args.len() > 0 {
+        if !args.is_empty() {
             return Err(tera::Error::msg("This filter takes no arguments"));
         }
 

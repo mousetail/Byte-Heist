@@ -11,7 +11,7 @@ pub struct Achievement {
 
 pub async fn list_achievements(_path: Option<Path<String>>) -> Result<Vec<Achievement>, Error> {
     Ok(AchievementType::VARIANTS
-        .into_iter()
+        .iter()
         .map(|i| Achievement { icon: i.get_icon() })
         .collect())
 }

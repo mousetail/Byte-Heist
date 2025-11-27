@@ -7,6 +7,7 @@ use sqlx::{PgPool, query_scalar};
 use strum::{EnumString, IntoStaticStr, VariantArray};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString)]
+#[allow(clippy::enum_variant_names)]
 pub enum AchievementType {
     // Solve Related
     // OnePoint,
@@ -160,7 +161,7 @@ pub async fn get_unread_achievements_for_user(
     pool: &PgPool,
     user_id: i32,
 ) -> Result<Vec<String>, sqlx::Error> {
-    Ok(query_scalar!(
+    query_scalar!(
         "UPDATE achievements
         SET read=true
         WHERE user_id=$1 AND read=false
@@ -168,5 +169,5 @@ pub async fn get_unread_achievements_for_user(
         user_id
     )
     .fetch_all(pool)
-    .await?)
+    .await
 }

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE achievements\n        SET read=true\n        WHERE user_id=$1 AND read=false\n        RETURNING achievement",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "achievement",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "fddc035618c7b386aed85cea4c4451e60a33c7eb1f4ad983ceb24ddbbf282d73"
+}

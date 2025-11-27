@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO achievements(\n            user_id,\n            achievement,\n            achieved,\n            awarded_at\n        ) SELECT\n            author as user_id,\n            $1,\n            true,\n            now()\n        FROM user_scoring_info\n        WHERE total_score > $2 AND category = $3::challenge_category\n        ON CONFLICT DO NOTHING\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int8",
+        {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "980e96af8b72229d116ea25f1d508f39569b9a7a40903725385cafe2401e3dd3"
+}

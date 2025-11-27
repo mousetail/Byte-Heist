@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO achievements(\n            user_id,\n            achievement,\n            achieved,\n            awarded_at\n        ) SELECT\n            author as user_id,\n            $1,\n            true,\n            now()\n        FROM user_scoring_info_per_language\n        WHERE language=$2\n        GROUP BY author\n        HAVING CAST(SUM(total_score) as BIGINT) > $3\n        ON CONFLICT DO NOTHING\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e5cb2a1a12388f3297071dfd330b64f8a1137a36f0d1679e9dcde6e7ad79f1df"
+}

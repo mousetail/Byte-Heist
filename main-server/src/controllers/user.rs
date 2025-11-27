@@ -1,4 +1,4 @@
-use crate::{achievements::AchievementType, models::challenge::ChallengeCategory};
+use crate::models::challenge::ChallengeCategory;
 use axum::{Extension, extract::Path};
 use serde::Serialize;
 use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
