@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO achievements(\n            user_id,\n            achievement,\n            achieved,\n            awarded_at,\n            progress,\n            total\n        ) SELECT\n            author as user_id,\n            $1,\n            CAST(SUM(total_score) as BIGINT) > $3 as achieved,\n            case when CAST(SUM(total_score) as BIGINT) > $3 then now() else null end,\n            LEAST(CAST(SUM(total_score) as BIGINT), $3),\n            $3\n        FROM user_scoring_info_per_language\n        WHERE language=$2\n        GROUP BY author\n        ON CONFLICT(user_id, achievement) DO UPDATE SET\n            achieved=excluded.achieved,\n            progress=excluded.progress,\n            awarded_at=COALESCE(achievements.awarded_at, excluded.awarded_at)\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "641dde8c86fe91b6fc43b40749b81655c85b95266ca59db5dfd93c234b2060f7"
+}

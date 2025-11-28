@@ -17,19 +17,29 @@ async fn point_based_score(
             user_id,
             achievement,
             achieved,
-            awarded_at
+            awarded_at,
+            progress,
+            total
         ) SELECT
             author as user_id,
             $1,
-            true,
-            now()
+            total_score > $2,
+            CASE WHEN total_score > $2
+                THEN now()
+                ELSE null
+            END,
+            LEAST($2, total_score),
+            $2
         FROM user_scoring_info
         WHERE total_score > $2 AND category = $3::challenge_category
-        ON CONFLICT DO NOTHING
+        ON CONFLICT(user_id, achievement) DO UPDATE SET
+            achieved=excluded.achieved,
+            progress=excluded.progress,
+            awarded_at=COALESCE(achievements.awarded_at, excluded.awarded_at)
     "#,
         achievement_type_string,
         minimum_score,
-        category as ChallengeCategory
+        category as ChallengeCategory,
     )
     .execute(pool)
     .await?;
@@ -50,17 +60,23 @@ async fn point_based_score_for_lang(
             user_id,
             achievement,
             achieved,
-            awarded_at
+            awarded_at,
+            progress,
+            total
         ) SELECT
             author as user_id,
             $1,
-            true,
-            now()
+            CAST(SUM(total_score) as BIGINT) > $3 as achieved,
+            case when CAST(SUM(total_score) as BIGINT) > $3 then now() else null end,
+            LEAST(CAST(SUM(total_score) as BIGINT), $3),
+            $3
         FROM user_scoring_info_per_language
         WHERE language=$2
         GROUP BY author
-        HAVING CAST(SUM(total_score) as BIGINT) > $3
-        ON CONFLICT DO NOTHING
+        ON CONFLICT(user_id, achievement) DO UPDATE SET
+            achieved=excluded.achieved,
+            progress=excluded.progress,
+            awarded_at=COALESCE(achievements.awarded_at, excluded.awarded_at)
     "#,
         achievement_type_string,
         language,
@@ -154,3 +170,5 @@ pub(super) async fn award_point_based_cheevos(pool: &PgPool) -> Result<(), sqlx:
 
     Ok(())
 }
+
+pub(super) fn get_point_based_achievement_progress() {}

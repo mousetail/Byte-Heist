@@ -6,7 +6,7 @@ use crate::{achievements::award_achievements, controllers::challenges::handle_re
 
 pub async fn refresh_views_task(pool: PgPool) {
     loop {
-        let statement = query!("REFRESH MATERIALIZED VIEW scores")
+        let statement = query!("REFRESH MATERIALIZED VIEW CONCURRENTLY scores")
             .execute(&pool)
             .await;
         match statement {
@@ -18,7 +18,7 @@ pub async fn refresh_views_task(pool: PgPool) {
 
         tokio::time::sleep(Duration::from_secs(15)).await;
 
-        let statement = query!("REFRESH MATERIALIZED VIEW user_scoring_info")
+        let statement = query!("REFRESH MATERIALIZED VIEW CONCURRENTLY user_scoring_info")
             .execute(&pool)
             .await;
         match statement {
@@ -30,9 +30,10 @@ pub async fn refresh_views_task(pool: PgPool) {
 
         tokio::time::sleep(Duration::from_secs(15)).await;
 
-        let statement = query!("REFRESH MATERIALIZED VIEW user_scoring_info_per_language")
-            .execute(&pool)
-            .await;
+        let statement =
+            query!("REFRESH MATERIALIZED VIEW CONCURRENTLY user_scoring_info_per_language")
+                .execute(&pool)
+                .await;
         match statement {
             Ok(_) => (),
             Err(e) => {

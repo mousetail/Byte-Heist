@@ -1,0 +1,30 @@
+{% extends "base/base.html.jinja" %}
+{% block content %}
+    {% for group in object %}
+        <h2 class="text-lg">{{ group.group }}</h2>
+        <div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(20rem,1fr))]">
+            {% for achievement in group.elements %}
+                <div class="grid grid-cols-5 gap-3 p-3 rounded-lg">
+                    <div class="row-span-2">
+                        <div class="p-2 rounded-full w-[fit-content]
+                                    {% if achievement.awarded_at %}bg-byte-brown-500{% endif %}">{{ achievement.achievement | get_achievement_icon | safe }}</div>
+                    </div>
+                    <div class="flex-1 col-span-4">
+                        <div class="font-medium text-white">{{ achievement.achievement | get_achievement_name }}</div>
+                        <div class="text-sm text-byte-brown-200">{{ achievement.achievement | get_achievement_description }}</div>
+                    </div>
+                    {% if achievement.awarded_at %}
+                        <div class="text-xs text-byte-brown-200 col-span-4 text-right">Earned {{ achievement.awarded_at | format_date }}</div>
+                    {% elif achievement.progress and achievement.total %}
+                        <div class="col-span-4 ">
+                            <div class="rounded-full h-2 bg-byte-brown-500 w-full">
+                                <div class="h2 rounded-full h-2 bg-byte-green-700"
+                                     style="width: {{ achievement.progress * 100 / achievement.total }}%"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock content %}

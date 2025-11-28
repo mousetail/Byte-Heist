@@ -1,12 +1,32 @@
 mod points_based;
 
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::{
+    collections::HashMap,
+    hash::{DefaultHasher, Hash, Hasher},
+};
 
 use points_based::award_point_based_cheevos;
+use serde::Serialize;
 use sqlx::{PgPool, query_scalar};
 use strum::{EnumString, IntoStaticStr, VariantArray};
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString)]
+use crate::models::challenge::ChallengeCategory;
+
+#[derive(Serialize, Hash, PartialEq, Eq)]
+pub enum AchievementCategory {
+    PointRelated,
+}
+
+struct AchievementProgressContext {
+    score_per_category: HashMap<ChallengeCategory, i64>,
+    score_per_language: HashMap<&'static str, i64>,
+}
+
+impl AchievementProgressContext {
+    async fn get_for_user(pool: &PgPool, user_id: i32) {}
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString, Debug)]
 #[allow(clippy::enum_variant_names)]
 pub enum AchievementType {
     // Solve Related
@@ -77,6 +97,10 @@ impl AchievementType {
             AchievementType::C1000Point => "Deep Blue Sea",
             AchievementType::Apl1000Point => "Original Sin",
         }
+    }
+
+    pub fn get_achievement_category(self) -> AchievementCategory {
+        AchievementCategory::PointRelated
     }
 
     pub fn get_achievement_description(self) -> &'static str {
@@ -164,7 +188,7 @@ pub async fn get_unread_achievements_for_user(
     query_scalar!(
         "UPDATE achievements
         SET read=true
-        WHERE user_id=$1 AND read=false
+        WHERE user_id=$1 AND read=false AND achieved=true
         RETURNING achievement",
         user_id
     )

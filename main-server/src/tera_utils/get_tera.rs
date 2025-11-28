@@ -132,7 +132,13 @@ fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, te
     }
     let date: OffsetDateTime = serde_json::from_value(value.clone()).map_err(tera::Error::json)?;
 
-    let offset = (date - OffsetDateTime::now_utc()).abs();
+    let offset = (date - OffsetDateTime::now_utc());
+    let (relative_time_prefix, relative_time_postfix) = if offset.is_positive() {
+        ("in ", "")
+    } else {
+        ("", " ago")
+    };
+    let offset = offset.abs();
 
     Ok(Value::String(if offset.whole_weeks() > 12 {
         date.format(if include_day {
@@ -141,15 +147,17 @@ fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, te
             format_description!("[month repr:long] [year]")
         })
         .map_err(|_e| tera::Error::call_filter("format_date", "unkown"))?
+    } else if offset.whole_hours() == 0 {
+        format!("{relative_time_prefix}a few minutes{relative_time_postfix}")
     } else if offset.whole_weeks() != 0 {
         format!(
-            "{} weeks, {} days",
+            "{relative_time_prefix}{} weeks, {} days{relative_time_postfix}",
             offset.whole_weeks(),
             offset.whole_days() % 7
         )
     } else {
         format!(
-            "{} days, {} hours",
+            "{relative_time_prefix}{} days, {} hours{relative_time_postfix}",
             offset.whole_days(),
             offset.whole_hours() % 24
         )

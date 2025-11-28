@@ -1,5 +1,8 @@
+use std::borrow::Cow;
+
 use crate::models::challenge::ChallengeCategory;
 use axum::{Extension, extract::Path};
+use common::slug::Slug;
 use serde::Serialize;
 use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
 
@@ -119,7 +122,7 @@ async fn get_user_achievements(
 }
 
 pub async fn get_user(
-    Path(id): Path<i32>,
+    Path((id, slug)): Path<(i32, String)>,
     account: Option<Account>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<UserInfo, Error> {
@@ -151,6 +154,13 @@ pub async fn get_user(
     let Some(account_info) = account_info else {
         return Err(Error::NotFound);
     };
+
+    if format!("{}", Slug(&account_info.username)) != slug {
+        return Err(Error::Redirect(Cow::Owned(format!(
+            "/user/{id}/{}",
+            Slug(&account_info.username)
+        ))));
+    }
 
     let invalidated_solutions = match account {
         Some(acc) if acc.id == id => Some(

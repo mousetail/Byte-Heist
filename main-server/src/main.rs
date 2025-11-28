@@ -36,7 +36,7 @@ use controllers::{
         challenge_redirect_with_slug, get_leaderboard, new_solution,
         post_mortem::{post_mortem_view, post_mortem_view_without_language},
     },
-    user::get_user,
+    user::{get_user, get_user_achievements, redirect_to_user_page},
 };
 use discord::DiscordEventSender;
 use discord_bot::Bot;
@@ -187,7 +187,15 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/user/{id}",
+            get(route_factory.handler("user/index.html.jinja", redirect_to_user_page)),
+        )
+        .route(
+            "/user/{id}/{slug}",
             get(route_factory.handler("user/index.html.jinja", get_user)),
+        )
+        .route(
+            "/user/{id}/{slug}/achievements",
+            get(route_factory.handler("user_achievements_page.html.jinja", get_user_achievements)),
         )
         .route(
             "/{id}/{language}",
