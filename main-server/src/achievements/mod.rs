@@ -1,7 +1,9 @@
+mod misc;
 mod points_based;
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 
+use misc::award_misc_achievements;
 use points_based::award_point_based_cheevos;
 use serde::Serialize;
 use sqlx::{PgPool, query_scalar};
@@ -10,10 +12,10 @@ use strum::{EnumString, IntoStaticStr, VariantArray};
 #[derive(Serialize, Hash, PartialEq, Eq)]
 pub enum AchievementCategory {
     PointRelated,
+    Miscellaneous,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString, Debug)]
-#[allow(clippy::enum_variant_names)]
 pub enum AchievementType {
     // Solve Related
     // OnePoint,
@@ -57,10 +59,10 @@ pub enum AchievementType {
     Apl1000Point,
     // Site Features
     // ReadDocumentation,
-    // StarTheRepo,
     // SubmitAPullRequest,
     // Miscellaneous
     // SolveImpossible,
+    StarTheRepo,
 }
 
 impl AchievementType {
@@ -82,11 +84,15 @@ impl AchievementType {
             AchievementType::Vyxal1000Point => "[Insert Joke Here]",
             AchievementType::C1000Point => "Deep Blue Sea",
             AchievementType::Apl1000Point => "Original Sin",
+            AchievementType::StarTheRepo => "Starstruck",
         }
     }
 
     pub fn get_achievement_category(self) -> AchievementCategory {
-        AchievementCategory::PointRelated
+        match self {
+            AchievementType::StarTheRepo => AchievementCategory::Miscellaneous,
+            _ => AchievementCategory::PointRelated,
+        }
     }
 
     pub fn get_achievement_description(self) -> &'static str {
@@ -107,6 +113,7 @@ impl AchievementType {
             AchievementType::Vyxal1000Point => "Earn 1000 points in Vyxal 3",
             AchievementType::C1000Point => "Earn 1000 points in C",
             AchievementType::Apl1000Point => "Earn 1000 points in APL",
+            AchievementType::StarTheRepo => "Star the Byte Heist Github Repo",
         }
     }
 
@@ -164,7 +171,12 @@ impl AchievementType {
 }
 
 pub async fn award_achievements(pool: &PgPool) -> Result<(), sqlx::Error> {
-    award_point_based_cheevos(pool).await
+    award_point_based_cheevos(pool).await?;
+    award_misc_achievements(pool)
+        .await
+        .inspect_err(|e| eprintln!("Failed to award github achievement: {e:?}"))
+        .unwrap();
+    Ok(())
 }
 
 pub async fn get_unread_achievements_for_user(

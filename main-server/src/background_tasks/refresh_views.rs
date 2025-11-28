@@ -50,6 +50,7 @@ pub async fn refresh_views_task(pool: PgPool) {
                 eprintln!("Error processing reactions: {e:?}");
             }
         }
+        tokio::time::sleep(Duration::from_secs(30)).await;
 
         match award_achievements(&pool).await {
             Ok(_) => (),
@@ -57,7 +58,5 @@ pub async fn refresh_views_task(pool: PgPool) {
                 eprintln!("Error awarding achievements: {e:?}")
             }
         };
-
-        tokio::time::sleep(Duration::from_secs(30)).await;
     }
 }

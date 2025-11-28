@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO achievements(\n                achievement, awarded_at, achieved, user_id\n            ) SELECT\n                $1,\n                $2,\n                true,\n                account\n            FROM account_oauth_codes\n                WHERE account_oauth_codes.id_on_provider=$3\n            ON CONFLICT DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5ef8bf6a44ac3cf3ddc9aae57d0fe4bf7440571d771ab815faf3e3dac0414cad"
+}
