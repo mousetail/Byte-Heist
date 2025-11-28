@@ -132,7 +132,7 @@ fn format_date(value: &Value, data: &HashMap<String, Value>) -> Result<Value, te
     }
     let date: OffsetDateTime = serde_json::from_value(value.clone()).map_err(tera::Error::json)?;
 
-    let offset = (date - OffsetDateTime::now_utc());
+    let offset = date - OffsetDateTime::now_utc();
     let (relative_time_prefix, relative_time_postfix) = if offset.is_positive() {
         ("in ", "")
     } else {

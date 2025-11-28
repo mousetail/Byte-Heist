@@ -1,29 +1,15 @@
 mod points_based;
 
-use std::{
-    collections::HashMap,
-    hash::{DefaultHasher, Hash, Hasher},
-};
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 use points_based::award_point_based_cheevos;
 use serde::Serialize;
 use sqlx::{PgPool, query_scalar};
 use strum::{EnumString, IntoStaticStr, VariantArray};
 
-use crate::models::challenge::ChallengeCategory;
-
 #[derive(Serialize, Hash, PartialEq, Eq)]
 pub enum AchievementCategory {
     PointRelated,
-}
-
-struct AchievementProgressContext {
-    score_per_category: HashMap<ChallengeCategory, i64>,
-    score_per_language: HashMap<&'static str, i64>,
-}
-
-impl AchievementProgressContext {
-    async fn get_for_user(pool: &PgPool, user_id: i32) {}
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString, Debug)]

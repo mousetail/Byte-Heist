@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use axum::{Extension, extract::Path};
 use common::slug::Slug;
-use futures_util::{TryFutureExt, never::Never};
 use sqlx::{PgPool, query_scalar};
 
 use crate::error::Error;
@@ -28,8 +27,8 @@ pub async fn redirect_to_user_page(
         .await
         .map_err(Error::Database)?;
 
-    return Err(Error::Redirect(Cow::Owned(format!(
+    Err(Error::Redirect(Cow::Owned(format!(
         "/user/{user_id}/{}",
         Slug(&username)
-    ))));
+    ))))
 }

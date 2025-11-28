@@ -50,13 +50,11 @@ fn categorize_achievements(achievements: Vec<UserPageAchievementInfo>) -> Vec<Ac
         .collect::<Option<_>>()
         .expect("At least one invalid achievement type in the database");
 
-    println!("{map:?}");
-
     let mut categories = HashMap::new();
     for achievement_type in AchievementType::VARIANTS {
         categories
             .entry(achievement_type.get_achievement_category())
-            .or_insert_with(|| vec![])
+            .or_insert_with(std::vec::Vec::new)
             .push(
                 map.remove(achievement_type)
                     .unwrap_or_else(|| UserPageAchievementInfo {

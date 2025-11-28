@@ -170,5 +170,3 @@ pub(super) async fn award_point_based_cheevos(pool: &PgPool) -> Result<(), sqlx:
 
     Ok(())
 }
-
-pub(super) fn get_point_based_achievement_progress() {}
