@@ -5,19 +5,16 @@
             {% include "icons/achievement-icon.svg" %}
             Recent Achievements
         </h3>
-        <div class="space-y-4">
+        <div>
             {% for achievement in object.recent_achievements %}
-                {% if loop.index < 6 %}
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-byte-brown-500">
-                        <div class="p-2 rounded-full bg-amber-900">{{ achievement.achievement | get_achievement_icon | safe }}</div>
-                        <div class="flex-1">
-                            <div class="font-medium text-white">{{ achievement.achievement | get_achievement_name }}</div>
-                            <div class="text-sm text-byte-brown-200">{{ achievement.achievement | get_achievement_description }}</div>
-                        </div>
-                        <div class="text-xs text-byte-brown-200">{{ achievement.awarded_at | format_date }}</div>
-                    </div>
-                {% endif %}
+                {{ achievement_widget::achievement_widget(achievement=achievement) }}
+            {% else %}
+                No achievements earned yet
             {% endfor %}
+            <div class="text-right">
+                <a href="{{ object.account_info.username| slugify }}/achievements"
+                   class="underline text-right">View all Achievements</a>
+            </div>
         </div>
     </div>
 </div>

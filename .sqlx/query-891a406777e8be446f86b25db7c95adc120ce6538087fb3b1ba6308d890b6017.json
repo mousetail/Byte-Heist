@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT achievement,\n            awarded_at,\n            progress,\n            total\n            FROM achievements\n            WHERE user_id=$1\n            ORDER BY achieved DESC, progress DESC, awarded_at DESC\n            LIMIT 3\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "achievement",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "awarded_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "progress",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "total",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "891a406777e8be446f86b25db7c95adc120ce6538087fb3b1ba6308d890b6017"
+}

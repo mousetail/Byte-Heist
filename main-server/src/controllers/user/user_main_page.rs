@@ -99,26 +99,59 @@ async fn get_account_category_stats(
 #[derive(Serialize)]
 struct UserAchievement {
     achievement: String,
-    awarded_at: OffsetDateTime,
+    awarded_at: Option<OffsetDateTime>,
+    progress: Option<i64>,
+    total: Option<i64>,
 }
 
 async fn get_user_achievements(
     pool: &PgPool,
     user_id: i32,
+    is_self: bool,
 ) -> Result<Vec<UserAchievement>, sqlx::Error> {
-    query_as!(
+    let achieved_achievements = query_as!(
         UserAchievement,
         r#"
             SELECT achievement,
-            awarded_at as "awarded_at!"
+            awarded_at,
+            progress,
+            total
             FROM achievements
-            WHERE user_id=$1 AND awarded_at IS NOT NULL
-            ORDER BY awarded_at DESC
+            WHERE user_id=$1
+            ORDER BY achieved DESC, progress DESC, awarded_at DESC
+            LIMIT 3
         "#,
         user_id
     )
     .fetch_all(pool)
-    .await
+    .await?;
+
+    if is_self && achieved_achievements.iter().all(|i| i.awarded_at.is_some()) {
+        let most_progress_achievement = query_as!(
+            UserAchievement,
+            r#"
+                SELECT achievement,
+                awarded_at,
+                progress,
+                total
+                From achievements
+                WHERE user_id=$1 and not achieved
+                ORDER BY progress DESC, total ASC
+                LIMIT 1
+            "#,
+            user_id
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        return Ok(most_progress_achievement
+            .into_iter()
+            .chain(achieved_achievements)
+            .take(3)
+            .collect());
+    }
+
+    Ok(achieved_achievements)
 }
 
 pub async fn get_user(
@@ -163,7 +196,7 @@ pub async fn get_user(
     }
 
     let invalidated_solutions = match account {
-        Some(acc) if acc.id == id => Some(
+        Some(ref acc) if acc.id == id => Some(
             InvalidatedSolution::get_invalidated_solutions_for_user(id, &pool)
                 .await
                 .map_err(Error::Database)?,
@@ -188,7 +221,7 @@ pub async fn get_user(
         account_info,
         id,
         invalidated_solutions,
-        recent_achievements: get_user_achievements(&pool, id)
+        recent_achievements: get_user_achievements(&pool, id, account.is_some_and(|i| i.id == id))
             .await
             .map_err(Error::Database)?,
         per_language_stats: get_account_language_stats(&pool, id)
