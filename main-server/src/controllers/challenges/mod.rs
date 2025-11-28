@@ -234,6 +234,13 @@ pub async fn new_challenge(
                         example_code=$4, 
                         status=$5::challenge_status, 
                         category=$6::challenge_category,
+                        go_live_date=COALESCE(
+                            challenges.go_live_date,
+                            CASE
+                                WHEN $5::challenge_status='public' THEN now()
+                                ELSE NULL
+                            END
+                        ),
                         post_mortem_date=COALESCE(
                             challenges.post_mortem_date,
                             CASE

@@ -21,6 +21,7 @@ struct UserPageAchievementInfo {
     progress: Option<i64>,
     total: Option<i64>,
     awarded_at: Option<OffsetDateTime>,
+    total_awarded: i64,
 }
 
 async fn get_all_achievements_for_user(
@@ -30,10 +31,23 @@ async fn get_all_achievements_for_user(
     query_as!(
         UserPageAchievementInfo,
         r#"
-            SELECT achievement, progress, total, awarded_at
-            FROM achievements
-            WHERE user_id=$1
-        
+            WITH known_achievement_types as (
+                SELECT achievements.achievement
+                FROM achievements
+                WHERE user_id=$1
+                UNION DISTINCT SELECT achievement_stats.achievement
+                FROM achievement_stats)
+            SELECT DISTINCT ON ("achievement!")
+                known_achievement_types.achievement as "achievement!",
+                achievements.progress,
+                achievements.total,
+                achievements.awarded_at,
+                COALESCE(achievement_stats.total_awarded, 0) as "total_awarded!"
+            FROM known_achievement_types
+            LEFT JOIN achievements
+            ON achievements.achievement = known_achievement_types.achievement AND achievements.user_id=$1
+            LEFT JOIN achievement_stats
+            ON achievement_stats.achievement = known_achievement_types.achievement
         "#,
         user_id
     )
@@ -66,6 +80,7 @@ fn categorize_achievements(achievements: Vec<UserPageAchievementInfo>) -> Vec<Ac
                         progress: None,
                         total: None,
                         awarded_at: None,
+                        total_awarded: 0,
                     }),
             );
     }

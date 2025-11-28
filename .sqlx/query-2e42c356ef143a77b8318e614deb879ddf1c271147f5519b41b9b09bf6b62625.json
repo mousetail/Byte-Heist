@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH known_achievement_types as (\n                SELECT achievements.achievement\n                FROM achievements\n                WHERE user_id=$1\n                UNION DISTINCT SELECT achievement_stats.achievement\n                FROM achievement_stats)\n            SELECT DISTINCT ON (\"achievement!\")\n                known_achievement_types.achievement as \"achievement!\",\n                achievements.progress,\n                achievements.total,\n                achievements.awarded_at,\n                COALESCE(achievement_stats.total_awarded, 0) as \"total_awarded!\"\n            FROM known_achievement_types\n            LEFT JOIN achievements\n            ON achievements.achievement = known_achievement_types.achievement AND achievements.user_id=$1\n            LEFT JOIN achievement_stats\n            ON achievement_stats.achievement = known_achievement_types.achievement\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "achievement!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "progress",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "total",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "awarded_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "total_awarded!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "2e42c356ef143a77b8318e614deb879ddf1c271147f5519b41b9b09bf6b62625"
+}

@@ -41,6 +41,17 @@ pub async fn refresh_views_task(pool: PgPool) {
             }
         }
 
+        // This one is not concurrent since the number of rows should be small
+        let statement = query!("REFRESH MATERIALIZED VIEW achievement_stats")
+            .execute(&pool)
+            .await;
+        match statement {
+            Ok(_) => (),
+            Err(e) => {
+                eprintln!("Error refreshing scores: {e:?}");
+            }
+        }
+
         tokio::time::sleep(Duration::from_secs(15)).await;
 
         let handle_reactions_result = handle_reactions(&pool).await;
