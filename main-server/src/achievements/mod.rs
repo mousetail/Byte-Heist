@@ -1,19 +1,22 @@
 mod misc;
 mod points_based;
+mod solve_related;
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 use misc::award_misc_achievements;
 use points_based::award_point_based_cheevos;
 use serde::Serialize;
+use solve_related::award_solve_related;
 use sqlx::{PgPool, query_scalar};
 use strum::{EnumString, IntoStaticStr, VariantArray};
 
 #[derive(Serialize, Hash, PartialEq, Eq, Ord, PartialOrd)]
 pub enum AchievementCategory {
     PointRelated,
-    Miscellaneous,
     LanguageRelated,
+    SolveRelated,
+    Miscellaneous,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString, Debug)]
@@ -24,8 +27,8 @@ pub enum AchievementType {
     // OnlySolution,
     // FiveLanguages,
     // ImproveFirstPlace,
-    // FirstDaySolve,
-    // LastDaySolve,
+    FirstDaySolve,
+    LastDaySolve,
     // Change Suggestion Related
     // ChangeSuggestionInvalidates3,
     // ChangeSuggestionInvalidate12,
@@ -86,6 +89,8 @@ impl AchievementType {
             AchievementType::C1000Point => "Deep Blue Sea",
             AchievementType::Apl1000Point => "Original Sin",
             AchievementType::StarTheRepo => "Starstruck",
+            AchievementType::FirstDaySolve => "Early Bird",
+            AchievementType::LastDaySolve => "Late Bird",
         }
     }
 
@@ -98,6 +103,9 @@ impl AchievementType {
             | AchievementType::C1000Point
             | AchievementType::Rust1000Point
             | AchievementType::Vyxal1000Point => AchievementCategory::LanguageRelated,
+            AchievementType::FirstDaySolve | AchievementType::LastDaySolve => {
+                AchievementCategory::SolveRelated
+            }
             _ => AchievementCategory::PointRelated,
         }
     }
@@ -121,6 +129,10 @@ impl AchievementType {
             AchievementType::C1000Point => "Earn 1000 points in C",
             AchievementType::Apl1000Point => "Earn 1000 points in APL",
             AchievementType::StarTheRepo => "Star the Byte Heist Github Repo",
+            AchievementType::FirstDaySolve => {
+                "Solve a challenge within 24 hours of when it goes live"
+            }
+            AchievementType::LastDaySolve => "Solve a challenge less than 24 hours before it ends",
         }
     }
 
@@ -183,6 +195,7 @@ pub async fn award_achievements(pool: &PgPool) -> Result<(), sqlx::Error> {
         .await
         .inspect_err(|e| eprintln!("Failed to award github achievement: {e:?}"))
         .unwrap();
+    award_solve_related(pool).await?;
     Ok(())
 }
 

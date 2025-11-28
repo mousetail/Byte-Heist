@@ -1,6 +1,6 @@
 {% macro achievement_widget(achievement) %}
     <div class="grid grid-cols-[3rem_1fr] gap-3 p-3 rounded-lg">
-        <div class="row-span-2">
+        <div class="row-span-3">
             <div class="p-2 rounded-full w-[fit-content]
                         {% if achievement.awarded_at %}bg-byte-brown-500{% endif %}">{{ achievement.achievement | get_achievement_icon | safe }}</div>
         </div>
@@ -25,7 +25,7 @@
             <div>
                 {% if achievement.awarded_at %}Earned {{ achievement.awarded_at | format_date }}{% endif %}
             </div>
-            {% if achievement.total_awarded %}<div>{{ achievement.total_awarded }} Awarded</div>{% endif %}
+            {% if achievement.total_awarded > -1 %}<div>{{ achievement.total_awarded }} Awarded</div>{% endif %}
         </div>
     </div>
 {% endmacro achievement_widget %}
