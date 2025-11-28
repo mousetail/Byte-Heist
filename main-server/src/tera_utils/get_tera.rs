@@ -83,7 +83,7 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
                     f: |e| {
                         e.chars()
                             .flat_map(|k| {
-                                k.is_ascii_uppercase().then(|| ' ').into_iter().chain([k])
+                                k.is_ascii_uppercase().then_some(' ').into_iter().chain([k])
                             })
                             .collect::<String>()
                     },
