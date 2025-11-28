@@ -2,7 +2,7 @@
 {% extends "base/base.html.jinja" %}
 {% block content %}
     {% for group in object %}
-        <h2 class="text-lg font-semibold mb-4">{{ group.group }}</h2>
+        <h2 class="text-lg font-semibold mb-4">{{ group.group | un_camelcase }}</h2>
         <div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(20rem,1fr))]">
             {% for achievement in group.elements %}
                 {{ achievement_widget::achievement_widget(achievement=achievement) }}

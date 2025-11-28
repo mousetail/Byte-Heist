@@ -1,4 +1,8 @@
-use std::{borrow::Cow, collections::HashMap, str::FromStr};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, HashMap},
+    str::FromStr,
+};
 
 use axum::{Extension, extract::Path};
 use serde::Serialize;
@@ -50,7 +54,7 @@ fn categorize_achievements(achievements: Vec<UserPageAchievementInfo>) -> Vec<Ac
         .collect::<Option<_>>()
         .expect("At least one invalid achievement type in the database");
 
-    let mut categories = HashMap::new();
+    let mut categories = BTreeMap::new();
     for achievement_type in AchievementType::VARIANTS {
         categories
             .entry(achievement_type.get_achievement_category())

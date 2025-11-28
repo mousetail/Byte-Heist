@@ -9,10 +9,11 @@ use serde::Serialize;
 use sqlx::{PgPool, query_scalar};
 use strum::{EnumString, IntoStaticStr, VariantArray};
 
-#[derive(Serialize, Hash, PartialEq, Eq)]
+#[derive(Serialize, Hash, PartialEq, Eq, Ord, PartialOrd)]
 pub enum AchievementCategory {
     PointRelated,
     Miscellaneous,
+    LanguageRelated,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString, Debug)]
@@ -91,6 +92,12 @@ impl AchievementType {
     pub fn get_achievement_category(self) -> AchievementCategory {
         match self {
             AchievementType::StarTheRepo => AchievementCategory::Miscellaneous,
+            AchievementType::Python1000Point
+            | AchievementType::JavaScript1000Point
+            | AchievementType::Apl1000Point
+            | AchievementType::C1000Point
+            | AchievementType::Rust1000Point
+            | AchievementType::Vyxal1000Point => AchievementCategory::LanguageRelated,
             _ => AchievementCategory::PointRelated,
         }
     }
