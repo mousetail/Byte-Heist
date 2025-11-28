@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO achievements(user_id, achievement, related_language, related_challenge, awarded_at, achieved)\n        SELECT\n            account as user_id,\n            $1,\n            language as related_language,\n            challenge as related_challenge,\n            user_activities.date,\n            true\n        FROM user_activities\n        LEFT JOIN\n            challenges ON user_activities.challenge=challenges.id\n        WHERE user_activities.date > now() + interval '-8 days'\n            AND user_activities.date >= challenges.go_live_date::date\n            AND user_activities.date <= challenges.go_live_date::date + interval '+1 day'\n        ON CONFLICT DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cc3854333e94508a5f1d519d42e0074be92fb52eb54ac3ecf5cbe1464d6c3592"
+}

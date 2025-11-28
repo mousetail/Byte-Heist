@@ -7,13 +7,14 @@ pub(super) async fn award_solve_related(pool: &PgPool) -> Result<(), sqlx::Error
     let last_day_solve_name: &str = AchievementType::LastDaySolve.into();
 
     query!(
-        "INSERT INTO achievements(user_id, achievement, related_language, related_challenge, awarded_at)
+        "INSERT INTO achievements(user_id, achievement, related_language, related_challenge, awarded_at, achieved)
         SELECT
             account as user_id,
             $1,
             language as related_language,
             challenge as related_challenge,
-            user_activities.date
+            user_activities.date,
+            true
         FROM user_activities
         LEFT JOIN
             challenges ON user_activities.challenge=challenges.id
@@ -28,13 +29,14 @@ pub(super) async fn award_solve_related(pool: &PgPool) -> Result<(), sqlx::Error
     .await?;
 
     query!(
-        "INSERT INTO achievements(user_id, achievement, related_language, related_challenge, awarded_at)
+        "INSERT INTO achievements(user_id, achievement, related_language, related_challenge, awarded_at, achieved)
         SELECT
             account as user_id,
             $1,
             language as related_language,
             challenge as related_challenge,
-            user_activities.date
+            user_activities.date,
+            true
         FROM user_activities
         LEFT JOIN
             challenges ON user_activities.challenge=challenges.id
