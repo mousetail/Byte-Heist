@@ -25,7 +25,7 @@
             <div>
                 {% if achievement.awarded_at %}Earned {{ achievement.awarded_at | format_date }}{% endif %}
             </div>
-            {% if achievement.total_awarded > -1 %}<div>{{ achievement.total_awarded }} Awarded</div>{% endif %}
+            {% if achievement.total_awarded is defined %}<div>{{ achievement.total_awarded }} Awarded</div>{% endif %}
         </div>
     </div>
 {% endmacro achievement_widget %}
