@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO achievements(user_id, achievement, related_challenge, related_language, awarded_at, achieved)\n        VALUES ($1, $2, $3, $4, now(), true)\n        ON CONFLICT DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Int4",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "89b48bfde95bea21d38ff82fe527367614939bf68fe1828a85e1bedda2d35041"
+}
