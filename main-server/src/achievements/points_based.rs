@@ -162,6 +162,7 @@ pub(super) async fn award_point_based_cheevos(pool: &PgPool) -> Result<(), sqlx:
 
     point_based_score_for_lang(pool, AchievementType::Python1000Point, 1000, "python").await?;
     point_based_score_for_lang(pool, AchievementType::JavaScript1000Point, 1000, "nodejs").await?;
+    point_based_score_for_lang(pool, AchievementType::JavaScript3500Point, 3500, "nodejs").await?;
     point_based_score_for_lang(pool, AchievementType::C1000Point, 1000, "tcc").await?;
     point_based_score_for_lang(pool, AchievementType::Rust1000Point, 1000, "rust").await?;
     point_based_score_for_lang(pool, AchievementType::Vyxal1000Point, 1000, "vyxal3").await?;

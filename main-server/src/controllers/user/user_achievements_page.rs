@@ -119,7 +119,7 @@ pub async fn get_user_achievements(
 
     if format!("{}", Slug(&account_info.username)) != slug {
         return Err(Error::Redirect(Cow::Owned(format!(
-            "/user/{user_id}/{}",
+            "/user/{user_id}/{}/achievements",
             Slug(&account_info.username)
         ))));
     }
