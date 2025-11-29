@@ -8,7 +8,7 @@ use misc::award_misc_achievements;
 use points_based::award_point_based_cheevos;
 use serde::Serialize;
 use solve_related::award_solve_related;
-use sqlx::{PgPool, query_scalar};
+use sqlx::{PgPool, query, query_scalar};
 use strum::{EnumString, IntoStaticStr, VariantArray};
 
 #[derive(Serialize, Hash, PartialEq, Eq, Ord, PartialOrd)]
@@ -23,7 +23,7 @@ pub enum AchievementCategory {
 pub enum AchievementType {
     // Solve Related
     // OnePoint,
-    // FirstPlace,
+    FirstPlace,
     // OnlySolution,
     // FiveLanguages,
     // ImproveFirstPlace,
@@ -93,6 +93,7 @@ impl AchievementType {
             AchievementType::FirstDaySolve => "Early Bird",
             AchievementType::LastDaySolve => "Late Bird",
             AchievementType::Contribute => "Hero",
+            AchievementType::FirstPlace => "A winner is you",
         }
     }
 
@@ -107,9 +108,9 @@ impl AchievementType {
             | AchievementType::C1000Point
             | AchievementType::Rust1000Point
             | AchievementType::Vyxal1000Point => AchievementCategory::LanguageRelated,
-            AchievementType::FirstDaySolve | AchievementType::LastDaySolve => {
-                AchievementCategory::SolveRelated
-            }
+            AchievementType::FirstDaySolve
+            | AchievementType::LastDaySolve
+            | AchievementType::FirstPlace => AchievementCategory::SolveRelated,
             _ => AchievementCategory::PointRelated,
         }
     }
@@ -156,6 +157,9 @@ impl AchievementType {
             }
             AchievementType::LastDaySolve => "Solve a challenge less than 24 hours before it ends",
             AchievementType::Contribute => "Contribute to Byte Heist",
+            AchievementType::FirstPlace => {
+                "Get first place on a challenge, even if just for a moment"
+            }
         }
     }
 
@@ -248,4 +252,26 @@ pub async fn get_unread_achievements_for_user(
     )
     .fetch_all(pool)
     .await
+}
+
+pub async fn award_achievement(
+    pool: &PgPool,
+    user: i32,
+    achievement_type: AchievementType,
+    associated_challenge: Option<i32>,
+    associated_language: Option<&str>,
+) -> Result<(), sqlx::Error> {
+    let achievement_name: &str = achievement_type.into();
+    query!(
+        r#"INSERT INTO achievements(user_id, achievement, related_challenge, related_language, awarded_at, achieved)
+        VALUES ($1, $2, $3, $4, now(), true)
+        ON CONFLICT DO NOTHING
+        "#,
+        user,
+        achievement_name,
+        associated_challenge,
+        associated_language
+    ).execute(pool).await?;
+
+    Ok(())
 }

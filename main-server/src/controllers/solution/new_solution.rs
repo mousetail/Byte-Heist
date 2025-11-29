@@ -307,7 +307,8 @@ async fn new_solution_inner(
             }
         };
 
-    bot.send(crate::discord::DiscordEvent::NewBestScore {
+    // This also awards achievements
+    bot.send(crate::discord::DiscordEvent::PointsImproved {
         challenge_id,
         solution_id,
     })

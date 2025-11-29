@@ -10,6 +10,7 @@ use serde::Serialize;
 use sqlx::{PgPool, query_as};
 
 use crate::{
+    achievements::award_achievement,
     models::{
         GetById,
         account::Account,
@@ -23,7 +24,7 @@ use crate::{
 pub enum DiscordEvent {
     NewGolfer { user_id: i32 },
     NewChallenge { challenge_id: i32 },
-    NewBestScore { challenge_id: i32, solution_id: i32 },
+    PointsImproved { challenge_id: i32, solution_id: i32 },
     EndedChallenge { challenge_id: i32 },
     AlmostEndedChallenge { challenge_id: i32 },
 }
@@ -67,7 +68,7 @@ async fn listen_for_events(
                     .await;
                 }
             }
-            DiscordEvent::NewBestScore {
+            DiscordEvent::PointsImproved {
                 challenge_id,
                 solution_id,
             } => {
@@ -327,6 +328,18 @@ async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, 
             }
         };
     if top_solution.is_none_or(|k| k.points == solution.points && k.author_id == solution.author) {
+        if let Err(e) = award_achievement(
+            pool,
+            solution.author,
+            crate::achievements::AchievementType::FirstPlace,
+            Some(challenge_id),
+            Some(&solution.language),
+        )
+        .await
+        {
+            eprintln!("Failed to award new best score achievement: {e}")
+        }
+
         bot.on_score_improved(ScoreImproved {
             challenge_id,
             author: solution.author,
