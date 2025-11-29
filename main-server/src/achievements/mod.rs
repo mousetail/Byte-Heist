@@ -23,8 +23,9 @@ pub enum AchievementCategory {
 pub enum AchievementType {
     // Solve Related
     // OnePoint,
+    UncontestedFirstPlace,
     FirstPlace,
-    // OnlySolution,
+    OnlySolution,
     // FiveLanguages,
     // ImproveFirstPlace,
     FirstDaySolve,
@@ -94,6 +95,8 @@ impl AchievementType {
             AchievementType::LastDaySolve => "Late Bird",
             AchievementType::Contribute => "Hero",
             AchievementType::FirstPlace => "A winner is you",
+            AchievementType::UncontestedFirstPlace => "The winner you are",
+            AchievementType::OnlySolution => "A player be thee",
         }
     }
 
@@ -110,7 +113,9 @@ impl AchievementType {
             | AchievementType::Vyxal1000Point => AchievementCategory::LanguageRelated,
             AchievementType::FirstDaySolve
             | AchievementType::LastDaySolve
-            | AchievementType::FirstPlace => AchievementCategory::SolveRelated,
+            | AchievementType::FirstPlace
+            | AchievementType::OnlySolution
+            | AchievementType::UncontestedFirstPlace => AchievementCategory::SolveRelated,
             _ => AchievementCategory::PointRelated,
         }
     }
@@ -135,6 +140,8 @@ impl AchievementType {
 
     pub fn get_achievement_description(self) -> &'static str {
         match self {
+            AchievementType::OnlySolution => "Be the first to solve a challenge in a language",
+            AchievementType::UncontestedFirstPlace => "Beat the best score",
             AchievementType::CodeGolf1Point => "Earn your first point in Code Golf",
             AchievementType::CodeGolf250Point => "Earn 250 points in Code Golf",
             AchievementType::CodeGolf500Point => "Earn 500 points in Code Golf",

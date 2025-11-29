@@ -10,7 +10,7 @@ use serde::Serialize;
 use sqlx::{PgPool, query_as};
 
 use crate::{
-    achievements::award_achievement,
+    achievements::{AchievementType, award_achievement},
     models::{
         GetById,
         account::Account,
@@ -282,6 +282,54 @@ async fn post_new_golfer(pool: &PgPool, user_id: i32) {
     };
 }
 
+async fn award_achievements(
+    pool: &PgPool,
+    challenge_id: i32,
+    top_solution: &Option<LeaderboardEntry>,
+    solution: &SolutionWithLanguage,
+) -> Result<(), sqlx::Error> {
+    if top_solution.is_none() {
+        award_achievement(
+            pool,
+            solution.author,
+            AchievementType::OnlySolution,
+            Some(challenge_id),
+            Some(&solution.language),
+        )
+        .await?;
+    }
+
+    if top_solution
+        .as_ref()
+        .is_none_or(|e| e.points <= solution.points)
+    {
+        award_achievement(
+            pool,
+            solution.author,
+            crate::achievements::AchievementType::FirstPlace,
+            Some(challenge_id),
+            Some(&solution.language),
+        )
+        .await?;
+    }
+
+    if top_solution
+        .as_ref()
+        .is_none_or(|e| e.author_id == solution.author)
+    {
+        award_achievement(
+            pool,
+            solution.author,
+            crate::achievements::AchievementType::UncontestedFirstPlace,
+            Some(challenge_id),
+            Some(&solution.language),
+        )
+        .await?;
+    }
+
+    Ok(())
+}
+
 async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, bot: &Bot) {
     let challenge = match ChallengeWithAuthorInfo::get_by_id(pool, challenge_id).await {
         Ok(Some(c)) => c,
@@ -327,19 +375,12 @@ async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, 
                 return;
             }
         };
-    if top_solution.is_none_or(|k| k.points == solution.points && k.author_id == solution.author) {
-        if let Err(e) = award_achievement(
-            pool,
-            solution.author,
-            crate::achievements::AchievementType::FirstPlace,
-            Some(challenge_id),
-            Some(&solution.language),
-        )
-        .await
-        {
-            eprintln!("Failed to award new best score achievement: {e}")
-        }
 
+    if let Err(e) = award_achievements(pool, challenge_id, &top_solution, &solution).await {
+        eprintln!("Failed to award achievements: {e:?}");
+    }
+
+    if top_solution.is_none_or(|k| k.points == solution.points && k.author_id == solution.author) {
         bot.on_score_improved(ScoreImproved {
             challenge_id,
             author: solution.author,
