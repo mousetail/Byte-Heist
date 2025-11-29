@@ -1,6 +1,5 @@
+use common::AchievementType;
 use sqlx::{PgPool, query};
-
-use crate::achievements::AchievementType;
 
 pub(super) async fn award_solve_related(pool: &PgPool) -> Result<(), sqlx::Error> {
     let first_day_solve_name: &str = AchievementType::FirstDaySolve.into();

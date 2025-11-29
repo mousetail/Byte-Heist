@@ -1,8 +1,9 @@
 use axum::extract::Path;
+use common::AchievementType;
 use serde::Serialize;
 use strum::VariantArray;
 
-use crate::{achievements::AchievementType, error::Error};
+use crate::error::Error;
 
 #[derive(Serialize)]
 pub struct Achievement {

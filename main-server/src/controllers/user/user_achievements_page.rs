@@ -5,16 +5,13 @@ use std::{
 };
 
 use axum::{Extension, extract::Path};
-use common::slug::Slug;
+use common::{AchievementCategory, AchievementType, slug::Slug};
 use serde::Serialize;
 use sqlx::{PgPool, query_as};
 use strum::VariantArray;
 use time::OffsetDateTime;
 
-use crate::{
-    achievements::{AchievementCategory, AchievementType},
-    error::Error,
-};
+use crate::error::Error;
 
 use super::user_main_page::AccountProfileInfo;
 

@@ -1,10 +1,9 @@
 use std::sync::atomic::AtomicUsize;
 
+use common::AchievementType;
 use serde::Deserialize;
 use sqlx::{PgPool, query};
 use time::OffsetDateTime;
-
-use crate::achievements::AchievementType;
 
 #[derive(Deserialize, Debug)]
 struct GitHubStarUser {

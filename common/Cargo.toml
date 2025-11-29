@@ -7,6 +7,7 @@ edition = "2024"
 phf = { version = "0.11.2", features = ["macros", "serde"] }
 serde = { version = "1.0.210", features = ["derive"] }
 slug = "0.1.6"
+strum = { version = "0.27", features = ["derive"] }
 
 [lints.clippy]
 print_stdout = "deny"

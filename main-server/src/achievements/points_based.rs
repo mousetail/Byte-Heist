@@ -1,8 +1,7 @@
+use common::AchievementType;
 use sqlx::{PgPool, query};
 
 use crate::models::challenge::ChallengeCategory;
-
-use super::AchievementType;
 
 async fn point_based_score(
     pool: &PgPool,

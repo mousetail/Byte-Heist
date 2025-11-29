@@ -1,9 +1,11 @@
+pub mod achievements;
 pub mod langs;
 pub mod slug;
 pub mod urls;
 
 use std::time::Duration;
 
+pub use achievements::{AchievementCategory, AchievementType};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]

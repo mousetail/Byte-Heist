@@ -1,6 +1,6 @@
 use std::{env::VarError, time::Duration};
 
-use common::urls::get_url_for_challenge;
+use common::{AchievementType, urls::get_url_for_challenge};
 use discord_bot::{
     Bot, ScoreImproved,
     new_challenge::{BestScore, ChallengePostAllSolutionsEvent, PostAllNewScoresReason},
@@ -10,7 +10,7 @@ use serde::Serialize;
 use sqlx::{PgPool, query_as};
 
 use crate::{
-    achievements::{AchievementType, award_achievement},
+    achievements::award_achievement,
     models::{
         GetById,
         account::Account,
@@ -306,7 +306,7 @@ async fn award_achievements(
         award_achievement(
             pool,
             solution.author,
-            crate::achievements::AchievementType::FirstPlace,
+            AchievementType::FirstPlace,
             Some(challenge_id),
             Some(&solution.language),
         )
@@ -320,7 +320,7 @@ async fn award_achievements(
         award_achievement(
             pool,
             solution.author,
-            crate::achievements::AchievementType::UncontestedFirstPlace,
+            AchievementType::UncontestedFirstPlace,
             Some(challenge_id),
             Some(&solution.language),
         )

@@ -1,7 +1,7 @@
 {% macro achievement_widget(achievement) %}
     <div class="grid grid-cols-[3rem_1fr] gap-3 p-3 rounded-lg">
         <div class="row-span-3">
-            <div class="p-2 rounded-full w-[fit-content]
+            <div class="p-1 rounded-full w-[fit-content]
                         {% if achievement.awarded_at %}bg-byte-brown-500{% endif %}">{{ achievement.achievement | get_achievement_icon | safe }}</div>
         </div>
         <div class="flex-1">

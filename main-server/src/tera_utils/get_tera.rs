@@ -2,12 +2,12 @@ use std::str::FromStr;
 use std::{collections::HashMap, sync::OnceLock};
 
 use axum::response::{IntoResponse, Response};
+use common::AchievementType;
 use common::langs::LANGS;
 use sqlx::types::time::OffsetDateTime;
 use tera::{Filter, Tera, Value, to_value};
 use tower_sessions::cookie::time::macros::format_description;
 
-use crate::achievements::AchievementType;
 use crate::tera_utils::markdown::MarkdownFilterWithTableOfContents;
 use crate::tera_utils::syntax_highlighting::SyntaxHighight;
 
