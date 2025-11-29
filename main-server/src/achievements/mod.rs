@@ -114,6 +114,24 @@ impl AchievementType {
         }
     }
 
+    pub fn get_associated_number(self) -> Option<i32> {
+        match self {
+            Self::CodeGolf1Point | Self::RestrictedSource1Point => Some(1),
+            Self::CodeGolf250Point | Self::RestrictedSource250Point => Some(250),
+            Self::CodeGolf500Point | Self::RestrictedSource500Point => Some(500),
+            Self::CodeGolf1000Point
+            | Self::RestrictedSource1000Point
+            | Self::Apl1000Point
+            | Self::Python1000Point
+            | Self::C1000Point
+            | Self::Vyxal1000Point
+            | Self::JavaScript1000Point
+            | Self::Rust1000Point => Some(1000),
+            Self::CodeGolf2000Point | Self::RestrictedSource2000Point => Some(2000),
+            _ => None,
+        }
+    }
+
     pub fn get_achievement_description(self) -> &'static str {
         match self {
             AchievementType::CodeGolf1Point => "Earn your first point in Code Golf",
@@ -158,7 +176,12 @@ impl AchievementType {
             }};
         }
 
-        let color = scramble_data!(5) as usize;
+        let color = match self.get_achievement_category() {
+            AchievementCategory::PointRelated => 0,
+            AchievementCategory::LanguageRelated => 1,
+            AchievementCategory::SolveRelated => 2,
+            AchievementCategory::Miscellaneous => 3,
+        };
         let colors = ["red", "green", "#2222ff", "#aaaa00", "teal"];
         let cx = scramble_data!(16) * 4;
         let cy = scramble_data!(16) * 4;
@@ -170,6 +193,8 @@ impl AchievementType {
         let p1_y = scramble_data!(8) * 4;
         let p2_x = scramble_data!(8) * 4 + 16;
         let p2_y = p0_y + scramble_data!(8) * 4 + 16;
+
+        let rectangle_rotate = scramble_data!(7) * 2;
 
         let rect_x = scramble_data!(18) * 2 + 4;
         let rect_y = scramble_data!(18) * 2 + 4;
@@ -183,13 +208,19 @@ impl AchievementType {
                 <svg viewBox="0 0 64 64" width="32" height="32">
                     <circle cx="{cx}" cy="{cy}" r="{r}" fill="{}"/>
                     <path d="M {p0_x} {p0_y} L {p1_x} {p1_y} L {p2_x} {p2_y} Z" fill="{}"/>
-                    <rect x="{rect_x}" y="{rect_y}" width="{width}" height="{height}" fill="{}"/>
+                    <rect x="{rect_x}" y="{rect_y}" width="{width}" height="{height}" fill="{}" transform="rotate({rectangle_rotate})"/>
                     <rect x="0" y="y" width="64" height="64" fill="none" stroke-width="4" stroke="#ffffff40"/>
+                    {}
                 </svg>
             "##,
             colors[color],
             colors[(color + 1) % colors.len()],
-            colors[(color + 2) % colors.len()]
+            colors[(color + 2) % colors.len()],
+            if let Some(number) = self.get_associated_number() {
+                format!(r##"<text x="0" y="16" font-size="17" fill="white">{number}</text>"##)
+            } else {
+                String::new()
+            }
         )
     }
 }
