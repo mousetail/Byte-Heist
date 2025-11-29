@@ -59,7 +59,7 @@
           <a href="/leaderboard/code-golf"
              class="text-white hover:text-white font-inter font-medium text-xs sm:text-sm transition-all duration-100 hover:underline">Leaderboard</a>
           {% if account %}
-            <a href="/user/{{ account.id }}"
+            <a href="/user/{{ account.id }}/{{ account.username | slugify }}"
                class="flex items-center gap-2 text-white hover:text-white font-kode transition-all duration-100 hover:underline">
               {# <span class="hidden sm:inline">{{ account.username }}</span> #}
               <img src="{{ account.avatar }}&size=34"
@@ -123,6 +123,8 @@
             <p>{{ achievement | get_achievement_description }}</p>
           </section>
           <footer>
+            <a href="/user/{{ account.id }}/{{ account.username | slugify }}/achievements"
+               class="btn p-1 text-s">See all</a>
             <button type="button" class="btn" data-toast-action>Dismiss</button>
           </footer>
         </div>

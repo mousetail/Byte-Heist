@@ -62,6 +62,7 @@ async fn get_all_achievements_for_user(
 pub struct AchievementGroup {
     group: AchievementCategory,
     elements: Vec<UserPageAchievementInfo>,
+    earned: usize,
 }
 
 fn categorize_achievements(achievements: Vec<UserPageAchievementInfo>) -> Vec<AchievementGroup> {
@@ -92,6 +93,7 @@ fn categorize_achievements(achievements: Vec<UserPageAchievementInfo>) -> Vec<Ac
         .into_iter()
         .map(|(group, items)| AchievementGroup {
             group,
+            earned: items.iter().filter(|i| i.awarded_at.is_some()).count(),
             elements: items,
         })
         .collect()

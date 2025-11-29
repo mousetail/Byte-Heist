@@ -67,6 +67,7 @@ pub enum AchievementType {
     // Miscellaneous
     // SolveImpossible,
     StarTheRepo,
+    Contribute,
 }
 
 impl AchievementType {
@@ -91,12 +92,15 @@ impl AchievementType {
             AchievementType::StarTheRepo => "Starstruck",
             AchievementType::FirstDaySolve => "Early Bird",
             AchievementType::LastDaySolve => "Late Bird",
+            AchievementType::Contribute => "Hero",
         }
     }
 
     pub fn get_achievement_category(self) -> AchievementCategory {
         match self {
-            AchievementType::StarTheRepo => AchievementCategory::Miscellaneous,
+            AchievementType::StarTheRepo | AchievementType::Contribute => {
+                AchievementCategory::Miscellaneous
+            }
             AchievementType::Python1000Point
             | AchievementType::JavaScript1000Point
             | AchievementType::Apl1000Point
@@ -115,24 +119,25 @@ impl AchievementType {
             AchievementType::CodeGolf1Point => "Earn your first point in Code Golf",
             AchievementType::CodeGolf250Point => "Earn 250 points in Code Golf",
             AchievementType::CodeGolf500Point => "Earn 500 points in Code Golf",
-            AchievementType::CodeGolf1000Point => "Earn 1000 points in Code Golf",
-            AchievementType::CodeGolf2000Point => "Earn 2000 points in Code Golf",
+            AchievementType::CodeGolf1000Point => "Earn 1,000 points in Code Golf",
+            AchievementType::CodeGolf2000Point => "Earn 2,000 points in Code Golf",
             AchievementType::RestrictedSource1Point => "Earn your first point in restricted source",
             AchievementType::RestrictedSource250Point => "Earn 250 points in restricted source",
             AchievementType::RestrictedSource500Point => "Earn 500 points in restricted source",
-            AchievementType::RestrictedSource1000Point => "Earn 1000 points in restricted source",
-            AchievementType::RestrictedSource2000Point => "Earn 2000 points in restricted source",
-            AchievementType::Python1000Point => "Earn 1000 points in python",
-            AchievementType::JavaScript1000Point => "Earn 1000 points in Node.js",
-            AchievementType::Rust1000Point => "Earn 1000 points in Rust",
-            AchievementType::Vyxal1000Point => "Earn 1000 points in Vyxal 3",
-            AchievementType::C1000Point => "Earn 1000 points in C",
-            AchievementType::Apl1000Point => "Earn 1000 points in APL",
+            AchievementType::RestrictedSource1000Point => "Earn 1,000 points in restricted source",
+            AchievementType::RestrictedSource2000Point => "Earn 2,000 points in restricted source",
+            AchievementType::Python1000Point => "Earn 1,000 points in python",
+            AchievementType::JavaScript1000Point => "Earn 1,000 points in Node.js",
+            AchievementType::Rust1000Point => "Earn 1,000 points in Rust",
+            AchievementType::Vyxal1000Point => "Earn 1,000 points in Vyxal 3",
+            AchievementType::C1000Point => "Earn 1,000 points in C",
+            AchievementType::Apl1000Point => "Earn 1,000 points in APL",
             AchievementType::StarTheRepo => "Star the Byte Heist Github Repo",
             AchievementType::FirstDaySolve => {
                 "Solve a challenge within 24 hours of when it goes live"
             }
             AchievementType::LastDaySolve => "Solve a challenge less than 24 hours before it ends",
+            AchievementType::Contribute => "Contribute to Byte Heist",
         }
     }
 
