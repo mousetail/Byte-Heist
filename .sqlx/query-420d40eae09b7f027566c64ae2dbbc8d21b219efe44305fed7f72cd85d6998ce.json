@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH total_scoring AS (\n                    SELECT\n                        author as id,\n                        CAST(SUM(sols) as BIGINT) as \"sols\",\n                        CAST(SUM(first_places) as BIGINT) as \"first_places\",\n                        CAST(SUM(top_ten_percents) as BIGINT) as \"top_ten_percents\",\n                        CAST(SUM(distinct_challenges) as BIGINT) as \"distinct_challenges\",\n                        ARRAY_AGG(rank ORDER BY rank DESC) as \"ranks\",\n                        ARRAY_AGG(category ORDER BY rank DESC) as \"categories\"\n                    FROM user_scoring_info\n                    WHERE author=$1\n                    GROUP BY author\n                )\n                SELECT\n                    username,\n                    avatar,\n                    created_at as join_date,\n                    total_scoring.sols as \"solutions\",\n                    total_scoring.first_places as \"first_places\",\n                    total_scoring.top_ten_percents as \"top_ten_percents\",\n                    total_scoring.distinct_challenges as \"distinct_challenges\",\n                    total_scoring.ranks as \"ranks\",\n                    total_scoring.categories as \"categories:Vec<ChallengeCategory>\"\n                FROM accounts\n                LEFT JOIN total_scoring\n                ON accounts.id = total_scoring.id\n                WHERE accounts.id=$1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "join_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "solutions",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "first_places",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "top_ten_percents",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "distinct_challenges",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "ranks",
+        "type_info": "Int8Array"
+      },
+      {
+        "ordinal": 8,
+        "name": "categories:Vec<ChallengeCategory>",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_category[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "challenge_category",
+                  "kind": {
+                    "Enum": [
+                      "code-golf",
+                      "restricted-source",
+                      "private"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "420d40eae09b7f027566c64ae2dbbc8d21b219efe44305fed7f72cd85d6998ce"
+}

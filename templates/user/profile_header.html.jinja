@@ -15,17 +15,21 @@
           <p class="text-byte-brown-200">Joined {{ object.account_info.join_date | format_date(include_day=false) }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
-            {% include "icons/Cup-First--Streamline-Solar.svg" %}
-            {% if object.account_info.rank %}
-              Rank #{{ object.account_info.rank }}
-            {% else %}
-              Not ranked yet
-            {% endif %}
-          </span>
+          {% if object.account_info.ranks is undefined %}
+            <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
+              Not Ranked Yet
+            </span>
+          {% else %}
+            {% for rank in object.account_info.ranks %}
+              <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
+                {% include "icons/Cup-First--Streamline-Solar.svg" %}
+                Rank #{{ rank }} in {{ object.account_info.categories[loop.index0] | replace(from='-', to=' ') }}
+              </span>
+            {% endfor %}
+          {% endif %}
           <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
             {% include "icons/clock.svg" %}
-            {{ object.solutions | length }} Heists Completed
+            {{ object.account_info.distinct_challenges }} Distinct Heists
           </span>
           {% if object.account_info.first_places %}
             <span class="bg-byte-brown-500 text-white border border-byte-brown-200 text-xs px-2 py-1 rounded flex items-center gap-1">
@@ -47,7 +51,7 @@
           </div>
           <div class="text-center">
             <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.distinct_challenges }}</div>
-            <div class="text-sm text-byte-brown-200">Challenges</div>
+            <div class="text-sm text-byte-brown-200">Heists</div>
           </div>
           <div class="text-center">
             <div class="text-2xl font-bold text-byte-green-700">{{ object.account_info.first_places }}</div>

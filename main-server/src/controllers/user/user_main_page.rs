@@ -21,14 +21,55 @@ pub struct UserPageLeaderboardEntry {
 
 #[derive(Serialize)]
 pub struct AccountProfileInfo {
-    username: String,
+    pub username: String,
     avatar: String,
     join_date: OffsetDateTime,
     solutions: Option<i64>,
     distinct_challenges: Option<i64>,
     first_places: Option<i64>,
     top_ten_percents: Option<i64>,
-    rank: Option<i64>,
+    ranks: Option<Vec<i64>>,
+    categories: Option<Vec<ChallengeCategory>>,
+}
+
+impl AccountProfileInfo {
+    pub async fn fetch(pool: &PgPool, user_id: i32) -> Result<Option<Self>, sqlx::Error> {
+        query_as!(
+            AccountProfileInfo,
+            r#"
+                WITH total_scoring AS (
+                    SELECT
+                        author as id,
+                        CAST(SUM(sols) as BIGINT) as "sols",
+                        CAST(SUM(first_places) as BIGINT) as "first_places",
+                        CAST(SUM(top_ten_percents) as BIGINT) as "top_ten_percents",
+                        CAST(SUM(distinct_challenges) as BIGINT) as "distinct_challenges",
+                        ARRAY_AGG(rank ORDER BY rank DESC) as "ranks",
+                        ARRAY_AGG(category ORDER BY rank DESC) as "categories"
+                    FROM user_scoring_info
+                    WHERE author=$1
+                    GROUP BY author
+                )
+                SELECT
+                    username,
+                    avatar,
+                    created_at as join_date,
+                    total_scoring.sols as "solutions",
+                    total_scoring.first_places as "first_places",
+                    total_scoring.top_ten_percents as "top_ten_percents",
+                    total_scoring.distinct_challenges as "distinct_challenges",
+                    total_scoring.ranks as "ranks",
+                    total_scoring.categories as "categories:Vec<ChallengeCategory>"
+                FROM accounts
+                LEFT JOIN total_scoring
+                ON accounts.id = total_scoring.id
+                WHERE accounts.id=$1
+            "#,
+            user_id
+        )
+        .fetch_optional(pool)
+        .await
+    }
 }
 
 #[derive(Serialize)]
@@ -159,31 +200,9 @@ pub async fn get_user(
     account: Option<Account>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<UserInfo, Error> {
-    let account_info = query_as!(
-        AccountProfileInfo,
-        r#"
-            SELECT
-                username,
-                avatar,
-                user_scoring_info.sols as "solutions",
-                user_scoring_info.first_places as "first_places",
-                user_scoring_info.top_ten_percents as "top_ten_percents",
-                user_scoring_info.distinct_challenges as "distinct_challenges",
-                user_scoring_info.rank as "rank",
-                created_at as join_date
-            FROM accounts
-            LEFT JOIN user_scoring_info
-            ON accounts.id = user_scoring_info.author
-            WHERE id=$1 AND (
-                category IS NULL OR
-                category='code-golf'
-            )
-        "#,
-        id
-    )
-    .fetch_optional(&pool)
-    .await
-    .map_err(Error::Database)?;
+    let account_info = AccountProfileInfo::fetch(&pool, id)
+        .await
+        .map_err(Error::Database)?;
     let Some(account_info) = account_info else {
         return Err(Error::NotFound);
     };

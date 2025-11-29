@@ -5,6 +5,7 @@ use std::{
 };
 
 use axum::{Extension, extract::Path};
+use common::slug::Slug;
 use serde::Serialize;
 use sqlx::{PgPool, query_as};
 use strum::VariantArray;
@@ -14,6 +15,8 @@ use crate::{
     achievements::{AchievementCategory, AchievementType},
     error::Error,
 };
+
+use super::user_main_page::AccountProfileInfo;
 
 #[derive(Serialize, Debug)]
 struct UserPageAchievementInfo {
@@ -94,14 +97,38 @@ fn categorize_achievements(achievements: Vec<UserPageAchievementInfo>) -> Vec<Ac
         .collect()
 }
 
+#[derive(Serialize)]
+pub struct UserAchievementPageData {
+    account_info: AccountProfileInfo,
+    achievement_groups: Vec<AchievementGroup>,
+}
+
 pub async fn get_user_achievements(
-    Path((user_id, _slug)): Path<(i32, String)>,
+    Path((user_id, slug)): Path<(i32, String)>,
     Extension(pool): Extension<PgPool>,
-) -> Result<Vec<AchievementGroup>, Error> {
+) -> Result<UserAchievementPageData, Error> {
     let achievements = get_all_achievements_for_user(&pool, user_id)
         .await
         .map_err(Error::Database)?;
+
+    let account_info = AccountProfileInfo::fetch(&pool, user_id)
+        .await
+        .map_err(Error::Database)?;
+    let Some(account_info) = account_info else {
+        return Err(Error::NotFound);
+    };
+
+    if format!("{}", Slug(&account_info.username)) != slug {
+        return Err(Error::Redirect(Cow::Owned(format!(
+            "/user/{user_id}/{}",
+            Slug(&account_info.username)
+        ))));
+    }
+
     let grouped_achievements = categorize_achievements(achievements);
 
-    Ok(grouped_achievements)
+    Ok(UserAchievementPageData {
+        account_info,
+        achievement_groups: grouped_achievements,
+    })
 }

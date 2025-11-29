@@ -1,7 +1,9 @@
 {% import "base/achievement_widget.html.jinja" as achievement_widget %}
 {% extends "base/base.html.jinja" %}
 {% block content %}
-    {% for group in object %}
+    {% include "user/profile_header.html.jinja" %}
+    <h1 class="text-2xl font-semibold mb-4 mt-4">Achievements</h1>
+    {% for group in object.achievement_groups %}
         <h2 class="text-lg font-semibold mb-4">{{ group.group | un_camelcase }}</h2>
         <div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(20rem,1fr))]">
             {% for achievement in group.elements %}
