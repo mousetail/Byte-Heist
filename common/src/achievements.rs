@@ -133,9 +133,8 @@ impl AchievementType {
             AchievementType::ImproveExample
             | AchievementType::ImproveJudge
             | AchievementType::ImproveDescription
-            | AchievementType::ChangeSuggestionInvalidates1 => {
-                AchievementCategory::ChangeSuggestions
-            }
+            | AchievementType::ChangeSuggestionInvalidates1
+            | AchievementType::Vote => AchievementCategory::ChangeSuggestions,
             _ => AchievementCategory::PointRelated,
         }
     }

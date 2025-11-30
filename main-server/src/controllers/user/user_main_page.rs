@@ -28,6 +28,7 @@ pub struct AccountProfileInfo {
     distinct_challenges: Option<i64>,
     first_places: Option<i64>,
     top_ten_percents: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     ranks: Option<Vec<i64>>,
     categories: Option<Vec<ChallengeCategory>>,
 }
