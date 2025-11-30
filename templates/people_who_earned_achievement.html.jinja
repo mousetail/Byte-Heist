@@ -4,7 +4,7 @@
         <div class="inline-block">{{ object.achievement_name | get_achievement_icon | safe }}</div>
         {{ object.achievement_name | get_achievement_name }}
     </h1>
-    <p class="mb-4">{{ object.achievement_name | get_achievement_description }}</p>
+    <p class="mb-4 text-byte-brown-200">{{ object.achievement_name | get_achievement_description }}</p>
     {% for achievement in object.achievements %}
         <div class="flex justify-between mb-2">
             <img src="{{ achievement.user_avatar }}"

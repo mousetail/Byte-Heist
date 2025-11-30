@@ -9,8 +9,8 @@ use serde::Deserialize;
 use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
-    controllers::challenges::suggest_changes::CommentDiff, error::Error, models::account::Account,
-    tera_utils::auto_input::AutoInput,
+    achievements::award_achievement, controllers::challenges::suggest_changes::CommentDiff,
+    error::Error, models::account::Account, tera_utils::auto_input::AutoInput,
 };
 
 pub(super) struct RawReaction {
@@ -189,6 +189,17 @@ async fn process_diff(
     author_id: i32,
 ) -> Result<(), sqlx::Error> {
     let reactions = RawReaction::get_reactions_for_comment(pool, comment_id).await?;
+
+    for reaction in &reactions {
+        award_achievement(
+            pool,
+            reaction.author_id,
+            common::AchievementType::Vote,
+            Some(challenge_id),
+            None,
+        )
+        .await?;
+    }
 
     let up_reactions = reactions.iter().filter(|i| i.is_upvote).count();
     let down_reactions = reactions.len() - up_reactions;

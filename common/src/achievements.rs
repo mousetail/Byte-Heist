@@ -14,6 +14,7 @@ pub enum AchievementCategory {
     PointRelated,
     LanguageRelated,
     SolveRelated,
+    ChangeSuggestions,
     Miscellaneous,
 }
 
@@ -34,11 +35,13 @@ pub enum AchievementType {
     FirstDaySolve,
     LastDaySolve,
     // Change Suggestion Related
-    // ChangeSuggestionInvalidates3,
+    ImproveDescription,
+    ImproveJudge,
+    ImproveExample,
+    Vote,
+    ChangeSuggestionInvalidates1,
     // ChangeSuggestionInvalidate12,
     // UpvoteSuggestionThatInvalidates3,
-    // ImproveDescription,
-    // ImproveJudge,
     // Creating Challenge Related
     // SubmitCodeGolf,
     // SubmitRestrictedSource,
@@ -102,6 +105,11 @@ impl AchievementType {
             AchievementType::FirstPlace => "A winner is you",
             AchievementType::UncontestedFirstPlace => "The winner you are",
             AchievementType::OnlySolution => "A player be thee",
+            AchievementType::ImproveDescription => "Pedant",
+            AchievementType::ImproveExample => "[Insert Name Here]",
+            AchievementType::ImproveJudge => "[Insert Name Here]",
+            AchievementType::ChangeSuggestionInvalidates1 => "Cheese Enthusiast",
+            AchievementType::Vote => "Thumbs",
         }
     }
 
@@ -122,6 +130,12 @@ impl AchievementType {
             | AchievementType::FirstPlace
             | AchievementType::OnlySolution
             | AchievementType::UncontestedFirstPlace => AchievementCategory::SolveRelated,
+            AchievementType::ImproveExample
+            | AchievementType::ImproveJudge
+            | AchievementType::ImproveDescription
+            | AchievementType::ChangeSuggestionInvalidates1 => {
+                AchievementCategory::ChangeSuggestions
+            }
             _ => AchievementCategory::PointRelated,
         }
     }
@@ -176,6 +190,19 @@ impl AchievementType {
             AchievementType::FirstPlace => {
                 "Get first place on a challenge, even if just for a moment"
             }
+            AchievementType::ImproveDescription => {
+                "Submit a change suggestion that updates a challenge's description and is accepted"
+            }
+            AchievementType::ImproveExample => {
+                "Submit a change suggestion that updates a challenge's example code and is accepted"
+            }
+            AchievementType::ImproveJudge => {
+                "Submit a change suggestion that updates a challenge's judge and is accepted"
+            }
+            AchievementType::ChangeSuggestionInvalidates1 => {
+                "Submit a change suggestion that invalidates a solution"
+            }
+            AchievementType::Vote => "Vote up or down on a change suggestion",
         }
     }
 
@@ -205,6 +232,7 @@ impl AchievementType {
             AchievementCategory::LanguageRelated => 1,
             AchievementCategory::SolveRelated => 2,
             AchievementCategory::Miscellaneous => 3,
+            AchievementCategory::ChangeSuggestions => 4,
         };
 
         if let Some(((icon, color), number)) = self

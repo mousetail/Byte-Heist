@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use common::langs::LANGS;
-use sqlx::{PgPool, query, query_as};
+use sqlx::{PgPool, query, query_as, query_scalar};
 use tokio::time::sleep;
 use tower_sessions::cookie::time::OffsetDateTime;
 
-use crate::test_solution::test_solution;
+use crate::{achievements::award_achievement, test_solution::test_solution};
 
 struct QueueEntry {
     id: i32,
@@ -78,7 +78,7 @@ async fn solution_invalidation_task_inner(pool: &PgPool) -> Result<(), sqlx::Err
         .await?;
 
         eprintln!(
-            "Processing task {}, number of solutins: {}",
+            "Processing task {}, number of solutions: {}",
             task.id,
             solutions.len()
         );
@@ -185,8 +185,41 @@ async fn solution_invalidation_task_inner(pool: &PgPool) -> Result<(), sqlx::Err
         .execute(pool)
         .await?;
 
+        if solutions_failed > 0 {
+            award_achievement_for_solutions_invalidation(pool, task, solutions_failed).await?;
+        }
+
         SOLUTION_INVALIATION_NOTIFICATION.notified().await;
     }
+}
+
+async fn award_achievement_for_solutions_invalidation(
+    pool: &PgPool,
+    task: SolutionRetestRequest,
+    number_failed: i32,
+) -> Result<(), sqlx::Error> {
+    let Some(author_id) = query_scalar!(
+        "SELECT author FROM solution_retest_request WHERE id=$1",
+        task.id
+    )
+    .fetch_optional(pool)
+    .await?
+    else {
+        return Ok(());
+    };
+
+    if number_failed > 0 {
+        award_achievement(
+            pool,
+            author_id,
+            common::AchievementType::ChangeSuggestionInvalidates1,
+            task.challenge,
+            None,
+        )
+        .await?;
+    }
+
+    Ok(())
 }
 
 fn notify_challenge_updated() {

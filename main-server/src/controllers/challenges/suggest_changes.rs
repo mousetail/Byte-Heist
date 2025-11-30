@@ -1,9 +1,11 @@
+use common::AchievementType;
 use macros::CustomResponseMetadata;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
+    achievements::award_achievement,
     background_tasks::solution_invalidation::queue_solution_retesting,
     discord::post_change_suggestion, error::Error, models::account::Account,
     test_case_formatting::OutputDisplay, test_solution::test_solution,
@@ -79,6 +81,19 @@ impl CommentDiff {
         comment_id: i32,
         author_id: i32,
     ) -> Result<(), sqlx::Error> {
+        award_achievement(
+            pool,
+            author_id,
+            match self.field {
+                DiffField::Judge => AchievementType::ImproveJudge,
+                DiffField::ExampleCode => AchievementType::ImproveExample,
+                DiffField::Description => AchievementType::ImproveDescription,
+            },
+            Some(challenge_id),
+            None,
+        )
+        .await?;
+
         match self.field {
             DiffField::Judge => query!(
                 "UPDATE challenges SET judge=$1 WHERE id=$2",
