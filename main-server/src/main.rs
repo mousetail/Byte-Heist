@@ -23,7 +23,7 @@ use tower_sessions::session_store::ExpiredDeletion;
 
 use anyhow::Context;
 use controllers::{
-    achievements::list_achievements,
+    achievements::{get_achievement, list_achievements},
     auth::{github_callback, github_login},
     challenges::{
         all_challenges, compose_challenge, get_homepage, new_challenge, post_comment,
@@ -116,6 +116,10 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/achievements",
             get(route_factory.handler("achievements.html.jinja", list_achievements)),
+        )
+        .route(
+            "/achievements/{achievement_name}",
+            get(route_factory.handler("people_who_earned_achievement.html.jinja", get_achievement)),
         )
         .route(
             "/doc/{*page}",

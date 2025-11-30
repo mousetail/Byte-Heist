@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    user_id as \"user_id?\",\n                    related_challenge as related_challenge_id,\n                    related_language as \"related_language?\",\n                    accounts.username as \"user_username\",\n                    accounts.avatar as \"user_avatar\",\n                    challenges.name as \"related_challenge_name?\",\n                    awarded_at as \"awarded_at!\"\n                FROM achievements\n                INNER JOIN\n                    accounts on accounts.id = user_id\n                LEFT JOIN\n                    challenges on challenges.id = achievements.related_challenge\n                WHERE\n                    awarded_at IS NOT NULL\n                    AND achieved\n                AND achievement=$1\n                ORDER BY awarded_at DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id?",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "related_challenge_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "related_language?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "related_challenge_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "awarded_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "9ff59c6142acbee33e07ef924a7d98e84df7d80a350b06f1b423ac5eb1885568"
+}

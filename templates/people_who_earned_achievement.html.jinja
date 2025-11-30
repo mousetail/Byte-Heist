@@ -1,0 +1,36 @@
+{% extends "base/base.html.jinja" %}
+{% block content %}
+    <h1 class="text-4xl mb-4">
+        <div class="inline-block">{{ object.achievement_name | get_achievement_icon | safe }}</div>
+        {{ object.achievement_name | get_achievement_name }}
+    </h1>
+    <p class="mb-4">{{ object.achievement_name | get_achievement_description }}</p>
+    {% for achievement in object.achievements %}
+        <div class="flex justify-between mb-2">
+            <img src="{{ achievement.user_avatar }}"
+                 alt="{{ achievement.user_username }}"
+                 class="w-12 h-12 mr-4">
+            <div class="flex-grow">
+                <a href="/user/{{ achievement.user_id }}/{{ achievement.user_username | slugify }}/achievements"
+                   class="underline">{{ achievement.user_username }}</a>
+            </div>
+            <div class="text-right">
+                {{ achievement.awarded_at | format_date }}
+                <br>
+                {% if achievement.related_challenge_id %}
+                    for
+                    <a class="underline"
+                       href="/challenge/{{- achievement.related_challenge_id -}}/{{- achievement.related_challenge_name | slugify -}}/solve{%- if achievement.related_language -%}/{{- achievement.related_language -}}{%- endif -%}">
+                        {{- achievement.related_challenge_name -}}
+                    </a>
+                {% endif %}
+                {% if achievement.related_language %}in {{ achievement.related_language }}{% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center">
+            <h2 class="text-xl text-white mt-4 mb-4">Nobody has earned this achievement yet</h2>
+            <div class="text-s">Be The first</div>
+        </div>
+    {% endfor %}
+{% endblock content %}
