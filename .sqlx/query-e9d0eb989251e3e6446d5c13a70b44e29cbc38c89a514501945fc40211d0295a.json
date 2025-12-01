@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO achievements(\n            user_id,\n            achievement,\n            achieved,\n            awarded_at,\n            progress,\n            total\n        ) SELECT\n            author as user_id,\n            $1,\n            total_score > $2,\n            CASE WHEN total_score > $2\n                THEN now()\n                ELSE null\n            END,\n            LEAST($2, total_score),\n            $2\n        FROM user_scoring_info\n        WHERE total_score > $2 AND category = $3::challenge_category\n        ON CONFLICT(user_id, achievement) DO UPDATE SET\n            achieved=achievements.achieved OR excluded.achieved,\n            progress=excluded.progress,\n            awarded_at=COALESCE(achievements.awarded_at, excluded.awarded_at)\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int8",
+        {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e9d0eb989251e3e6446d5c13a70b44e29cbc38c89a514501945fc40211d0295a"
+}

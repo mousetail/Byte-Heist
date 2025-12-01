@@ -32,7 +32,7 @@ async fn point_based_score(
         FROM user_scoring_info
         WHERE total_score > $2 AND category = $3::challenge_category
         ON CONFLICT(user_id, achievement) DO UPDATE SET
-            achieved=excluded.achieved,
+            achieved=achievements.achieved OR excluded.achieved,
             progress=excluded.progress,
             awarded_at=COALESCE(achievements.awarded_at, excluded.awarded_at)
     "#,

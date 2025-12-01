@@ -26,11 +26,12 @@ pub enum ChallengeCategory {
 #[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString, Debug)]
 pub enum AchievementType {
     // Solve Related
-    // OnePoint,
+    OnePoint,
     UncontestedFirstPlace,
     FirstPlace,
     OnlySolution,
     UncontestedFirstPlacePostMortem,
+    TenTopTen,
     // FiveLanguages,
     // ImproveFirstPlace,
     FirstDaySolve,
@@ -84,6 +85,8 @@ pub enum AchievementType {
 impl AchievementType {
     pub fn get_achievement_name(self) -> &'static str {
         match self {
+            AchievementType::OnePoint => "Consolation Prize",
+            AchievementType::TenTopTen => "Ten times Ten",
             AchievementType::CodeGolf1Point => "Code Golf Baby",
             AchievementType::CodeGolf250Point => "Code Golf Newbie",
             AchievementType::CodeGolf500Point => "Code Golf Starter",
@@ -138,7 +141,9 @@ impl AchievementType {
             | AchievementType::UncontestedFirstPlace
             | AchievementType::SolveBeta
             | AchievementType::SolvePostMortem
-            | AchievementType::UncontestedFirstPlacePostMortem => AchievementCategory::SolveRelated,
+            | AchievementType::UncontestedFirstPlacePostMortem
+            | AchievementType::OnePoint
+            | AchievementType::TenTopTen => AchievementCategory::SolveRelated,
             AchievementType::ImproveExample
             | AchievementType::ImproveJudge
             | AchievementType::ImproveDescription
@@ -150,7 +155,12 @@ impl AchievementType {
 
     pub fn get_associated_number(self) -> Option<i32> {
         match self {
-            Self::CodeGolf1Point | Self::RestrictedSource1Point => Some(1),
+            Self::CodeGolf1Point
+            | Self::RestrictedSource1Point
+            | Self::Vote
+            | Self::OnePoint
+            | Self::OnlySolution => Some(1),
+            Self::TenTopTen => Some(10),
             Self::CodeGolf250Point | Self::RestrictedSource250Point => Some(250),
             Self::CodeGolf500Point | Self::RestrictedSource500Point => Some(500),
             Self::CodeGolf1000Point
@@ -162,6 +172,7 @@ impl AchievementType {
             | Self::JavaScript1000Point
             | Self::Rust1000Point => Some(1000),
             Self::CodeGolf2000Point | Self::RestrictedSource2000Point => Some(2000),
+            Self::FirstDaySolve | Self::LastDaySolve => Some(24),
 
             AchievementType::JavaScript3500Point => Some(3500),
             _ => None,
@@ -170,7 +181,9 @@ impl AchievementType {
 
     pub fn get_achievement_description(self) -> &'static str {
         match self {
-            AchievementType::OnlySolution => "Be the first to solve a challenge in a language",
+            AchievementType::OnePoint => "Earn just one score for a solution",
+            AchievementType::TenTopTen => "Earn top 10% in 10 different challenges",
+            AchievementType::OnlySolution => "Be the first to solve a heist in a language",
             AchievementType::UncontestedFirstPlace => "Beat the best score",
             AchievementType::CodeGolf1Point => "Earn your first point in Code Golf",
             AchievementType::CodeGolf250Point => "Earn 250 points in Code Golf",
@@ -190,27 +203,23 @@ impl AchievementType {
             AchievementType::C1000Point => "Earn 1,000 points in C",
             AchievementType::Apl1000Point => "Earn 1,000 points in APL",
             AchievementType::StarTheRepo => "Star the Byte Heist Github Repo",
-            AchievementType::FirstDaySolve => {
-                "Solve a challenge within 24 hours of when it goes live"
-            }
-            AchievementType::LastDaySolve => "Solve a challenge less than 24 hours before it ends",
-            AchievementType::SolveBeta => "Solve a beta challenge",
-            AchievementType::SolvePostMortem => "Solve a challenge after it ends",
+            AchievementType::FirstDaySolve => "Solve a heist within 24 hours of when it goes live",
+            AchievementType::LastDaySolve => "Solve a heist less than 24 hours before it ends",
+            AchievementType::SolveBeta => "Solve a beta heist",
+            AchievementType::SolvePostMortem => "Solve a heist after it ends",
             AchievementType::UncontestedFirstPlacePostMortem => {
-                "Beat the best score after the challenge has ended"
+                "Beat the best score after the heist has ended"
             }
             AchievementType::Contribute => "Contribute to Byte Heist",
-            AchievementType::FirstPlace => {
-                "Get first place on a challenge, even if just for a moment"
-            }
+            AchievementType::FirstPlace => "Get first place on a heist, even if just for a moment",
             AchievementType::ImproveDescription => {
-                "Submit a change suggestion that updates a challenge's description and is accepted"
+                "Submit a change suggestion that updates a heist's description and is accepted"
             }
             AchievementType::ImproveExample => {
-                "Submit a change suggestion that updates a challenge's example code and is accepted"
+                "Submit a change suggestion that updates a heist's example code and is accepted"
             }
             AchievementType::ImproveJudge => {
-                "Submit a change suggestion that updates a challenge's judge and is accepted"
+                "Submit a change suggestion that updates a heist's judge and is accepted"
             }
             AchievementType::ChangeSuggestionInvalidates1 => {
                 "Submit a change suggestion that invalidates a solution"
@@ -247,7 +256,6 @@ impl AchievementType {
             | AchievementType::RestrictedSource500Point => {
                 Some(ChallengeCategory::RestrictedSource)
             }
-
             _ => None,
         }
     }

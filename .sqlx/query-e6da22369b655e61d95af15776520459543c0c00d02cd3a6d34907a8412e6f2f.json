@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO achievements(\n                user_id,\n                achievement,\n                awarded_at,\n                achieved,\n                progress,\n                total\n            ) SELECT\n                author as user_id,\n                $1,\n                case when SUM(top_ten_percents) >= 10 then now() else null end,\n                SUM(top_ten_percents) >=10,\n                LEAST(10, SUM(top_ten_percents)),\n                10\n            FROM user_scoring_info\n            GROUP BY author\n            HAVING SUM(top_ten_percents) > 0\n            ON CONFLICT(user_id, achievement) DO UPDATE SET\n                achieved = achievements.achieved OR excluded.achieved,\n                progress=case when achievements.achieved then 10 else excluded.progress end,\n                awarded_at = coalesce(achievements.awarded_at, excluded.awarded_at)\n\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e6da22369b655e61d95af15776520459543c0c00d02cd3a6d34907a8412e6f2f"
+}
