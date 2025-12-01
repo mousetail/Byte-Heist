@@ -30,10 +30,13 @@ pub enum AchievementType {
     UncontestedFirstPlace,
     FirstPlace,
     OnlySolution,
+    UncontestedFirstPlacePostMortem,
     // FiveLanguages,
     // ImproveFirstPlace,
     FirstDaySolve,
     LastDaySolve,
+    SolveBeta,
+    SolvePostMortem,
     // Change Suggestion Related
     ImproveDescription,
     ImproveJudge,
@@ -105,6 +108,9 @@ impl AchievementType {
             AchievementType::FirstPlace => "A winner is you",
             AchievementType::UncontestedFirstPlace => "The winner you are",
             AchievementType::OnlySolution => "A player be thee",
+            AchievementType::SolveBeta => "Lab Rat",
+            AchievementType::UncontestedFirstPlacePostMortem => "It's not over till it's over",
+            AchievementType::SolvePostMortem => "Coroner",
             AchievementType::ImproveDescription => "Pedant",
             AchievementType::ImproveExample => "[Insert Name Here]",
             AchievementType::ImproveJudge => "[Insert Name Here]",
@@ -129,7 +135,10 @@ impl AchievementType {
             | AchievementType::LastDaySolve
             | AchievementType::FirstPlace
             | AchievementType::OnlySolution
-            | AchievementType::UncontestedFirstPlace => AchievementCategory::SolveRelated,
+            | AchievementType::UncontestedFirstPlace
+            | AchievementType::SolveBeta
+            | AchievementType::SolvePostMortem
+            | AchievementType::UncontestedFirstPlacePostMortem => AchievementCategory::SolveRelated,
             AchievementType::ImproveExample
             | AchievementType::ImproveJudge
             | AchievementType::ImproveDescription
@@ -185,6 +194,11 @@ impl AchievementType {
                 "Solve a challenge within 24 hours of when it goes live"
             }
             AchievementType::LastDaySolve => "Solve a challenge less than 24 hours before it ends",
+            AchievementType::SolveBeta => "Solve a beta challenge",
+            AchievementType::SolvePostMortem => "Solve a challenge after it ends",
+            AchievementType::UncontestedFirstPlacePostMortem => {
+                "Beat the best score after the challenge has ended"
+            }
             AchievementType::Contribute => "Contribute to Byte Heist",
             AchievementType::FirstPlace => {
                 "Get first place on a challenge, even if just for a moment"
@@ -202,6 +216,39 @@ impl AchievementType {
                 "Submit a change suggestion that invalidates a solution"
             }
             AchievementType::Vote => "Vote up or down on a change suggestion",
+        }
+    }
+
+    pub fn get_associated_language(&self) -> Option<&'static Lang> {
+        match self {
+            AchievementType::Apl1000Point => Some("tinyapl"),
+            AchievementType::Python1000Point => Some("python"),
+            AchievementType::C1000Point => Some("tcc"),
+            AchievementType::Rust1000Point => Some("rust"),
+            AchievementType::Vyxal1000Point => Some("vyxal3"),
+            AchievementType::JavaScript1000Point | Self::JavaScript3500Point => Some("nodejs"),
+            _ => None,
+        }
+        .and_then(|i| LANGS.get(i))
+    }
+
+    pub fn get_associated_category(&self) -> Option<ChallengeCategory> {
+        match self {
+            AchievementType::CodeGolf1000Point
+            | AchievementType::CodeGolf1Point
+            | AchievementType::CodeGolf250Point
+            | AchievementType::CodeGolf2000Point
+            | AchievementType::CodeGolf500Point => Some(ChallengeCategory::CodeGolf),
+
+            AchievementType::RestrictedSource1000Point
+            | AchievementType::RestrictedSource1Point
+            | AchievementType::RestrictedSource250Point
+            | AchievementType::RestrictedSource2000Point
+            | AchievementType::RestrictedSource500Point => {
+                Some(ChallengeCategory::RestrictedSource)
+            }
+
+            _ => None,
         }
     }
 
@@ -332,38 +379,5 @@ impl AchievementType {
                 String::new()
             }
         )
-    }
-
-    pub fn get_associated_language(&self) -> Option<&'static Lang> {
-        match self {
-            AchievementType::Apl1000Point => Some("tinyapl"),
-            AchievementType::Python1000Point => Some("python"),
-            AchievementType::C1000Point => Some("tcc"),
-            AchievementType::Rust1000Point => Some("rust"),
-            AchievementType::Vyxal1000Point => Some("vyxal3"),
-            AchievementType::JavaScript1000Point | Self::JavaScript3500Point => Some("nodejs"),
-            _ => None,
-        }
-        .and_then(|i| LANGS.get(i))
-    }
-
-    pub fn get_associated_category(&self) -> Option<ChallengeCategory> {
-        match self {
-            AchievementType::CodeGolf1000Point
-            | AchievementType::CodeGolf1Point
-            | AchievementType::CodeGolf250Point
-            | AchievementType::CodeGolf2000Point
-            | AchievementType::CodeGolf500Point => Some(ChallengeCategory::CodeGolf),
-
-            AchievementType::RestrictedSource1000Point
-            | AchievementType::RestrictedSource1Point
-            | AchievementType::RestrictedSource250Point
-            | AchievementType::RestrictedSource2000Point
-            | AchievementType::RestrictedSource500Point => {
-                Some(ChallengeCategory::RestrictedSource)
-            }
-
-            _ => None,
-        }
     }
 }

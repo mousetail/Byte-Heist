@@ -121,6 +121,7 @@ pub struct LeaderboardEntry {
     pub author_name: String,
     pub author_avatar: String,
     pub points: i32,
+    pub is_post_mortem: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
@@ -250,7 +251,8 @@ impl LeaderboardEntry {
                 accounts.username as author_name,
                 accounts.avatar as author_avatar,
                 1 as "rank!",
-                points
+                points,
+                solutions.is_post_mortem
             FROM solutions
                 LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
@@ -278,7 +280,8 @@ impl LeaderboardEntry {
                 accounts.username as author_name,
                 accounts.avatar as author_avatar,
                 points,
-                rank() OVER (ORDER BY solutions.points ASC) as "rank!"
+                rank() OVER (ORDER BY solutions.points ASC) as "rank!",
+                solutions.is_post_mortem
             FROM solutions
                 LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true

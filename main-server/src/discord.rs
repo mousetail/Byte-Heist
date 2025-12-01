@@ -288,43 +288,68 @@ async fn award_achievements(
     top_solution: &Option<LeaderboardEntry>,
     solution: &SolutionWithLanguage,
 ) -> Result<(), sqlx::Error> {
-    if top_solution.is_none() {
+    if solution.is_post_mortem {
         award_achievement(
             pool,
             solution.author,
-            AchievementType::OnlySolution,
+            AchievementType::SolvePostMortem,
             Some(challenge_id),
             Some(&solution.language),
         )
         .await?;
-    }
 
-    if top_solution
-        .as_ref()
-        .is_none_or(|e| e.points <= solution.points)
-    {
-        award_achievement(
-            pool,
-            solution.author,
-            AchievementType::FirstPlace,
-            Some(challenge_id),
-            Some(&solution.language),
-        )
-        .await?;
-    }
+        if top_solution
+            .as_ref()
+            .is_none_or(|e| e.author_id == solution.author && e.is_post_mortem)
+        {
+            award_achievement(
+                pool,
+                solution.author,
+                AchievementType::SolvePostMortem,
+                Some(challenge_id),
+                Some(&solution.language),
+            )
+            .await?;
+        }
+    } else {
+        if top_solution.is_none() {
+            award_achievement(
+                pool,
+                solution.author,
+                AchievementType::OnlySolution,
+                Some(challenge_id),
+                Some(&solution.language),
+            )
+            .await?;
+        }
 
-    if top_solution
-        .as_ref()
-        .is_none_or(|e| e.author_id == solution.author)
-    {
-        award_achievement(
-            pool,
-            solution.author,
-            AchievementType::UncontestedFirstPlace,
-            Some(challenge_id),
-            Some(&solution.language),
-        )
-        .await?;
+        if top_solution
+            .as_ref()
+            .is_none_or(|e| e.points <= solution.points)
+        {
+            award_achievement(
+                pool,
+                solution.author,
+                AchievementType::FirstPlace,
+                Some(challenge_id),
+                Some(&solution.language),
+            )
+            .await?;
+        }
+
+        if top_solution
+            .as_ref()
+            .is_none_or(|e| e.author_id == solution.author)
+        {
+            award_achievement(
+                pool,
+                solution.author,
+                AchievementType::UncontestedFirstPlace,
+                Some(challenge_id),
+                Some(&solution.language),
+            )
+            .await?;
+        }
     }
 
     Ok(())
@@ -363,7 +388,21 @@ async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, 
     };
 
     match challenge.challenge.challenge.status {
-        ChallengeStatus::Beta | ChallengeStatus::Draft | ChallengeStatus::Private => return,
+        ChallengeStatus::Beta => {
+            if let Err(e) = award_achievement(
+                pool,
+                solution.author,
+                AchievementType::SolveBeta,
+                Some(challenge_id),
+                None,
+            )
+            .await
+            {
+                eprintln!("Can not award achievement: {e:?}");
+            }
+            return;
+        }
+        ChallengeStatus::Draft | ChallengeStatus::Private => return,
         _ => (),
     }
 

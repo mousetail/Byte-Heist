@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                solutions.id as id,\n                solutions.author as author_id,\n                accounts.username as author_name,\n                accounts.avatar as author_avatar,\n                points,\n                rank() OVER (ORDER BY solutions.points ASC) as \"rank!\",\n                solutions.is_post_mortem\n            FROM solutions\n                LEFT JOIN accounts ON solutions.author = accounts.id\n            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true\n            ORDER BY solutions.points ASC, last_improved_date ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "author_avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "points",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "rank!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "is_post_mortem",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "3f3cae89fbc4a183706c980f1ca06662d657e65b0a375c0e2f9d84580d620e5c"
+}
