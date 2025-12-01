@@ -63,13 +63,15 @@
                     <span class="text-byte-brown-200">
                         {% if challenge.submission_count > 0 %}
                             {{ challenge.submission_count }} submission
-                            {% if challenge.submission_count != 1 %}s{% endif %}
-                            {% else %}
-                                No submissions yet
-                            {% endif %}
-                        </span>
-                    </div>
+                            {%- if challenge.submission_count != 1 -%}
+                                s
+                            {%- endif -%}
+                        {% else %}
+                            No submissions yet
+                        {% endif %}
+                    </span>
                 </div>
             </div>
-        </a>
-    {% endmacro %}
+        </div>
+    </a>
+{% endmacro %}
