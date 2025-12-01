@@ -116,7 +116,7 @@ impl AchievementType {
             AchievementType::SolvePostMortem => "Coroner",
             AchievementType::ImproveDescription => "Pedant",
             AchievementType::ImproveExample => "[Insert Name Here]",
-            AchievementType::ImproveJudge => "[Insert Name Here]",
+            AchievementType::ImproveJudge => "Lawyer",
             AchievementType::ChangeSuggestionInvalidates1 => "Cheese Enthusiast",
             AchievementType::Vote => "Thumbs",
         }
