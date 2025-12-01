@@ -43,12 +43,16 @@ pub(super) async fn award_solve_related(pool: &PgPool) -> Result<(), sqlx::Error
                 user_id,
                 achievement,
                 awarded_at,
-                achieved
+                achieved,
+                related_challenge,
+                related_language
             ) SELECT DISTINCT ON (author)
                 author as user_id,
                 $1,
                 now(),
-                true
+                true,
+                challenge,
+                language
             FROM scores
             WHERE score = 1
             ON CONFLICT DO NOTHING
