@@ -62,10 +62,10 @@ pub async fn get_doc(path: Option<Path<String>>) -> Result<GetDocOutput, Error> 
     };
 
     if files[position].path != original_path {
-        return Err(Error::Redirect(Cow::Owned(format!(
-            "/doc/{}",
-            files[position].path,
-        ))));
+        return Err(Error::Redirect(
+            crate::error::RedirectType::Permanent,
+            Cow::Owned(format!("/doc/{}", files[position].path,)),
+        ));
     }
 
     let (prev, next) = (

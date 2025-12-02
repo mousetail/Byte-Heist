@@ -13,9 +13,16 @@ pub enum Error {
     RunLang(String),
     PermissionDenied(&'static str),
     BadRequest(&'static str),
-    Redirect(Cow<'static, str>),
+    Redirect(RedirectType, Cow<'static, str>),
     RateLimit,
     Conflict,
+}
+
+#[derive(Debug)]
+pub enum RedirectType {
+    TemporaryPreserveMethod,
+    TemporaryGet,
+    Permanent,
 }
 
 #[derive(Debug)]
@@ -27,7 +34,7 @@ pub enum OauthError {
 }
 
 impl OauthError {
-    fn get_representaiton(self) -> ErrorRepresentation {
+    fn get_representation(self) -> ErrorRepresentation {
         ErrorRepresentation {
             status_code: StatusCode::INTERNAL_SERVER_ERROR,
             title: Cow::Borrowed("OAuth Error"),
@@ -48,7 +55,7 @@ pub struct ErrorRepresentation {
 }
 
 impl Error {
-    pub fn get_representaiton(self) -> ErrorRepresentation {
+    pub fn get_representation(self) -> ErrorRepresentation {
         match self {
             Error::NotFound => ErrorRepresentation {
                 status_code: StatusCode::NOT_FOUND,
@@ -68,7 +75,7 @@ impl Error {
                 body: Some(Cow::Owned(format!("{e:#?}"))),
                 location: None,
             },
-            Error::Oauth(oauth_error) => oauth_error.get_representaiton(),
+            Error::Oauth(oauth_error) => oauth_error.get_representation(),
             Error::RunLang(s) => ErrorRepresentation {
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 title: Cow::Borrowed("Lang Runner Error"),
@@ -95,8 +102,12 @@ impl Error {
                 body: Some(Cow::Borrowed(e)),
                 location: None,
             },
-            Error::Redirect(e) => ErrorRepresentation {
-                status_code: StatusCode::TEMPORARY_REDIRECT,
+            Error::Redirect(redirect_type, e) => ErrorRepresentation {
+                status_code: match redirect_type {
+                    RedirectType::TemporaryGet => StatusCode::SEE_OTHER,
+                    RedirectType::Permanent => StatusCode::PERMANENT_REDIRECT,
+                    RedirectType::TemporaryPreserveMethod => StatusCode::TEMPORARY_REDIRECT,
+                },
                 title: Cow::Borrowed(""),
                 body: None,
                 location: Some(e),

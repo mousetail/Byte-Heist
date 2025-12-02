@@ -120,9 +120,10 @@ pub async fn post_reaction(
         .await
         .map_err(Error::Database)?;
 
-    Err(Error::Redirect(Cow::Owned(format!(
-        "/challenge/{id}/{slug}/view"
-    ))))
+    Err(Error::Redirect(
+        crate::error::RedirectType::TemporaryGet,
+        Cow::Owned(format!("/challenge/{id}/{slug}/view")),
+    ))
 }
 
 pub async fn handle_reactions(pool: &PgPool) -> Result<(), sqlx::Error> {

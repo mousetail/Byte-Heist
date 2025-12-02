@@ -1,6 +1,6 @@
 use axum::{
     body::Body,
-    response::{IntoResponse, Redirect, Response},
+    response::{IntoResponse, Response},
 };
 use html_context::{HtmlContext, RenderContext};
 use macros::HtmlRenderer;
@@ -91,7 +91,7 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
     }
 
     fn render_error(&self, err: Self::Err, context: Self::Context) -> Response {
-        let representation = err.get_representaiton();
+        let representation = err.get_representation();
         let status_code = representation.status_code;
         match context {
             html_context::Format::Json => Self::render_json(
@@ -104,7 +104,11 @@ impl<S: Send + Sync> HtmlRenderer<S> for TeraHtmlRenderer {
             ),
             html_context::Format::Html(ctx) => {
                 if let Some(location) = representation.location {
-                    return Redirect::temporary(&location).into_response();
+                    return Response::builder()
+                        .header("location", location.into_owned())
+                        .status(representation.status_code)
+                        .body(Body::empty())
+                        .expect("Expected a valid body");
                 }
 
                 Self::render_html(representation, ctx, status_code, "error.html.jinja")

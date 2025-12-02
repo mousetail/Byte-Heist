@@ -62,14 +62,17 @@ pub async fn challenge_redirect_no_slug(
         return Err(Error::NotFound);
     };
 
-    Err(Error::Redirect(Cow::Owned(format!(
-        "{}",
-        get_url_for_challenge(
-            id,
-            Some(&challenge_name),
-            common::urls::ChallengePage::Solve {
-                language: Some(language)
-            }
-        )
-    ))))
+    Err(Error::Redirect(
+        crate::error::RedirectType::Permanent,
+        Cow::Owned(format!(
+            "{}",
+            get_url_for_challenge(
+                id,
+                Some(&challenge_name),
+                common::urls::ChallengePage::Solve {
+                    language: Some(language)
+                }
+            )
+        )),
+    ))
 }

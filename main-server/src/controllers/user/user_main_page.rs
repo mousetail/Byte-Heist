@@ -209,10 +209,10 @@ pub async fn get_user(
     };
 
     if format!("{}", Slug(&account_info.username)) != slug {
-        return Err(Error::Redirect(Cow::Owned(format!(
-            "/user/{id}/{}",
-            Slug(&account_info.username)
-        ))));
+        return Err(Error::Redirect(
+            crate::error::RedirectType::Permanent,
+            Cow::Owned(format!("/user/{id}/{}", Slug(&account_info.username))),
+        ));
     }
 
     let invalidated_solutions = match account {

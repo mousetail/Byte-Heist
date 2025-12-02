@@ -27,8 +27,8 @@ pub async fn redirect_to_user_page(
         .await
         .map_err(Error::Database)?;
 
-    Err(Error::Redirect(Cow::Owned(format!(
-        "/user/{user_id}/{}",
-        Slug(&username)
-    ))))
+    Err(Error::Redirect(
+        crate::error::RedirectType::Permanent,
+        Cow::Owned(format!("/user/{user_id}/{}", Slug(&username))),
+    ))
 }

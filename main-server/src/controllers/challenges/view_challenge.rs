@@ -315,7 +315,7 @@ pub async fn post_comment(
         None
     };
 
-    // Only apply the rate limit if the validation succceeded
+    // Only apply the rate limit if the validation succeeded
     account.rate_limit(&pool).await?;
 
     let result = data
@@ -327,7 +327,8 @@ pub async fn post_comment(
         task.apply(&pool, result, account).await?;
     }
 
-    Err(Error::Redirect(Cow::Owned(format!(
-        "/challenge/{id}/{slug}/view"
-    ))))
+    Err(Error::Redirect(
+        crate::error::RedirectType::TemporaryGet,
+        Cow::Owned(format!("/challenge/{id}/{slug}/view")),
+    ))
 }

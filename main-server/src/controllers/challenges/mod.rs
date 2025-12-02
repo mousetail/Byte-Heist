@@ -213,7 +213,7 @@ pub async fn new_challenge(
                     .unwrap();
             }
 
-            Err(Error::Redirect(std::borrow::Cow::Owned(destination)))
+            Err(Error::Redirect(crate::error::RedirectType::TemporaryGet, std::borrow::Cow::Owned(destination)))
         }
         (_, Some(Path((id, _slug)))) => {
             let existing_challenge = existing_challenge.unwrap(); // This can never fail

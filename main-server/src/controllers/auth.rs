@@ -144,7 +144,7 @@ pub async fn github_callback(
         }
 
         update_or_insert_user(&pool, &user_info, bot, &token_res, &session).await?;
-        Err(Error::Redirect(Cow::Borrowed("/")))
+        Err(Error::Redirect(crate::error::RedirectType::TemporaryGet, Cow::Borrowed("/")))
     } else {
         // let data = response.bytes().await.unwrap();
         Err(Error::ServerError)
