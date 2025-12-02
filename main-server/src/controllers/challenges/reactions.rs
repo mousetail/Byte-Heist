@@ -13,24 +13,46 @@ use crate::{
     error::Error, models::account::Account, tera_utils::auto_input::AutoInput,
 };
 
-pub(super) struct RawReaction {
-    #[allow(unused)]
-    pub id: i32,
+pub(super) struct RawChallengeReaction {
+    pub author_id: i32,
+    pub author_username: String,
+    pub is_upvote: bool,
+}
+
+impl RawChallengeReaction {
+    pub(super) async fn get_for_challenge(
+        pool: &PgPool,
+        challenge_id: i32,
+    ) -> Result<Vec<Self>, sqlx::Error> {
+        query_as!(
+            Self,
+            r#"
+                SELECT author as author_id, is_upvote, accounts.username as author_username FROM challenge_votes            
+                INNER JOIN accounts ON accounts.id = challenge_votes.author
+                WHERE challenge=$1
+                ORDER BY is_upvote
+            "#,
+            challenge_id
+        ).fetch_all(pool).await
+    }
+}
+
+pub(super) struct RawCommentReaction {
     pub comment_id: i32,
     pub author_id: i32,
     pub author_username: String,
     pub is_upvote: bool,
 }
 
-impl RawReaction {
+impl RawCommentReaction {
     async fn get_reactions_for_comment(
         pool: &PgPool,
         comment_id: i32,
-    ) -> Result<Vec<RawReaction>, sqlx::Error> {
+    ) -> Result<Vec<RawCommentReaction>, sqlx::Error> {
         query_as!(
-            RawReaction,
+            RawCommentReaction,
             "
-                SELECT challenge_comment_votes.id,
+                SELECT 
                     comment as comment_id,
                     author as author_id,
                     is_upvote,
@@ -46,14 +68,14 @@ impl RawReaction {
         .await
     }
 
-    pub(super) async fn get_reactions_for_challenge(
+    pub(super) async fn get_reactions_for_comments(
         pool: &PgPool,
         comments: &[RawComment],
-    ) -> Result<Vec<RawReaction>, sqlx::Error> {
+    ) -> Result<Vec<RawCommentReaction>, sqlx::Error> {
         query_as!(
-            RawReaction,
+            RawCommentReaction,
             "
-                SELECT challenge_comment_votes.id,
+                SELECT
                     comment as comment_id,
                     author as author_id,
                     is_upvote,
@@ -72,25 +94,31 @@ impl RawReaction {
 
 #[derive(Deserialize)]
 pub struct NewReaction {
-    comment_id: i32,
+    comment_id: Option<i32>,
     is_upvote: bool,
 }
 
 impl NewReaction {
-    async fn submit(&self, author: i32, pool: &PgPool) -> Result<i32, sqlx::Error> {
-        query!(
-            "
+    async fn submit(
+        &self,
+        author: i32,
+        pool: &PgPool,
+        challenge_id: i32,
+    ) -> Result<i32, sqlx::Error> {
+        if let Some(comment_id) = self.comment_id {
+            query!(
+                "
             UPDATE challenge_comments
             SET last_vote_time=now()
             WHERE id=$1
             ",
-            self.comment_id
-        )
-        .execute(pool)
-        .await?;
+                comment_id
+            )
+            .execute(pool)
+            .await?;
 
-        query_scalar!(
-            "
+            query_scalar!(
+                "
             INSERT INTO challenge_comment_votes(
                 author,
                 comment,
@@ -100,12 +128,31 @@ impl NewReaction {
             ON CONFLICT(author, comment) DO UPDATE SET is_upvote=$3
             RETURNING id
             ",
-            author,
-            self.comment_id,
-            self.is_upvote
-        )
-        .fetch_one(pool)
-        .await
+                author,
+                comment_id,
+                self.is_upvote
+            )
+            .fetch_one(pool)
+            .await
+        } else {
+            query_scalar!(
+                r#"
+                    INSERT INTO challenge_votes(
+                        author,
+                        is_upvote,
+                        challenge
+                    )
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT(author, challenge) DO UPDATE SET is_upvote=$2
+                    RETURNING id
+                "#,
+                author,
+                self.is_upvote,
+                challenge_id
+            )
+            .fetch_one(pool)
+            .await
+        }
     }
 }
 
@@ -116,7 +163,7 @@ pub async fn post_reaction(
     AutoInput(reaction): AutoInput<NewReaction>,
 ) -> Result<(), Error> {
     reaction
-        .submit(account.id, &pool)
+        .submit(account.id, &pool, id)
         .await
         .map_err(Error::Database)?;
 
@@ -189,7 +236,7 @@ async fn process_diff(
     comment_id: i32,
     author_id: i32,
 ) -> Result<(), sqlx::Error> {
-    let reactions = RawReaction::get_reactions_for_comment(pool, comment_id).await?;
+    let reactions = RawCommentReaction::get_reactions_for_comment(pool, comment_id).await?;
 
     for reaction in &reactions {
         award_achievement(

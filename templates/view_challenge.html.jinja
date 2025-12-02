@@ -82,6 +82,13 @@
     {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author) }}
   {% endif %}
   <h1 class="text-3xl font-bold tracking-tighter sm:text-5xl text-white">{{ object.name }}</h1>
+  <form class="challenge-reactions"
+        method="post"
+        action="/challenge/{{ object.id }}/{{ object.name | slugify }}/view/vote">
+    {{ self::vote_button(is_upvote=true, reactions=object.up_reactions) }}
+    {{ self::vote_button(is_upvote=false, reactions=object.down_reactions) }}
+  </form>
+  <h2 class="text-2xl font-bold tracking-tighter sm:text-3xl text-white">Description</h2>
   <div id="description-container">{{ object.description | markdown }}</div>
   {% if account and account.has_solved_a_challenge %}
     <div class="flex justify-end">

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO challenge_votes(\n                        author,\n                        is_upvote,\n                        challenge\n                    )\n                    VALUES ($1, $2, $3)\n                    ON CONFLICT(author, challenge) DO UPDATE SET is_upvote=$2\n                    RETURNING id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7948e47d0130896d2b49eb35f2864fc5c8ecd8272c89311fcb64d78c43d78fbd"
+}

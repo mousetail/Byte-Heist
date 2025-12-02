@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query_as, query_scalar};
 
 use crate::{
-    controllers::challenges::suggest_changes::handle_diff,
+    controllers::challenges::{reactions::RawChallengeReaction, suggest_changes::handle_diff},
     error::Error,
     models::{account::Account, challenge::NewOrExistingChallenge},
     tera_utils::auto_input::AutoInput,
@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::{
-    reactions::RawReaction,
+    reactions::RawCommentReaction,
     suggest_changes::{CommentDiff, DiffStatus},
 };
 
@@ -132,7 +132,10 @@ struct Reaction {
 impl Reaction {
     /// Assumes reactions is sorted by comment id
     /// Assumes comments is sorted by id
-    fn apply_reactions_to_comments(comments: &mut [ProcessedComment], reactions: Vec<RawReaction>) {
+    fn apply_reactions_to_comments(
+        comments: &mut [ProcessedComment],
+        reactions: Vec<RawCommentReaction>,
+    ) {
         let mut first_index = 0;
         for reaction in reactions {
             let index = comments[first_index..]
@@ -165,7 +168,7 @@ impl ProcessedComment {
 
     fn from_raw_comments(
         comments: Vec<RawComment>,
-        reactions: Vec<RawReaction>,
+        reactions: Vec<RawCommentReaction>,
     ) -> Vec<ProcessedComment> {
         let mut output: Vec<_> = comments
             .into_iter()
@@ -225,6 +228,8 @@ pub struct ViewChallengeOutput {
     #[serde(flatten)]
     challenge: NewOrExistingChallenge,
     comments: Vec<ProcessedComment>,
+    up_reactions: Vec<Reaction>,
+    down_reactions: Vec<Reaction>,
 }
 
 pub async fn view_challenge(
@@ -234,16 +239,35 @@ pub async fn view_challenge(
     let raw_comments = RawComment::get_raw_comments_for_challenge(&pool, id)
         .await
         .map_err(Error::Database)?;
-    let reactions = RawReaction::get_reactions_for_challenge(&pool, &raw_comments)
+    let comment_reactions = RawCommentReaction::get_reactions_for_comments(&pool, &raw_comments)
         .await
         .map_err(Error::Database)?;
-    let comments = ProcessedComment::from_raw_comments(raw_comments, reactions);
+    let mut challenge_reactions = RawChallengeReaction::get_for_challenge(&pool, id)
+        .await
+        .map_err(Error::Database)?;
+    let partition_point = challenge_reactions.partition_point(|e| e.is_upvote);
+    let up_reactions = challenge_reactions.split_off(partition_point);
+    let comments = ProcessedComment::from_raw_comments(raw_comments, comment_reactions);
 
     Ok(ViewChallengeOutput {
         challenge: NewOrExistingChallenge::get_by_id(&pool, id)
             .await?
             .ok_or(Error::NotFound)?,
         comments,
+        up_reactions: challenge_reactions
+            .into_iter()
+            .map(|k| Reaction {
+                author_id: k.author_id,
+                author_username: k.author_username,
+            })
+            .collect(),
+        down_reactions: up_reactions
+            .into_iter()
+            .map(|k| Reaction {
+                author_id: k.author_id,
+                author_username: k.author_username,
+            })
+            .collect(),
     })
 }
 #[derive(Deserialize)]

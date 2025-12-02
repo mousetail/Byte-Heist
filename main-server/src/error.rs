@@ -20,6 +20,7 @@ pub enum Error {
 
 #[derive(Debug)]
 pub enum RedirectType {
+    #[allow(dead_code)]
     TemporaryPreserveMethod,
     TemporaryGet,
     Permanent,

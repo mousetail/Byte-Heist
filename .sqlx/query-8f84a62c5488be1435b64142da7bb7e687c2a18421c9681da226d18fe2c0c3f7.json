@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT author as author_id, is_upvote, accounts.username as author_username FROM challenge_votes            \n                INNER JOIN accounts ON accounts.id = challenge_votes.author\n                WHERE challenge=$1\n                ORDER BY is_upvote\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_upvote",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "author_username",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8f84a62c5488be1435b64142da7bb7e687c2a18421c9681da226d18fe2c0c3f7"
+}
