@@ -30,7 +30,7 @@ If you think there is a real good challenge left from your idea, it's time to cr
 
 You can create a heist at [byte-heist.com/challenge](https://byte-heist.com/challenge). 
 
-Judges are currently written in Deno. The library of functions available to you are here: [runner-lib.ts](https://github.com/mousetail/Byte-Heist/blob/master/scripts/runner-lib.ts). The exact process changes too much so this documentation would be instantly out of date. Existing challenges should provide a good base.
+Judges are currently written in Deno. The library of functions available to you are here: [runner-lib.ts](https://github.com/mousetail/Byte-Heist/blob/master/lang-runner/scripts/runner-lib.ts). The exact process changes too much so this documentation would be instantly out of date. Existing challenges should provide a good base.
 
 Byte Heist's judging system is quite flexible, ideally the judge should be programmed to ignore noise not directly related to the algorithm, like order of outputs or spacing.
 

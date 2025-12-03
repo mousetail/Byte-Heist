@@ -33,7 +33,7 @@ services:
       - "3000:3000"
     volumes:
       - ./target/debug:/debug
-      - ./scripts:/scripts
+      - ./lang-runner/scripts:/scripts
     entrypoint: ["/scripts/auto-reload.sh", "/debug/lang-runner"]
   postgres:
     image: "postgres:17"

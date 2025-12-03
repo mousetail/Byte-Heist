@@ -53,6 +53,6 @@ USER byte_heist
 ENV PATH=$PATH:/home/byte_heist/.asdf/shims
 
 COPY --from=rust-build /usr/src/myapp/target/release/lang-runner /lang-runner
-COPY ./scripts /scripts
+COPY ./lang-runner/scripts /scripts
 
 ENTRYPOINT ["/lang-runner"]

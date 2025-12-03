@@ -5,4 +5,4 @@
 .sessions
 node_modules
 static/target
-scripts/build
+lang-runner/scripts/build

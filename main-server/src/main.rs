@@ -105,7 +105,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .nest_service(
             "/ts/runner-lib.d.ts",
-            ServeFile::new("scripts/build/runner-lib.d.ts"),
+            ServeFile::new("lang-runner/scripts/build/runner-lib.d.ts"),
         )
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))

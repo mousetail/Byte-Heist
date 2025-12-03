@@ -24,11 +24,11 @@ run-main-server:
 clean:
 	cargo clean
 	docker compose down
-	rm -rf ./target ./scripts/build ./static/target ./node_modules
+	rm -rf ./target ./lang-runner/scripts/build ./static/target ./node_modules
 
 .PHONY: ts-build-runner
 ts-build-runner:
-	npx tsc scripts/runner-lib.ts --target es2022 --moduleResolution bundler --declaration --outDir scripts/build
+	npx tsc lang-runner/scripts/runner-lib.ts --target es2022 --moduleResolution bundler --declaration --outDir lang-runner/scripts/build
 
 .PHONY: restart-runner
 restart-runner:

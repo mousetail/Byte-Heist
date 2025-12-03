@@ -1,6 +1,5 @@
 import { EditorView } from "codemirror";
 import { createCodemirrorFromTextAreas } from "./code_editing/code_editor";
-import { TestCase } from "../scripts/runner-lib";
 import { ResultDisplay, renderResultDisplay } from "./test_cases/test_case";
 
 window.addEventListener("DOMContentLoaded", () => {
