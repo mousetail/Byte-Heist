@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_process::Command;
 use common::RunLangOutput;
 
@@ -12,7 +14,7 @@ static RUNS_SEMAPHORE: tokio::sync::Semaphore =
 
 pub async fn process_message(
     message: Message,
-    lang_versions: &CacheMap<String, CacheMap<String, ()>>,
+    lang_versions: Arc<CacheMap<String, CacheMap<String, ()>>>,
 ) -> Result<RunLangOutput, RunLangError> {
     install_lang(message.lang.clone(), &message.version, lang_versions)
         .await

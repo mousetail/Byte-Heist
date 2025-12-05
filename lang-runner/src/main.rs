@@ -65,7 +65,7 @@ async fn handle_message(
     lang_versions: State<Arc<CacheMap<String, CacheMap<String, ()>>>>,
     message: Json<Message>,
 ) -> Result<Json<RunLangOutput>, RunLangError> {
-    let result = process_message(message.0, &lang_versions.0).await?;
+    let result = process_message(message.0, lang_versions.0).await?;
     Ok(Json(result))
 }
 

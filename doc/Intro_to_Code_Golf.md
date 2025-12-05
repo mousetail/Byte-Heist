@@ -69,7 +69,7 @@ Golfing in Rust is less popular so there are less resources available, but there
 
 ### Kotlin Specific
 
-I do now actually know much about golfing in Kotlin so of someone is willing to fill out this section that would be helpful.
+I do not actually know much about golfing in Kotlin so of someone is willing to fill out this section that would be helpful.
 
 ### TinyAPL specific
 

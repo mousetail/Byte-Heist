@@ -18,6 +18,7 @@ pub enum RunProcessError {
         std::io::Error,
     ),
     NoSuchLanguage,
+    JoinFail,
 }
 
 impl From<std::io::Error> for RunProcessError {

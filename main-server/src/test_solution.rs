@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{borrow::Cow, time::Duration};
 
 use common::RunLangOutput;
 use serde::Serialize;
@@ -28,21 +28,30 @@ pub async fn test_solution(
             code,
             judge,
         })
-        .timeout(Duration::from_secs(60))
+        .timeout(Duration::from_secs(10))
         .send()
         .await
-        .map_err(|_e| Error::RunLang("Failed to connect to the lang runner".to_string()))?;
+        .map_err(|e| {
+            if e.is_timeout() {
+                Error::RunLang(Cow::Borrowed(concat!(
+                    "Timeout connecting to the lang runner, this usually means the language ",
+                    "is in the process of being installed"
+                )))
+            } else {
+                Error::RunLang(Cow::Borrowed("Failed to connect to the lang runner"))
+            }
+        })?;
 
     if !resp.status().is_success() {
-        return Err(Error::RunLang(
+        return Err(Error::RunLang(Cow::Owned(
             resp.text().await.map_err(|_| Error::ServerError)?,
-        ));
+        )));
     }
 
     let out = resp
         .json::<RunLangOutput>()
         .await
-        .map_err(|_| Error::RunLang("Failed to parse json".to_string()))?;
+        .map_err(|_| Error::RunLang(Cow::Borrowed("Failed to parse json")))?;
 
     Ok(out)
 }

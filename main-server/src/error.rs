@@ -10,7 +10,7 @@ pub enum Error {
     ServerError,
     Database(sqlx::Error),
     Oauth(OauthError),
-    RunLang(String),
+    RunLang(Cow<'static, str>),
     PermissionDenied(&'static str),
     BadRequest(&'static str),
     Redirect(RedirectType, Cow<'static, str>),
@@ -80,7 +80,7 @@ impl Error {
             Error::RunLang(s) => ErrorRepresentation {
                 status_code: StatusCode::INTERNAL_SERVER_ERROR,
                 title: Cow::Borrowed("Lang Runner Error"),
-                body: Some(Cow::Owned(s)),
+                body: Some(s),
                 location: None,
             },
             Error::Conflict => ErrorRepresentation {

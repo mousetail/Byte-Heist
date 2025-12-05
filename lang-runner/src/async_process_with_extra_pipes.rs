@@ -132,7 +132,7 @@ impl Drop for AsyncChild {
     fn drop(&mut self) {
         if !self.exited {
             eprintln!("Child timed out, killing child...");
-            if let Err(e) = kill(self.child, Signal::SIGKILL) {
+            if let Err(e) = kill(self.child, Signal::SIGTERM) {
                 eprintln!("Error killing child: {e:?}")
             }
             // clean up zombie process if the thread was not started yet
