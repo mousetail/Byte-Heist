@@ -162,11 +162,8 @@ pub async fn new_challenge(
             tests: Some(tests.into()),
             validation: Some(
                 [
-                    ("judge", "please fill in a judge for the challenge"),
-                    (
-                        "example-code",
-                        "Please fill in example code for the challenge",
-                    ),
+                    ("judge", "The example code did not pass the tests"),
+                    ("example-code", "The example code did not pass the tests"),
                 ]
                 .into(),
             ),
@@ -213,7 +210,10 @@ pub async fn new_challenge(
                     .unwrap();
             }
 
-            Err(Error::Redirect(crate::error::RedirectType::TemporaryGet, std::borrow::Cow::Owned(destination)))
+            Err(Error::Redirect(
+                crate::error::RedirectType::TemporaryGet,
+                std::borrow::Cow::Owned(destination),
+            ))
         }
         (_, Some(Path((id, _slug)))) => {
             let existing_challenge = existing_challenge.unwrap(); // This can never fail
