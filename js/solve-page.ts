@@ -252,9 +252,9 @@ function changeActiveLeaderboardTab(tab: string) {
   ).ariaSelected = "false";
 }
 
-globalThis.addEventListener("load", async () => {
+globalThis.addEventListener("load", () => {
   const mainCodeTextArea = document.getElementById("main-code");
-  const originalCode = decodeURIComponent(
+  const previouslySubmittedCode = decodeURIComponent(
     mainCodeTextArea.dataset.encodedSource
   );
   const originalLocalStorageId = mainCodeTextArea.dataset.localStorageId;
@@ -272,7 +272,7 @@ globalThis.addEventListener("load", async () => {
     setupEditorControls(
       editorControls,
       mainTextArea!,
-      originalCode,
+      previouslySubmittedCode,
       originalLocalStorageId
     );
   }
@@ -281,7 +281,7 @@ globalThis.addEventListener("load", async () => {
 const setupEditorControls = (
   editorControls: HTMLElement,
   mainTextArea: EditorView,
-  originalCode: string,
+  shortestValidCode: string,
   localStorageId: string
 ) => {
   editorControls.classList.remove("hidden");
@@ -307,13 +307,13 @@ const setupEditorControls = (
       changes: {
         from: 0,
         to: mainTextArea.state.doc.length,
-        insert: originalCode,
+        insert: shortestValidCode,
       },
     });
   });
 
   setupJsSubmitOnForm(mainTextArea!, localStorageId, (e) => {
     resetButton.style.display = "block";
-    currentCode = e;
+    shortestValidCode = e;
   });
 };
