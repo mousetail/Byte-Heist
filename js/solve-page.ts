@@ -290,7 +290,7 @@ const setupEditorControls = (
   const resetButton = editorControls.querySelector<HTMLButtonElement>(
     "#restore-solution-button"
   )!;
-  let currentCode = mainTextArea.state.doc.toString();
+  const currentCode = mainTextArea.state.doc.toString();
 
   byteCountElement.textContent = lengthInBytes(currentCode).toString();
 

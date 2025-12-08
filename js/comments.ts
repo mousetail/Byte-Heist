@@ -10,9 +10,6 @@ const setupVotingButton = (button: HTMLButtonElement) => {
   const comment_id = +button.parentElement.querySelector<HTMLInputElement>(
     "input[name=comment_id]"
   )?.value;
-  if (!comment_id) {
-    return;
-  }
   const other_button = button.parentElement.querySelector<HTMLButtonElement>(
     `button[name=is_upvote][value=${!is_upvote}]`
   );
