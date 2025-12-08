@@ -64,6 +64,7 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
                         AchievementType::from_str(e)
                             .map(|k| k.get_achievement_name())
                             .unwrap_or_default()
+                            .to_owned()
                     },
                 },
             );
@@ -74,6 +75,7 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
                         AchievementType::from_str(e)
                             .map(|k| k.get_achievement_description())
                             .unwrap_or_default()
+                            .to_owned()
                     },
                 },
             );
@@ -89,6 +91,10 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
                     },
                 },
             );
+            tera.register_filter(
+                "language_display_name",
+                MappingStringToStringFilter { f: get_lang_name },
+            );
             tera
         })
     });
@@ -101,6 +107,14 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
     };
 
     Ok(tera)
+}
+
+fn get_lang_name(e: &str) -> String {
+    LANGS
+        .get(e)
+        .map(|e| e.display_name)
+        .unwrap_or(e)
+        .to_string()
 }
 
 fn get_langs(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
@@ -208,13 +222,11 @@ fn empty(value: Option<&Value>, args: &[Value]) -> tera::Result<bool> {
     })
 }
 
-struct MappingStringToStringFilter<E: AsRef<str> + Send, F: Fn(&str) -> E + Send + Sync> {
+struct MappingStringToStringFilter<F: Fn(&str) -> String> {
     f: F,
 }
 
-impl<E: AsRef<str> + Send, F: Fn(&str) -> E + Send + Sync> Filter
-    for MappingStringToStringFilter<E, F>
-{
+impl<F: Fn(&str) -> String + Send + Sync> Filter for MappingStringToStringFilter<F> {
     fn filter(&self, value: &Value, args: &HashMap<String, Value>) -> tera::Result<Value> {
         if !args.is_empty() {
             return Err(tera::Error::msg("This filter takes no arguments"));
@@ -225,6 +237,6 @@ impl<E: AsRef<str> + Send, F: Fn(&str) -> E + Send + Sync> Filter
             _ => return Err(tera::Error::msg("This filter expects a string")),
         };
 
-        Ok(tera::Value::String(data.as_ref().to_string()))
+        Ok(tera::Value::String(data))
     }
 }

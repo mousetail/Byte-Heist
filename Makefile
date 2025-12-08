@@ -42,3 +42,7 @@ production-build:
 	npx vite build
 	cargo sqlx migrate run --database-url ${DATABASE_URL}
 	bash -c "SQLX_OFFLINE=true cargo build --release --package main-server"
+
+.PHONY: watch
+watch:
+	bash -c "find . -path './main-server/*.rs' -or -path './templates/*.html.jinja' | entr -r cargo run --bin main-server"

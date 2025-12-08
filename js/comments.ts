@@ -7,9 +7,10 @@ import { ResultDisplay, renderResultDisplay } from "./test_cases/test_case";
 
 const setupVotingButton = (button: HTMLButtonElement) => {
   const is_upvote = button.value === "true";
-  const comment_id = +button.parentElement.querySelector<HTMLInputElement>(
-    "input[name=comment_id]"
-  )?.value;
+  const comment_id: number | undefined =
+    +button.parentElement.querySelector<HTMLInputElement>(
+      "input[name=comment_id]"
+    )?.value;
   const other_button = button.parentElement.querySelector<HTMLButtonElement>(
     `button[name=is_upvote][value=${!is_upvote}]`
   );

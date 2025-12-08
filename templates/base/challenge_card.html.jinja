@@ -45,8 +45,13 @@
             <div class="flex flex-col gap-2 mt-4">
                 <!-- Score and Time Info -->
                 <div class="flex items-center justify-between text-xs">
-                    {% if challenge.user_has_submitted %}
+                    {% if challenge.user_has_submitted and challenge.score %}
                         <!-- User has submitted - show green checkmark -->
+                        <span class="text-byte-green-200 font-medium flex items-center gap-1">
+                            {% include "icons/check.svg" %}
+                            {{ challenge.score }} Score in {{ account.preferred_language | language_display_name }}
+                        </span>
+                    {% elif challenge.user_has_submitted %}
                         <span class="text-byte-green-200 font-medium flex items-center gap-1">
                             {% include "icons/check.svg" %}
                             Submitted
@@ -69,7 +74,9 @@
                     {% endif %}
                     <!-- Submission count -->
                     <span class="text-byte-brown-200">
-                        {% if challenge.submission_count > 0 %}
+                        {% if beta %}
+                            {{ challenge.up_votes }} 👍 / {{ challenge.down_votes }} 👎
+                        {% elif challenge.submission_count > 0 %}
                             {{ challenge.submission_count }} submission
                             {%- if challenge.submission_count != 1 -%}
                                 s

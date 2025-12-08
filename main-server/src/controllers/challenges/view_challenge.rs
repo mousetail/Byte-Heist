@@ -245,7 +245,7 @@ pub async fn view_challenge(
     let mut challenge_reactions = RawChallengeReaction::get_for_challenge(&pool, id)
         .await
         .map_err(Error::Database)?;
-    let partition_point = challenge_reactions.partition_point(|e| e.is_upvote);
+    let partition_point = challenge_reactions.partition_point(|e| !e.is_upvote);
     let up_reactions = challenge_reactions.split_off(partition_point);
     let comments = ProcessedComment::from_raw_comments(raw_comments, comment_reactions);
 

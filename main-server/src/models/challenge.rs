@@ -193,6 +193,8 @@ pub struct HomePageChallenge {
     is_post_mortem: bool,
     submission_count: i64,
     user_has_submitted: bool,
+    up_votes: Option<i64>,
+    down_votes: Option<i64>,
 }
 
 impl HomePageChallenge {
@@ -214,7 +216,9 @@ impl HomePageChallenge {
                 post_mortem_date,
                 COALESCE((challenges.post_mortem_date IS NOT NULL AND challenges.post_mortem_date < now()), false) as "is_post_mortem!",
                 COALESCE(submission_counts.count, 0) as "submission_count!",
-                COALESCE(user_submissions.has_submitted, false) as "user_has_submitted!"
+                COALESCE(user_submissions.has_submitted, false) as "user_has_submitted!",
+                (SELECT count(*) FROM challenge_votes WHERE challenge=challenges.id and is_upvote) as up_votes,
+                (SELECT count(*) FROM challenge_votes WHERE challenge=challenges.id and not is_upvote) as down_votes
             FROM challenges
             LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3
             LEFT JOIN (
@@ -229,7 +233,10 @@ impl HomePageChallenge {
                 GROUP BY challenge
             ) user_submissions ON user_submissions.challenge = challenges.id
             WHERE status=($1) AND category != 'private'
-            ORDER BY challenges.created_at DESC
+            ORDER BY challenges.go_live_date DESC,
+                up_votes DESC,
+                down_votes ASC,
+                created_at DESC
             LIMIT $4
         "#,
             status as ChallengeStatus,
