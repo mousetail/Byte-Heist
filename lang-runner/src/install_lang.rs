@@ -1,7 +1,6 @@
-use std::{path::PathBuf, process::Stdio, sync::Arc};
-
-use async_process::Command;
 use common::langs::{LANGS, Lang};
+use std::{path::PathBuf, process::Stdio, sync::Arc};
+use tokio::process::Command;
 
 use crate::{cachemap::CacheMap, error::RunProcessError};
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use async_process::Command;
 use common::RunLangOutput;
+use tokio::process::Command;
 
 use crate::{
     Message, cachemap::CacheMap, error::RunLangError, install_lang::install_lang,

@@ -3,10 +3,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-use async_process::Command;
 use common::{JudgeResult, RunLangOutput, TestCase, Timers, langs::LANGS};
-use futures_util::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, StreamExt, io::BufReader};
 use serde::{Deserialize, Serialize};
+use tokio::{
+    io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
+    process::Command,
+};
 
 use crate::{error::RunLangError, run::RunLangContext, stopwatch::start_stopwatch};
 
@@ -94,8 +96,7 @@ pub async fn run_lang_with_judge(
                 test_cases: vec![],
             };
 
-            while let Some(line) = lines.next().await {
-                let line = line?;
+            while let Some(line) = lines.next_line().await? {
                 let data: JudgeResponse = serde_json::from_str(&line).map_err(|e| {
                     RunLangError::RunLang(crate::error::RunProcessError::SerializationFailed(e))
                 })?;
@@ -148,8 +149,7 @@ pub async fn run_lang_with_judge(
     let mut error = String::new();
     stderr.read_to_string(&mut error).await?;
 
-    command.kill()?;
-    command.status().await?;
+    command.kill().await?;
 
     Ok(RunLangOutput {
         tests: judge_result,

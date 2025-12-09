@@ -6,7 +6,6 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-process = "2.3.0"
 axum = { version = "0.8.3", features = ["macros"] }
 dashmap = "6.1.0"
 futures-util = { version = "0.3.30", features = ["io"] }
@@ -17,6 +16,7 @@ tokio = { version = "1.40.0", features = [
     "rt-multi-thread",
     "signal",
     "io-util",
+    "process",
 ] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 common = { path = "../common" }
