@@ -117,9 +117,9 @@ impl Future for AsyncChild {
                     Ok(o) => o,
                     Err(e) => return Poll::Ready(Err(e.into())),
                 };
-                self.exited = true;
 
                 if let Some(status) = Self::understand_wait_status(status) {
+                    eprintln!("Child waited on");
                     self.exited = true;
                     e.join().expect("Watcher thread panicked")?;
                     Poll::Ready(Ok(status))
@@ -134,15 +134,17 @@ impl Future for AsyncChild {
 
 impl Drop for AsyncChild {
     fn drop(&mut self) {
+        if self.exited {
+            eprintln!("Skipping cleaning up child since it was previously waited on")
+        }
+
         if !self.exited {
             eprintln!("Child timed out, killing child...");
             if let Err(e) = kill(self.child, Signal::SIGTERM) {
                 eprintln!("Error killing child: {e:?}")
             }
             // clean up zombie process
-            if !self.exited
-                && let Err(e) = nix::sys::wait::waitpid(self.child, None)
-            {
+            if let Err(e) = nix::sys::wait::waitpid(self.child, None) {
                 eprintln!("Error harvesting child' corpse: {e:?}");
             };
         }
