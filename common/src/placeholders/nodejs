@@ -1,5 +1,5 @@
 // take input
-process.stdin.on('input', (e)=>{
+process.stdin.on('data', (e)=>{
     const input = ''+e;
     // Output
     console.log(input);

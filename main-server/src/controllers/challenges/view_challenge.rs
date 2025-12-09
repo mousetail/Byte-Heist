@@ -254,14 +254,14 @@ pub async fn view_challenge(
             .await?
             .ok_or(Error::NotFound)?,
         comments,
-        up_reactions: challenge_reactions
+        up_reactions: up_reactions
             .into_iter()
             .map(|k| Reaction {
                 author_id: k.author_id,
                 author_username: k.author_username,
             })
             .collect(),
-        down_reactions: up_reactions
+        down_reactions: challenge_reactions
             .into_iter()
             .map(|k| Reaction {
                 author_id: k.author_id,
