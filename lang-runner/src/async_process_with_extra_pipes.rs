@@ -14,13 +14,11 @@ use std::{
     io::{PipeReader, Read, Write},
     os::fd::AsRawFd,
     pin::Pin,
-    sync::{Arc, OnceLock},
     task::{Context, Poll},
 };
 
 use futures_util::FutureExt;
 use nix::{
-    errno::Errno,
     spawn::{PosixSpawnAttr, PosixSpawnFileActions, posix_spawn},
     sys::{
         signal::{Signal, kill},
@@ -32,8 +30,7 @@ use nix::{
 /// A future that waits for a child process with a given PID to complete
 struct AsyncChild {
     child: Pid,
-    thread: Option<std::thread::JoinHandle<()>>,
-    result: Arc<OnceLock<Result<WaitStatus, Errno>>>,
+    thread: Option<std::thread::JoinHandle<Result<(), std::io::Error>>>,
     exited: bool,
 }
 
@@ -43,7 +40,6 @@ impl AsyncChild {
             child,
             thread: None,
             exited: false,
-            result: Arc::new(OnceLock::new()),
         }
     }
 
@@ -93,33 +89,41 @@ impl Future for AsyncChild {
                     None => {
                         let child = self.child;
                         let waker = cx.waker().clone();
-                        let result = self.result.clone();
                         self.thread = Some(std::thread::spawn(move || {
-                            let status = nix::sys::wait::waitpid(child, None);
-                            result
-                                .set(status)
-                                .expect("Exit status was already previously set");
-                            eprintln!("Child process exited normally");
+                            eprintln!("Starting wait");
+                            let status = nix::sys::wait::waitid(
+                                nix::sys::wait::Id::Pid(child),
+                                WaitPidFlag::WNOWAIT | WaitPidFlag::WEXITED,
+                            );
+
+                            if status.is_ok() {
+                                println!("Child process exited normally");
+                            } else {
+                                eprintln!(
+                                    "Error waiting for child. This could cause the async process to fail to wake up on time and cause time outs."
+                                )
+                            }
                             waker.wake();
+
+                            status.map(|_| ()).map_err(|e| e.into())
                         }));
                         Poll::Pending
                     }
                 }
             }
             Some(e) => {
-                let status = self.result.get();
-                if let Some(status) = status.cloned() {
+                let status = nix::sys::wait::waitpid(self.child, Some(WaitPidFlag::WNOHANG));
+                let status = match status {
+                    Ok(o) => o,
+                    Err(e) => return Poll::Ready(Err(e.into())),
+                };
+                self.exited = true;
+
+                if let Some(status) = Self::understand_wait_status(status) {
                     self.exited = true;
-                    e.join().expect("Watcher thread panicked");
-                    let exit_code = match status {
-                        Ok(e) => Self::understand_wait_status(e),
-                        Err(err) => return Poll::Ready(Err(err.into())),
-                    };
-                    Poll::Ready(Ok(
-                        exit_code.unwrap_or(SignalOrStatus::Signal(Signal::SIGUSR1))
-                    ))
+                    e.join().expect("Watcher thread panicked")?;
+                    Poll::Ready(Ok(status))
                 } else {
-                    eprintln!("Process polled but thread has not yet finished");
                     self.thread = Some(e);
                     Poll::Pending
                 }
@@ -135,9 +139,8 @@ impl Drop for AsyncChild {
             if let Err(e) = kill(self.child, Signal::SIGTERM) {
                 eprintln!("Error killing child: {e:?}")
             }
-            // clean up zombie process if the thread was not started yet
-            if self.thread.is_none()
-                && !self.exited
+            // clean up zombie process
+            if !self.exited
                 && let Err(e) = nix::sys::wait::waitpid(self.child, None)
             {
                 eprintln!("Error harvesting child' corpse: {e:?}");
