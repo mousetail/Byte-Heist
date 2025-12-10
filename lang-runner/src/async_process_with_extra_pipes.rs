@@ -19,6 +19,7 @@ use std::{
 
 use futures_util::FutureExt;
 use nix::{
+    fcntl::OFlag,
     spawn::{PosixSpawnAttr, PosixSpawnFileActions, posix_spawn},
     sys::{
         signal::{Signal, kill},
@@ -26,6 +27,9 @@ use nix::{
     },
     unistd::Pid,
 };
+use tokio::io::unix::AsyncFd;
+
+const MAX_BUFF_SIZE: usize = 1024 * 4;
 
 /// A future that waits for a child process with a given PID to complete
 struct AsyncChild {
@@ -83,25 +87,25 @@ impl Future for AsyncChild {
                 match exit_code {
                     Some(e) => {
                         self.exited = true;
-                        eprintln!("Child exited before first poll");
+                        eprintln!("Child exited before first poll (pid: {})", self.child);
                         Poll::Ready(Ok(e))
                     }
                     None => {
                         let child = self.child;
                         let waker = cx.waker().clone();
                         self.thread = Some(std::thread::spawn(move || {
-                            eprintln!("Starting wait");
+                            eprintln!("Starting wait (pid: {child})");
                             let status = nix::sys::wait::waitid(
                                 nix::sys::wait::Id::Pid(child),
                                 WaitPidFlag::WNOWAIT | WaitPidFlag::WEXITED,
                             );
 
-                            if status.is_ok() {
-                                println!("Child process exited normally");
-                            } else {
+                            if let Err(e) = status {
                                 eprintln!(
-                                    "Error waiting for child. This could cause the async process to fail to wake up on time and cause time outs."
-                                )
+                                    "Error waiting for child: {e}. This could cause the async process to fail to wake up on time and cause time outs."
+                                );
+                            } else {
+                                println!("Child exited normally.")
                             }
                             waker.wake();
 
@@ -119,7 +123,7 @@ impl Future for AsyncChild {
                 };
 
                 if let Some(status) = Self::understand_wait_status(status) {
-                    eprintln!("Child waited on");
+                    eprintln!("Child waited on (pid: {})", self.child);
                     self.exited = true;
                     e.join().expect("Watcher thread panicked")?;
                     Poll::Ready(Ok(status))
@@ -135,11 +139,14 @@ impl Future for AsyncChild {
 impl Drop for AsyncChild {
     fn drop(&mut self) {
         if self.exited {
-            eprintln!("Skipping cleaning up child since it was previously waited on")
+            eprintln!(
+                "Skipping cleaning up child (pid: {}) since it was previously waited on",
+                self.child
+            )
         }
 
         if !self.exited {
-            eprintln!("Child timed out, killing child...");
+            eprintln!("Child timed out, killing child... (pid: {})", self.child);
             if let Err(e) = kill(self.child, Signal::SIGTERM) {
                 eprintln!("Error killing child: {e:?}")
             }
@@ -158,7 +165,7 @@ pub struct ChildOutput {
 
 pub struct OutputChild {
     process: AsyncChild,
-    pipes: HashMap<i32, PipeReader>,
+    pipes: HashMap<i32, (AsyncFd<PipeReader>, Vec<u8>)>,
 }
 
 impl Future for OutputChild {
@@ -170,9 +177,19 @@ impl Future for OutputChild {
                 let pipes = std::mem::take(&mut self.pipes);
                 let pipes = pipes
                     .into_iter()
-                    .map(|(key, mut value)| {
-                        let mut str = String::new();
-                        value.read_to_string(&mut str)?;
+                    .map(|(key, (value, mut buffer))| {
+                        if buffer.len() < MAX_BUFF_SIZE {
+                            value.into_inner().read_to_end(&mut buffer).or_else(|e| {
+                                match e.kind() {
+                                    std::io::ErrorKind::WouldBlock => Ok(0),
+                                    e => Err(e),
+                                }
+                            })?;
+                        }
+
+                        let str = String::from_utf8(buffer).map_err(|e| {
+                            std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
+                        })?;
                         Ok((key, str))
                     })
                     .collect::<Result<HashMap<_, _>, std::io::Error>>()?;
@@ -182,7 +199,34 @@ impl Future for OutputChild {
                     outputs: pipes,
                 })
             })),
-            Poll::Pending => Poll::Pending,
+            Poll::Pending => {
+                self.pipes
+                    .iter_mut()
+                    .try_for_each(|(_fid, (reader, buffer))| {
+                        let guard = reader.poll_read_ready_mut(cx);
+                        if let Poll::Ready(mut guard) = guard? {
+                            let mut length = 1;
+                            while length > 0 {
+                                let original_length = buffer.len();
+                                buffer.resize(original_length + 4096, 0);
+                                length = guard
+                                    .get_inner_mut()
+                                    .read(&mut buffer[original_length..])
+                                    .or_else(|e| match e.kind() {
+                                        std::io::ErrorKind::WouldBlock => {
+                                            guard.clear_ready();
+                                            Ok(0)
+                                        }
+                                        _ => Err(e),
+                                    })?;
+
+                                buffer.truncate((original_length + length).min(MAX_BUFF_SIZE));
+                            }
+                        }
+                        Ok::<(), std::io::Error>(())
+                    })?;
+                Poll::Pending
+            }
         }
     }
 }
@@ -238,8 +282,17 @@ impl<'a> AsyncProcessWithCustomPipes<'a> {
 
         for fd in self.process_output {
             let (reader, writer) = std::io::pipe()?;
+
+            let args: OFlag =
+                OFlag::from_bits(nix::fcntl::fcntl(&reader, nix::fcntl::FcntlArg::F_GETFL)?)
+                    .expect("Expected valid file flags");
+            nix::fcntl::fcntl(
+                &reader,
+                nix::fcntl::FcntlArg::F_SETFL(args | OFlag::O_NONBLOCK),
+            )?;
+
             file_actions.add_dup2(writer.as_raw_fd(), fd)?;
-            readers.insert(fd, reader);
+            readers.insert(fd, (AsyncFd::new(reader)?, Vec::with_capacity(1024)));
 
             writers_to_be_dropped.push(writer);
         }

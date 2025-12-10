@@ -17,8 +17,9 @@ tokio = { version = "1.40.0", features = [
     "signal",
     "io-util",
     "process",
+    "net",
 ] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 common = { path = "../common" }
 serde_json = "1.0.128"
-nix = { version = "0.30.1", features = ["process", "signal"] }
+nix = { version = "0.30.1", features = ["process", "signal", "fs"] }
