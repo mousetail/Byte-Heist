@@ -11,7 +11,7 @@
 use std::{
     collections::HashMap,
     ffi::CStr,
-    io::{PipeReader, Read, Write},
+    io::Write,
     os::fd::AsRawFd,
     pin::Pin,
     task::{Context, Poll},
@@ -19,7 +19,6 @@ use std::{
 
 use futures_util::FutureExt;
 use nix::{
-    fcntl::OFlag,
     spawn::{PosixSpawnAttr, PosixSpawnFileActions, posix_spawn},
     sys::{
         signal::{Signal, kill},
@@ -27,7 +26,8 @@ use nix::{
     },
     unistd::Pid,
 };
-use tokio::io::unix::AsyncFd;
+
+use crate::limited_async_pipe::{LimitedAsyncPipe, LimitedAsyncPipeOutput};
 
 const MAX_BUFF_SIZE: usize = 1024 * 4;
 
@@ -160,12 +160,13 @@ impl Drop for AsyncChild {
 
 pub struct ChildOutput {
     pub result: SignalOrStatus,
-    pub outputs: HashMap<i32, String>,
+    pub outputs:
+        HashMap<i32, tokio::task::JoinHandle<Result<LimitedAsyncPipeOutput, std::io::Error>>>,
 }
 
 pub struct OutputChild {
     process: AsyncChild,
-    pipes: HashMap<i32, (AsyncFd<PipeReader>, Vec<u8>)>,
+    pipes: HashMap<i32, tokio::task::JoinHandle<Result<LimitedAsyncPipeOutput, std::io::Error>>>,
 }
 
 impl Future for OutputChild {
@@ -173,60 +174,16 @@ impl Future for OutputChild {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         match self.process.poll_unpin(cx) {
-            Poll::Ready(result) => Poll::Ready(result.and_then(|exit_status| {
+            Poll::Ready(result) => Poll::Ready(result.map(|exit_status| {
+                eprintln!("Ready");
                 let pipes = std::mem::take(&mut self.pipes);
-                let pipes = pipes
-                    .into_iter()
-                    .map(|(key, (value, mut buffer))| {
-                        if buffer.len() < MAX_BUFF_SIZE {
-                            value.into_inner().read_to_end(&mut buffer).or_else(|e| {
-                                match e.kind() {
-                                    std::io::ErrorKind::WouldBlock => Ok(0),
-                                    e => Err(e),
-                                }
-                            })?;
-                        }
 
-                        let str = String::from_utf8(buffer).map_err(|e| {
-                            std::io::Error::new(std::io::ErrorKind::InvalidInput, e)
-                        })?;
-                        Ok((key, str))
-                    })
-                    .collect::<Result<HashMap<_, _>, std::io::Error>>()?;
-
-                Ok(ChildOutput {
+                ChildOutput {
                     result: exit_status,
                     outputs: pipes,
-                })
+                }
             })),
-            Poll::Pending => {
-                self.pipes
-                    .iter_mut()
-                    .try_for_each(|(_fid, (reader, buffer))| {
-                        let guard = reader.poll_read_ready_mut(cx);
-                        if let Poll::Ready(mut guard) = guard? {
-                            let mut length = 1;
-                            while length > 0 {
-                                let original_length = buffer.len();
-                                buffer.resize(original_length + 4096, 0);
-                                length = guard
-                                    .get_inner_mut()
-                                    .read(&mut buffer[original_length..])
-                                    .or_else(|e| match e.kind() {
-                                        std::io::ErrorKind::WouldBlock => {
-                                            guard.clear_ready();
-                                            Ok(0)
-                                        }
-                                        _ => Err(e),
-                                    })?;
-
-                                buffer.truncate((original_length + length).min(MAX_BUFF_SIZE));
-                            }
-                        }
-                        Ok::<(), std::io::Error>(())
-                    })?;
-                Poll::Pending
-            }
+            Poll::Pending => Poll::Pending,
         }
     }
 }
@@ -283,16 +240,11 @@ impl<'a> AsyncProcessWithCustomPipes<'a> {
         for fd in self.process_output {
             let (reader, writer) = std::io::pipe()?;
 
-            let args: OFlag =
-                OFlag::from_bits(nix::fcntl::fcntl(&reader, nix::fcntl::FcntlArg::F_GETFL)?)
-                    .expect("Expected valid file flags");
-            nix::fcntl::fcntl(
-                &reader,
-                nix::fcntl::FcntlArg::F_SETFL(args | OFlag::O_NONBLOCK),
-            )?;
-
             file_actions.add_dup2(writer.as_raw_fd(), fd)?;
-            readers.insert(fd, (AsyncFd::new(reader)?, Vec::with_capacity(1024)));
+            readers.insert(
+                fd,
+                tokio::spawn(LimitedAsyncPipe::new(reader, MAX_BUFF_SIZE)?),
+            );
 
             writers_to_be_dropped.push(writer);
         }

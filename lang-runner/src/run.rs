@@ -269,9 +269,17 @@ impl<'a> RunInSandboxBuilder<'a> {
             .await
             .map_err(RunProcessError::IOError)?;
 
-        if let SignalOrStatus::Signal(signal) = output.result
-            && let Some(child_stderr) = output.outputs.get_mut(&STDERR_FILENO)
-        {
+        println!("Starting to wait on child stderr");
+        let mut child_stderr = output
+            .outputs
+            .remove(&STDERR_FILENO)
+            .expect("Expected a stderr pipe to exist")
+            .await
+            .expect("Task panicked")?
+            .into_string()?;
+        println!("Finished waiting on child stderr");
+
+        if let SignalOrStatus::Signal(signal) = output.result {
             write!(
                 child_stderr,
                 "\nProcess was possibly killed by signal {}",
@@ -280,15 +288,19 @@ impl<'a> RunInSandboxBuilder<'a> {
             .expect("Formatting string should never fail")
         }
 
+        println!("Starting to wait on child stdout");
+        let stdout = output
+            .outputs
+            .remove(&STDOUT_FILENO)
+            .expect("Expected an STDOUT pipe to exist")
+            .await
+            .expect("Task panicked")?
+            .into_string()?;
+        println!("Finished waiting on child stdout");
+
         Ok(RunCodeResult {
-            stdout: output
-                .outputs
-                .remove(&STDOUT_FILENO)
-                .unwrap_or(String::new()),
-            stderr: output
-                .outputs
-                .remove(&STDERR_FILENO)
-                .unwrap_or(String::new()),
+            stdout,
+            stderr: child_stderr,
             exit_status: match output.result {
                 // Seems signal + 128 is a standard way to report processes that where killed by a signal
                 SignalOrStatus::Signal(e) => (e as i32) + 128,

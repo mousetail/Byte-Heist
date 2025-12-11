@@ -3,6 +3,7 @@ mod cachemap;
 mod error;
 mod install_lang;
 mod judge;
+mod limited_async_pipe;
 mod process_message;
 mod run;
 mod stopwatch;
