@@ -66,26 +66,30 @@ impl Future for LimitedAsyncPipe {
             let mut guard = guard?;
             loop {
                 let original_length = buffer.len();
-
                 buffer.resize(original_length + CHUNK_SIZE, 0);
+
                 match guard.get_inner_mut().read(&mut buffer[original_length..]) {
                     Ok(0) => {
+                        buffer.truncate(original_length);
                         return std::task::Poll::Ready(Ok(LimitedAsyncPipeOutput {
                             value: std::mem::take(buffer),
                             truncated: *truncated,
                         }));
                     }
                     Ok(n) => {
-                        println!("Read {n} bytes");
                         if original_length + n > *max_length {
                             *truncated = true;
                         }
                         buffer.truncate((*max_length).min(original_length + n));
                     }
                     Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        buffer.truncate(original_length);
                         guard.clear_ready();
                     }
-                    Err(e) => return std::task::Poll::Ready(Err(e)),
+                    Err(e) => {
+                        buffer.truncate(original_length);
+                        return std::task::Poll::Ready(Err(e));
+                    }
                 };
             }
         } else {

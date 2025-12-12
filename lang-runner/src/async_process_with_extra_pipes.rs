@@ -29,7 +29,7 @@ use nix::{
 
 use crate::limited_async_pipe::{LimitedAsyncPipe, LimitedAsyncPipeOutput};
 
-const MAX_BUFF_SIZE: usize = 1024 * 4;
+const MAX_BUFF_SIZE: usize = 1024 * 100;
 
 /// A future that waits for a child process with a given PID to complete
 struct AsyncChild {
