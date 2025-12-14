@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::HashSet};
 use axum::{Extension, extract::Path};
 use macros::CustomResponseMetadata;
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, query_as, query_scalar};
+use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
     controllers::challenges::{reactions::RawChallengeReaction, suggest_changes::handle_diff},
@@ -279,7 +279,7 @@ pub struct NewComment {
 
 impl NewComment {
     async fn submit(&self, challenge: i32, author: i32, pool: &PgPool) -> Result<i32, sqlx::Error> {
-        query_scalar!(
+        let comment_id = query_scalar!(
             "
             INSERT INTO challenge_comments(challenge, parent, author, message)
             VALUES ($1, $2, $3, $4)
@@ -291,7 +291,20 @@ impl NewComment {
             self.message
         )
         .fetch_one(pool)
-        .await
+        .await?;
+
+        query!(
+            "
+            INSERT INTO challenge_comment_votes(author, comment, is_upvote)
+            VALUES ($1, $2, true)
+            ",
+            author,
+            comment_id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(comment_id)
     }
 }
 

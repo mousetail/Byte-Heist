@@ -4,7 +4,11 @@ use axum::{Extension, extract::FromRequestParts, http::request::Parts};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::{achievements::get_unread_achievements_for_user, models::account::Account};
+use crate::{
+    achievements::get_unread_achievements_for_user,
+    controllers::pending_change_suggestions::get_unread_change_suggestions_for_user,
+    models::account::Account,
+};
 
 pub enum Format<HtmlRendererContext> {
     Json,
@@ -41,28 +45,35 @@ impl<C: FromRequestParts<S>, S: Send + Sync> FromRequestParts<S> for Format<C> {
 pub struct HtmlContext {
     pub(super) account: Option<Account>,
     pub(super) unread_achievements: Vec<String>,
+    pub(super) unread_change_suggestions: i64,
 }
 
 impl<S: Send + Sync> FromRequestParts<S> for HtmlContext {
     type Rejection = Infallible;
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let account = Account::from_request_parts(parts, state).await.ok();
-        let unread_achievements = match account {
-            None => vec![],
+        let (unread_achievements, unread_change_suggestions) = match account {
+            None => (vec![], 0),
             Some(ref account) => {
                 let Extension(pool) = Extension::<PgPool>::from_request_parts(parts, state)
                     .await
                     .expect("Expected there to be a pg database");
 
-                get_unread_achievements_for_user(&pool, account.id)
-                    .await
-                    .expect("Error getting achievements")
+                (
+                    get_unread_achievements_for_user(&pool, account.id)
+                        .await
+                        .expect("Error getting achievements"),
+                    get_unread_change_suggestions_for_user(&pool, account.id)
+                        .await
+                        .expect("Error getting change edits"),
+                )
             }
         };
 
         Ok(HtmlContext {
             account,
             unread_achievements,
+            unread_change_suggestions,
         })
     }
 }

@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    challenge_change_suggestions.comment as id,\n                    challenge_comments.message as message,\n                    challenges.id as challenge_id,\n                    challenges.name as challenge_name,\n                    accounts.id as author_id,\n                    accounts.username as author_name,\n                    accounts.avatar as author_avatar,\n                    challenge_change_suggestions.old_value as old_value,\n                    challenge_change_suggestions.new_value as new_value\n                FROM challenge_change_suggestions\n                INNER JOIN challenge_comments ON challenge_comments.id = challenge_change_suggestions.comment\n                INNER JOIN challenges ON challenge_comments.challenge=challenges.id\n                INNER JOIN accounts ON challenge_comments.author=accounts.id\n                WHERE\n                    challenge_change_suggestions.status='active'\n                    AND (\n                        $1::integer IS NULL\n                        OR NOT EXISTS(\n                            SELECT FROM challenge_comment_votes\n                            WHERE challenge_comment_votes.comment = challenge_change_suggestions.comment\n                            AND challenge_comment_votes.author=$1\n                        )\n                    )\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "message",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "challenge_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "challenge_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "author_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "author_avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "old_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "new_value",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "893f5c66da0240e3e8ade569f4bf1fe266af62c05474fef7d4db1a19249e99bc"
+}

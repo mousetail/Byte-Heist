@@ -51,6 +51,10 @@ impl TeraHtmlRenderer {
         tera_context.insert("object", &data);
         tera_context.insert("account", &context.account);
         tera_context.insert("unread_achievements", &context.unread_achievements);
+        tera_context.insert(
+            "unread_change_suggestions",
+            &context.unread_change_suggestions,
+        );
         tera_context.insert("dev", &cfg!(debug_assertions));
 
         let html = match tera.render(template, &tera_context) {

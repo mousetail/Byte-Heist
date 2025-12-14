@@ -1,0 +1,24 @@
+{% import "base/test_cases.html.jinja" as test_cases %}
+{% extends "base/base.html.jinja" %}
+{% block content %}
+    <h1 class="text-3xl font-bold">Pending Unread Change Suggestions</h1>
+    <p>This page shows change suggestions you have not yet voted on. Click through to the page to vote them up or down.</p>
+    {% for change_suggestion in object %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold">{{ change_suggestion.challenge_name }}</h2>
+            <span>
+                <img class="w-4 inline"
+                     src="{{ change_suggestion.author_avatar }}"
+                     alt="{{ change_suggestion.author_avatar }} avatar">
+            {{ change_suggestion.author_name }}</span>
+            <blockquote class="p-2 border-l-4 border-l-solid border-l-grey">
+                {{ change_suggestion.message }}
+            </blockquote>
+            <div style="grid-column: span 3;">{{ test_cases::test_case_content(columns=change_suggestion.diff) }}</div>
+            <a class="btn btn-primary"
+               href="/challenge/{{ change_suggestion.challenge_id }}/{{ change_suggestion.challenge_name | slugify }}/view#comment-{{ change_suggestion.id }}">
+                View In Context
+            </a>
+        </div>
+    {% endfor %}
+{% endblock content %}

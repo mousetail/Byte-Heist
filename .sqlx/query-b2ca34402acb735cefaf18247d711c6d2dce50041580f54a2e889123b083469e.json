@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT COUNT(*)\n            FROM challenge_change_suggestions\n            WHERE status='active'\n            AND NOT EXISTS(\n                SELECT FROM challenge_comment_votes\n                    WHERE challenge_comment_votes.comment = challenge_change_suggestions.comment\n                    AND challenge_comment_votes.author=$1\n            )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b2ca34402acb735cefaf18247d711c6d2dce50041580f54a2e889123b083469e"
+}

@@ -31,6 +31,7 @@ use controllers::{
     },
     docs::get_doc,
     global_leaderboard::{global_leaderboard, global_leaderboard_per_language},
+    pending_change_suggestions::get_pending_change_suggestions,
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
         challenge_redirect_with_slug, get_leaderboard, new_solution,
@@ -204,6 +205,13 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/{id}/{language}",
             get(route_factory.handler("", challenge_redirect_no_slug)),
+        )
+        .route(
+            "/change_suggestions",
+            get(route_factory.handler(
+                "pending_change_suggestions.html.jinja",
+                get_pending_change_suggestions,
+            )),
         )
         .nest_service("/static", ServeDir::new("static"))
         .fallback(get(route_factory.handler("", strip_trailing_slashes)))

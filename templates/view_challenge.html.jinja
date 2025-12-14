@@ -44,7 +44,8 @@
         {{ self::vote_button(is_upvote=true, reactions=com.up_reactions) }}
         {{ self::vote_button(is_upvote=false, reactions=com.down_reactions) }}
       </form>
-      {%- if com.diff -%}<i class="text-xs">This suggestion will automatically be acceped if it gets enough 👍</i>{% endif %}
+      {%- if com.diff -%}<i class="text-xs">This suggestion will automatically be accepted if it gets enough 👍</i>
+    {% endif %}
   </div>
   <div class="comment-content">
     {%- if com.diff -%}
