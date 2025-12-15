@@ -13,7 +13,8 @@ pub fn render_test_case_display_mode(
 ) -> Columns {
     let input_separator = input_separator.as_str();
 
-    let iter = input.as_deref()
+    let iter = input
+        .as_deref()
         .unwrap_or("")
         .split(input_separator)
         .zip_longest(output.split(&sep))
@@ -56,7 +57,7 @@ pub fn render_test_case_display_mode(
                     column: 2,
                     span: 1,
                     row_span: 1,
-                    content: output.to_owned(),
+                    content: expected.to_owned(),
                     kind: if output == expected {
                         FieldKind::Identical
                     } else {

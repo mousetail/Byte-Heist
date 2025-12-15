@@ -9,7 +9,8 @@ pub fn render_filter_display_mode(
     input: Option<String>,
     input_separator: String,
 ) -> Columns {
-    let input_parts: Vec<&str> = input.as_deref()
+    let input_parts: Vec<&str> = input
+        .as_deref()
         .unwrap_or("")
         .split(&input_separator)
         .collect();
@@ -32,11 +33,11 @@ pub fn render_filter_display_mode(
         let output_value = output_parts
             .get(output_index)
             .copied()
-            .unwrap_or((None, ""));
+            .unwrap_or((Some(input_parts.len() - 1), ""));
         let expected_value = expected_parts
             .get(expected_index)
             .copied()
-            .unwrap_or((None, ""));
+            .unwrap_or((Some(input_parts.len() - 1), ""));
 
         match (output_value, expected_value) {
             ((Some(left), _), (Some(right), _)) if left == right => {
