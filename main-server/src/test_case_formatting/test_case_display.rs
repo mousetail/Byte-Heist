@@ -7,6 +7,7 @@ use crate::test_case_formatting::{
     Field, FieldKind,
     display_modes::{
         diff_display_mode::render_diff_display_mode,
+        filter_display_mode::render_filter_display_mode,
         test_case_display_mode::render_test_case_display_mode,
     },
 };
@@ -52,7 +53,9 @@ impl TestCaseDisplay {
                 common::DisplayMode::Normal => {
                     render_diff_display_mode(output, expected, sep, input)
                 }
-                common::DisplayMode::Filter => todo!(),
+                common::DisplayMode::Filter => {
+                    render_filter_display_mode(output, expected, sep, input, input_separator)
+                }
                 common::DisplayMode::Test => {
                     render_test_case_display_mode(output, expected, sep, input, input_separator)
                 }

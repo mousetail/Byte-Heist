@@ -78,7 +78,8 @@ export class StringResult {
   public assertEquals(
     value: string,
     sep: string = "\n",
-    displayMode?: undefined | "test" | "filter" | "normal"
+    displayMode?: undefined | "test" | "filter" | "normal",
+    inputSeparator?: string | undefined
   ): TestCase {
     const valid = eqIgnoreTrailingWhitespace(this.text, value);
     const testCase = new TestCase(undefined, valid ? "Pass" : "Fail", {
@@ -88,6 +89,7 @@ export class StringResult {
         sep,
         input: this.input,
         displayMode,
+        inputSeparator,
       },
     });
     this.context.testCases.push(testCase);
@@ -259,7 +261,8 @@ export class Context {
           .map((i) => i[0])
           .join(options.inputSeparator),
         undefined,
-        "filter"
+        "filter",
+        options.inputSeparator
       );
     }
   }
