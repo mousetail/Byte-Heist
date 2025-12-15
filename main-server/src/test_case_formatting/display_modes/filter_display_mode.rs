@@ -33,11 +33,11 @@ pub fn render_filter_display_mode(
         let output_value = output_parts
             .get(output_index)
             .copied()
-            .unwrap_or((Some(input_parts.len() - 1), ""));
+            .unwrap_or((Some(input_parts.len()), ""));
         let expected_value = expected_parts
             .get(expected_index)
             .copied()
-            .unwrap_or((Some(input_parts.len() - 1), ""));
+            .unwrap_or((Some(input_parts.len()), ""));
 
         match (output_value, expected_value) {
             ((Some(left), _), (Some(right), _)) if left == right => {
@@ -49,21 +49,21 @@ pub fn render_filter_display_mode(
                         column: 0,
                         span: 1,
                         row_span: 1,
-                        content: input_parts[left].to_owned(),
+                        content: input_parts.get(left).copied().unwrap_or("").to_owned(),
                         kind: FieldKind::Identical,
                     },
                     Field {
                         column: 1,
                         span: 1,
                         row_span: 1,
-                        content: input_parts[left].to_owned(),
+                        content: input_parts.get(left).copied().unwrap_or("").to_owned(),
                         kind: FieldKind::Identical,
                     },
                     Field {
                         column: 2,
                         span: 1,
                         row_span: 1,
-                        content: input_parts[left].to_owned(),
+                        content: input_parts.get(left).copied().unwrap_or("").to_owned(),
                         kind: FieldKind::Identical,
                     },
                 ])
@@ -137,7 +137,7 @@ pub fn render_filter_display_mode(
                         column: 0,
                         span: 1,
                         row_span: 1,
-                        content: input_parts[left].to_owned(),
+                        content: input_parts.get(left).copied().unwrap_or("").to_owned(),
                         kind: FieldKind::Identical,
                     },
                     Field {
@@ -157,7 +157,7 @@ pub fn render_filter_display_mode(
                         column: 0,
                         span: 1,
                         row_span: 1,
-                        content: input_parts[right].to_owned(),
+                        content: input_parts.get(right).copied().unwrap_or("").to_owned(),
                         kind: FieldKind::Identical,
                     },
                     Field {
