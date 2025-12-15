@@ -13,9 +13,7 @@ pub fn render_test_case_display_mode(
 ) -> Columns {
     let input_separator = input_separator.as_str();
 
-    let iter = input
-        .as_ref()
-        .map(|i| i.as_str())
+    let iter = input.as_deref()
         .unwrap_or("")
         .split(input_separator)
         .zip_longest(output.split(&sep))
@@ -26,11 +24,11 @@ pub fn render_test_case_display_mode(
                 .map(|i| i.left_and_right())
                 .unwrap_or((None, None));
 
-            return (
+            (
                 left.unwrap_or(""),
                 center.unwrap_or(""),
                 right.unwrap_or(""),
-            );
+            )
         });
 
     let fields: Vec<Field> = FilterIteratorButKeepContext::new(

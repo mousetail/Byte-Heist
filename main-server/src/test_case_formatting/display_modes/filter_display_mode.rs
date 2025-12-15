@@ -9,9 +9,7 @@ pub fn render_filter_display_mode(
     input: Option<String>,
     input_separator: String,
 ) -> Columns {
-    let input_parts: Vec<&str> = input
-        .as_ref()
-        .map(|i| i.as_str())
+    let input_parts: Vec<&str> = input.as_deref()
         .unwrap_or("")
         .split(&input_separator)
         .collect();
