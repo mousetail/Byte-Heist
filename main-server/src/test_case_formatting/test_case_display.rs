@@ -3,7 +3,13 @@ use std::borrow::Cow;
 use common::{ResultDisplay, TestCase, TestPassState};
 use serde::Serialize;
 
-use crate::test_case_formatting::{Field, FieldKind, diff_tools::get_diff_elements};
+use crate::test_case_formatting::{
+    Field, FieldKind,
+    display_modes::{
+        diff_display_mode::render_diff_display_mode,
+        test_case_display_mode::render_test_case_display_mode,
+    },
+};
 
 use super::Columns;
 
@@ -40,33 +46,17 @@ impl TestCaseDisplay {
                 expected,
                 input,
                 sep,
-            } => {
-                let mut diff = get_diff_elements(
-                    &output,
-                    &expected,
-                    &sep,
-                    match &input {
-                        Some(_) => 1,
-                        None => 0,
-                    },
-                );
-
-                if let Some(input) = input {
-                    diff.column_titles.insert(0, Some("Input"));
-                    diff.fields.insert(
-                        0,
-                        Field {
-                            column: 0,
-                            span: 1,
-                            content: input,
-                            kind: FieldKind::Identical,
-                            row_span: diff.height + 1,
-                        },
-                    );
+                display_mode,
+                input_separator,
+            } => match display_mode {
+                common::DisplayMode::Normal => {
+                    render_diff_display_mode(output, expected, sep, input)
                 }
-
-                diff
-            }
+                common::DisplayMode::Filter => todo!(),
+                common::DisplayMode::Test => {
+                    render_test_case_display_mode(output, expected, sep, input, input_separator)
+                }
+            },
             common::ResultDisplay::Run {
                 input,
                 output,

@@ -6,6 +6,8 @@ export type ResultDisplay =
         output: string;
         input?: string | undefined;
         sep?: string | undefined;
+        displayMode?: "normal" | "filter" | "test" | undefined;
+        inputSeparator?: string | undefined;
       };
     }
   | { Text: string }
@@ -73,7 +75,11 @@ export class StringResult {
     this.input = input;
   }
 
-  public assertEquals(value: string, sep: string = "\n"): TestCase {
+  public assertEquals(
+    value: string,
+    sep: string = "\n",
+    displayMode?: undefined | "test" | "filter" | "normal"
+  ): TestCase {
     const valid = eqIgnoreTrailingWhitespace(this.text, value);
     const testCase = new TestCase(undefined, valid ? "Pass" : "Fail", {
       Diff: {
@@ -81,6 +87,7 @@ export class StringResult {
         output: this.text,
         sep,
         input: this.input,
+        displayMode,
       },
     });
     this.context.testCases.push(testCase);
@@ -134,15 +141,15 @@ function shuffleAndDeal<T>(
 }
 
 export type TestCasesOptions<T> = {
-  inputSeperator: string;
-  outputSeperator: string;
+  inputSeparator: string;
+  outputSeparator: string;
   numberOfRuns: number;
   shuffle: boolean;
   compareFunction: (a: string, b: T) => boolean;
 };
 
 export type FilterCasesOptions = {
-  inputSeperator: string;
+  inputSeparator: string;
   shuffle: boolean;
   numberOfRuns: number;
 };
@@ -186,8 +193,8 @@ export class Context {
     overrideOptions: Partial<TestCasesOptions<T>> = {}
   ): AsyncIterableIterator<TestCase> {
     const options: TestCasesOptions<T> = {
-      inputSeperator: "\n",
-      outputSeperator: "\n",
+      inputSeparator: "\n",
+      outputSeparator: "\n",
       numberOfRuns: 2,
       shuffle: true,
       compareFunction: (a, b) => eqIgnoreTrailingWhitespace(a, "" + b),
@@ -198,11 +205,11 @@ export class Context {
 
     // TODO: When running code becomes thread safe, this should run in paralel
     for (const hand of hands) {
-      const input = hand.map((i) => i[0]).join(options.inputSeperator);
+      const input = hand.map((i) => i[0]).join(options.inputSeparator);
       yield (await this.run(input)).assert((d) => {
         const cases = [
           ...zipLongest(
-            d.trimEnd().split(options.outputSeperator),
+            d.trimEnd().split(options.outputSeparator),
             hand.map((i) => i[1])
           ),
         ].map(([a, b]) => ({
@@ -220,7 +227,9 @@ export class Context {
               output: d,
               expected: cases
                 .map((i) => (i.equal ? i.output : i.expected))
-                .join(options.outputSeperator),
+                .join(options.outputSeparator),
+              displayMode: "test",
+              inputSeparator: options.inputSeparator,
             },
           }
         );
@@ -233,22 +242,24 @@ export class Context {
     overrideOptions: Partial<FilterCasesOptions> = {}
   ): AsyncIterableIterator<TestCase> {
     const options: FilterCasesOptions = {
-      inputSeperator: "\n",
+      inputSeparator: "\n",
       numberOfRuns: 2,
       shuffle: true,
       ...overrideOptions,
     };
     const hands = shuffleAndDeal(testCases, options);
 
-    // TODO: When running code becomes thread safe, this should run in paralel
+    // TODO: When running code becomes thread safe, this should run in parallel
     for (const hand of hands) {
       yield (
-        await this.run(hand.map((i) => i[0]).join(options.inputSeperator))
+        await this.run(hand.map((i) => i[0]).join(options.inputSeparator))
       ).assertEquals(
         hand
           .filter((i) => i[1])
           .map((i) => i[0])
-          .join(options.inputSeperator)
+          .join(options.inputSeparator),
+        undefined,
+        "filter"
       );
     }
   }

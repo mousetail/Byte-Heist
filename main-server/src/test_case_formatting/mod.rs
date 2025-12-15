@@ -1,4 +1,5 @@
 mod diff_tools;
+mod display_modes;
 mod filter_iterator_but_keep_context;
 mod raw_itemwise_diff;
 mod test_case_display;

@@ -95,6 +95,15 @@ fn create_default_sep() -> String {
     "\n".to_string()
 }
 
+#[derive(Serialize, Default, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DisplayMode {
+    #[default]
+    Normal,
+    Filter,
+    Test,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub enum ResultDisplay {
     Empty,
@@ -106,6 +115,10 @@ pub enum ResultDisplay {
         expected: String,
         #[serde(default = "create_default_sep")]
         sep: String,
+        #[serde(rename = "displayMode", default)]
+        display_mode: DisplayMode,
+        #[serde(rename = "inputSeparator", default = "create_default_sep")]
+        input_separator: String,
     },
     Run {
         #[serde(default)]
@@ -125,6 +138,8 @@ impl ResultDisplay {
                 expected,
                 sep,
                 input,
+                display_mode: _,
+                input_separator: _,
             } => {
                 output.truncate(length);
                 expected.truncate(length);
