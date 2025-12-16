@@ -11,8 +11,8 @@ the *length* of your code.
 | Train architecture and readable code | Train mathematics |
 | Very satisfying when you finally solve a challenge | Very satisfying when you finally solve a challenge |
 
-**You don't need to care about your score** Optimising your score is optional. Feel free
-to submit fully commented solutions if you prefer to code that way. Especially restricted source.
+**You don't need to care about your score.** Optimising your score is optional. Feel free
+to submit fully commented solutions if you prefer to code that way.
 
 ## How to have the most fun
 
@@ -27,7 +27,7 @@ anything you can do to make it more readable. No point in optimizing if you don'
 - Think about the problem overnight, or in the next few days and weeks. Code golf mostly works by getting a random idea during your morning commute, not by staring at the problem.
 - Don't be afraid to try "stupid" ideas. Sometimes an algorithm that feels less elegant gets you a better score. Sometimes you change a whole bit of your code for no score change but which allows saving bytes somewhere else.
 
-## OK but how do I actually get descent scores?
+## OK, but how do I actually get decent scores?
 
 I will just re-iterate that it's more about personal enjoyment and learning than scores. However, I will link to some resources which might help you:
 
@@ -48,28 +48,28 @@ I will just re-iterate that it's more about personal enjoyment and learning than
 ### JavaScript (Deno/Node) Specific
 
 - [Tips for Golfing in JavaScript on Code Golf Stack Exchange](https://codegolf.stackexchange.com/questions/2682/tips-for-golfing-in-javascript) - A lot of tips but many are low quality 
-- [JavaScript on the code.golf wiki](https://code.golf/wiki/langs/javascript) - A handful of descent quality tips, some are code.golf specific
+- [JavaScript on the code.golf wiki](https://code.golf/wiki/langs/javascript) - A handful of decent quality tips, some are code.golf specific
 
 Deno will probably be removed from the site at some point.
 
 ### C Specific
 
-C being ancient means there is a lot of tips online but very scattered. It pays to do some research.
+C being ancient means there are many tips online, but they're very scattered. It pays to do some research.
 
 - [Tips for golfing in C on Code Golf Stack Exchange](https://codegolf.stackexchange.com/questions/2203/tips-for-golfing-in-c) - Many answers, mostly low quality
-- [C on the code.golf wiki](https://code.golf/wiki/langs/c) - Byte Heist uses the same TCC compiler as code.golf uses so tips regarding it's idiosyncrasies should apply here too.
+- [C on the code.golf wiki](https://code.golf/wiki/langs/c) - Byte Heist uses the same [TCC](https://bellard.org/tcc/) compiler as code.golf, so tips regarding its idiosyncrasies should apply here too.
 
 ### Rust Specific
 
-Golfing in Rust is less popular so there are less resources available, but there is also more opportunity to invent new tricks yourself.
+Golfing in Rust is less popular, so there are fewer resources available. However, this means you have the opportunity to invent new tricks yourself.
 
-- [Tips for golfing in Rust on Code Golf Stack Exchange](https://codegolf.stackexchange.com/questions/74096/tips-for-golfing-in-rust) - For Rust, the tips on Code Golf Stack Exchange seem to actually be descent quality
+- [Tips for golfing in Rust on Code Golf Stack Exchange](https://codegolf.stackexchange.com/questions/74096/tips-for-golfing-in-rust) - For Rust, the tips on Code Golf Stack Exchange seem to actually be decent quality
 - [Rust on the Code.golf wiki](https://code.golf/wiki/langs/rust) - The top section is code.golf specific but the "Random Tips" are helpful on Byte Heist
 - [Iterator Trait on Rust Docs](https://doc.rust-lang.org/std/iter/trait.Iterator.html) - Most Rust golfing comes down to choosing the correct method on the Iterator trait, so knowing all of them is quite helpful.
 
 ### Kotlin Specific
 
-I do not actually know much about golfing in Kotlin so of someone is willing to fill out this section that would be helpful.
+I do not actually know much about golfing in Kotlin, so if someone is willing to help [fill out](https://github.com/mousetail/Byte-Heist/edit/master/doc/Intro_to_Code_Golf.md) this section, that would be helpful.
 
 ### TinyAPL specific
 
