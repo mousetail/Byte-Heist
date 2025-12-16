@@ -111,10 +111,10 @@ impl NewReaction {
         if let Some(comment_id) = self.comment_id {
             query!(
                 "
-            UPDATE challenge_comments
-            SET last_vote_time=now()
-            WHERE id=$1
-            ",
+                    UPDATE challenge_comments
+                    SET last_vote_time=now()
+                    WHERE id=$1
+                ",
                 comment_id
             )
             .execute(pool)
@@ -122,15 +122,15 @@ impl NewReaction {
 
             query_scalar!(
                 "
-            INSERT INTO challenge_comment_votes(
-                author,
-                comment,
-                is_upvote
-            )
-            VALUES ($1, $2, $3)
-            ON CONFLICT(author, comment) DO UPDATE SET is_upvote=$3
-            RETURNING id
-            ",
+                    INSERT INTO challenge_comment_votes(
+                        author,
+                        comment,
+                        is_upvote
+                    )
+                    VALUES ($1, $2, $3)
+                    ON CONFLICT(author, comment) DO UPDATE SET is_upvote=$3
+                    RETURNING id
+                ",
                 author,
                 comment_id,
                 self.is_upvote
@@ -138,6 +138,27 @@ impl NewReaction {
             .fetch_one(pool)
             .await
         } else {
+            let challenge_is_beta = query_scalar!(
+                r#"
+                    SELECT status='beta' as "value!"
+                    FROM challenges WHERE id=$1
+                "#,
+                challenge_id
+            )
+            .fetch_one(pool)
+            .await?;
+
+            if challenge_is_beta {
+                award_achievement(
+                    pool,
+                    author,
+                    common::AchievementType::VoteOnBetaChallenge,
+                    Some(challenge_id),
+                    None,
+                )
+                .await?;
+            }
+
             query_scalar!(
                 r#"
                     INSERT INTO challenge_votes(

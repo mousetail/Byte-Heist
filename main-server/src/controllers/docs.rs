@@ -1,9 +1,11 @@
 use std::{borrow::Cow, fs::read_to_string, io::ErrorKind, path::PathBuf, sync::LazyLock};
 
-use axum::extract::Path;
+use axum::{Extension, extract::Path};
+use common::AchievementType;
 use serde::Serialize;
+use sqlx::PgPool;
 
-use crate::error::Error;
+use crate::{achievements::award_achievement, error::Error, models::account::Account};
 
 #[derive(Serialize, Clone)]
 struct File {
@@ -38,7 +40,11 @@ pub struct GetDocOutput {
     files: &'static [File],
 }
 
-pub async fn get_doc(path: Option<Path<String>>) -> Result<GetDocOutput, Error> {
+pub async fn get_doc(
+    Extension(pool): Extension<PgPool>,
+    path: Option<Path<String>>,
+    account: Option<Account>,
+) -> Result<GetDocOutput, Error> {
     let files = FILES.as_ref().map_err(|_| Error::ServerError)?;
 
     let original_path = path
@@ -85,6 +91,12 @@ pub async fn get_doc(path: Option<Path<String>>) -> Result<GetDocOutput, Error> 
             Error::ServerError
         }
     })?;
+
+    if let Some(account) = account {
+        award_achievement(&pool, account.id, AchievementType::ReadTheDocs, None, None)
+            .await
+            .map_err(Error::Database)?;
+    }
 
     Ok(GetDocOutput {
         content: s,

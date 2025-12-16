@@ -71,7 +71,7 @@ pub enum TestPassState {
     Fail,
     /// This particular test is only informational and has no effect on the pass/fail of the entire challenge
     Info,
-    /// This test failed but failure does not nececairly mean the entire challenge failed. Can be used if, for example, you only need 5 out of 6
+    /// This test failed but failure does not necessarily mean the entire challenge failed. Can be used if, for example, you only need 5 out of 6
     /// Tests to pass
     Warning,
 }

@@ -46,6 +46,7 @@ pub enum AchievementType {
     AcceptedVote5,
     AcceptedVote25,
     AcceptedVote125,
+    VoteOnBetaChallenge,
 
     ChangeSuggestionInvalidates1,
     // ChangeSuggestionInvalidate12,
@@ -84,6 +85,7 @@ pub enum AchievementType {
     // SolveImpossible,
     StarTheRepo,
     Contribute,
+    ReadTheDocs,
 }
 
 impl AchievementType {
@@ -126,14 +128,16 @@ impl AchievementType {
             AchievementType::AcceptedVote5 => "Five Thumbs",
             AchievementType::AcceptedVote25 => "Twenty-five Thumbs",
             AchievementType::AcceptedVote125 => "One Hundred and Twenty Five Thumbs",
+            AchievementType::VoteOnBetaChallenge => "Ring finger",
+            AchievementType::ReadTheDocs => "Markdown Monk",
         }
     }
 
     pub fn get_achievement_category(self) -> AchievementCategory {
         match self {
-            AchievementType::StarTheRepo | AchievementType::Contribute => {
-                AchievementCategory::Miscellaneous
-            }
+            AchievementType::StarTheRepo
+            | AchievementType::Contribute
+            | AchievementType::ReadTheDocs => AchievementCategory::Miscellaneous,
             AchievementType::Python1000Point
             | AchievementType::JavaScript1000Point
             | AchievementType::Apl1000Point
@@ -158,7 +162,8 @@ impl AchievementType {
             | AchievementType::Vote
             | AchievementType::AcceptedVote5
             | AchievementType::AcceptedVote25
-            | AchievementType::AcceptedVote125 => AchievementCategory::ChangeSuggestions,
+            | AchievementType::AcceptedVote125
+            | AchievementType::VoteOnBetaChallenge => AchievementCategory::ChangeSuggestions,
             _ => AchievementCategory::PointRelated,
         }
     }
@@ -247,6 +252,8 @@ impl AchievementType {
             AchievementType::AcceptedVote125 => {
                 "Vote 125 times on change suggestions that end up accepted or rejected"
             }
+            AchievementType::VoteOnBetaChallenge => "Vote on a beta challenge",
+            AchievementType::ReadTheDocs => "Read the documentation",
         }
     }
 
