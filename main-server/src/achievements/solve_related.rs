@@ -6,6 +6,7 @@ pub(super) async fn award_solve_related(pool: &PgPool) -> Result<(), sqlx::Error
     let last_day_solve_name: &str = AchievementType::LastDaySolve.into();
     let ten_top_ten_name: &str = AchievementType::TenTopTen.into();
     let one_point_name: &str = AchievementType::OnePoint.into();
+    let solve_impossible: &str = AchievementType::SolveImpossible.into();
 
     query!(
         r#"
@@ -102,6 +103,24 @@ pub(super) async fn award_solve_related(pool: &PgPool) -> Result<(), sqlx::Error
         ON CONFLICT DO NOTHING
         ",
         last_day_solve_name
+    )
+    .execute(pool)
+    .await?;
+
+    query!(
+        "INSERT INTO achievements(user_id, achievement, related_language, related_challenge, awarded_at, achieved)
+        SELECT
+            author as user_id,
+            $1,
+            language as related_language,
+            challenge as related_challenge,
+            created_at,
+            true
+        FROM solutions
+        WHERE challenge=17
+        ON CONFLICT DO NOTHING
+        ",
+        solve_impossible
     )
     .execute(pool)
     .await?;

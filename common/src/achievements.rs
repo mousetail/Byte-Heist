@@ -82,7 +82,7 @@ pub enum AchievementType {
     // ReadDocumentation,
     // SubmitAPullRequest,
     // Miscellaneous
-    // SolveImpossible,
+    SolveImpossible,
     StarTheRepo,
     Contribute,
     ReadTheDocs,
@@ -130,6 +130,7 @@ impl AchievementType {
             AchievementType::AcceptedVote125 => "One Hundred and Twenty Five Thumbs",
             AchievementType::VoteOnBetaChallenge => "Ring finger",
             AchievementType::ReadTheDocs => "Markdown Monk",
+            AchievementType::SolveImpossible => "Impossible?",
         }
     }
 
@@ -137,7 +138,8 @@ impl AchievementType {
         match self {
             AchievementType::StarTheRepo
             | AchievementType::Contribute
-            | AchievementType::ReadTheDocs => AchievementCategory::Miscellaneous,
+            | AchievementType::ReadTheDocs
+            | AchievementType::SolveImpossible => AchievementCategory::Miscellaneous,
             AchievementType::Python1000Point
             | AchievementType::JavaScript1000Point
             | AchievementType::Apl1000Point
@@ -254,6 +256,7 @@ impl AchievementType {
             }
             AchievementType::VoteOnBetaChallenge => "Vote on a beta challenge",
             AchievementType::ReadTheDocs => "Read the documentation",
+            AchievementType::SolveImpossible => "Solve Impossible (Challenge #17)",
         }
     }
 
