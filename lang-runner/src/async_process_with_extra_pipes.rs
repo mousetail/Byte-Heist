@@ -69,6 +69,7 @@ impl AsyncChild {
     }
 }
 
+#[derive(Debug)]
 pub enum SignalOrStatus {
     Signal(Signal),
     Status(i32),
@@ -84,17 +85,21 @@ impl Future for AsyncChild {
                     Ok(e) => Self::understand_wait_status(e),
                     Err(err) => return Poll::Ready(Err(err.into())),
                 };
+
                 match exit_code {
                     Some(e) => {
                         self.exited = true;
-                        eprintln!("Child exited before first poll (pid: {})", self.child);
+                        eprintln!(
+                            "[AsyncChild] Child exited before first poll (pid: {})",
+                            self.child
+                        );
                         Poll::Ready(Ok(e))
                     }
                     None => {
                         let child = self.child;
                         let waker = cx.waker().clone();
                         self.thread = Some(std::thread::spawn(move || {
-                            eprintln!("Starting wait (pid: {child})");
+                            eprintln!("[AsyncChild] [Thread] Starting wait (pid: {child})");
                             let status = nix::sys::wait::waitid(
                                 nix::sys::wait::Id::Pid(child),
                                 WaitPidFlag::WNOWAIT | WaitPidFlag::WEXITED,
@@ -105,7 +110,7 @@ impl Future for AsyncChild {
                                     "Error waiting for child: {e}. This could cause the async process to fail to wake up on time and cause time outs."
                                 );
                             } else {
-                                println!("Child exited normally.")
+                                println!("[AsyncChild] Child exited normally.")
                             }
                             waker.wake();
 
@@ -115,7 +120,7 @@ impl Future for AsyncChild {
                     }
                 }
             }
-            Some(e) => {
+            Some(thread) => {
                 let status = nix::sys::wait::waitpid(self.child, Some(WaitPidFlag::WNOHANG));
                 let status = match status {
                     Ok(o) => o,
@@ -123,12 +128,14 @@ impl Future for AsyncChild {
                 };
 
                 if let Some(status) = Self::understand_wait_status(status) {
-                    eprintln!("Child waited on (pid: {})", self.child);
+                    eprintln!("[AsyncChild] Child waited on (pid: {})", self.child);
                     self.exited = true;
-                    e.join().expect("Watcher thread panicked")?;
+                    thread.join().expect("Watcher thread panicked")?;
                     Poll::Ready(Ok(status))
                 } else {
-                    self.thread = Some(e);
+                    println!("[AsyncChild] Waited on but thread not ready");
+
+                    self.thread = Some(thread);
                     Poll::Pending
                 }
             }

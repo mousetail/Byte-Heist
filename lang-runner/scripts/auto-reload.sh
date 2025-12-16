@@ -9,6 +9,7 @@ program="$(realpath "$1")"
 $program &
 PID=$!
 restart () {
+    pkill bwrap
     kill -TERM $PID
     $program "${@:1}" &
     PID=$!

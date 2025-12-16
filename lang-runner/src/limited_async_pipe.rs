@@ -62,9 +62,10 @@ impl Future for LimitedAsyncPipe {
             ref mut truncated,
             ref mut buffer,
         } = *self.as_mut();
-        if let std::task::Poll::Ready(guard) = inner.poll_read_ready_mut(cx) {
-            let mut guard = guard?;
-            loop {
+
+        loop {
+            if let std::task::Poll::Ready(guard) = inner.poll_read_ready_mut(cx) {
+                let mut guard = guard?;
                 let original_length = buffer.len();
                 buffer.resize(original_length + CHUNK_SIZE, 0);
 
@@ -90,10 +91,10 @@ impl Future for LimitedAsyncPipe {
                         buffer.truncate(original_length);
                         return std::task::Poll::Ready(Err(e));
                     }
-                };
-            }
-        } else {
-            std::task::Poll::Pending
+                }
+            } else {
+                return std::task::Poll::Pending;
+            };
         }
     }
 }
