@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT name, status as \"status:ChallengeStatus\" FROM challenges WHERE id=$1",
+  "query": "SELECT name, status as \"status:ChallengeStatus\", category as \"category:ChallengeCategory\" FROM challenges WHERE id=$1",
   "describe": {
     "columns": [
       {
@@ -24,6 +24,22 @@
             }
           }
         }
+      },
+      {
+        "ordinal": 2,
+        "name": "category:ChallengeCategory",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
       }
     ],
     "parameters": {
@@ -33,8 +49,9 @@
     },
     "nullable": [
       false,
+      true,
       true
     ]
   },
-  "hash": "8a3ae43525eea6b61d4534efdf45d24d225e26ae7322626fe2bc5d65b9e08730"
+  "hash": "cf53b917a82129b867bd238e0d22b1b9e83f34a3a3bf5f939787c44042362709"
 }

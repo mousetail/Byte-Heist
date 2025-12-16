@@ -14,7 +14,7 @@ use crate::{
     models::{
         GetById,
         account::Account,
-        challenge::{ChallengeStatus, ChallengeWithAuthorInfo},
+        challenge::{ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo},
         solutions::{LeaderboardEntry, SolutionWithLanguage},
     },
     test_case_formatting::inline_diff,
@@ -442,11 +442,12 @@ pub async fn post_change_suggestion(
     struct ChallengeInfo {
         name: String,
         status: Option<ChallengeStatus>,
+        category: Option<ChallengeCategory>,
     }
 
     let challenge_info = query_as!(
         ChallengeInfo,
-        r#"SELECT name, status as "status:ChallengeStatus" FROM challenges WHERE id=$1"#,
+        r#"SELECT name, status as "status:ChallengeStatus", category as "category:ChallengeCategory" FROM challenges WHERE id=$1"#,
         challenge_id
     )
     .fetch_one(pool)
@@ -455,7 +456,8 @@ pub async fn post_change_suggestion(
     if matches!(
         challenge_info.status,
         Some(ChallengeStatus::Draft | ChallengeStatus::Private)
-    ) {
+    ) || matches!(challenge_info.category, Some(ChallengeCategory::Private))
+    {
         return Ok(());
     }
 
