@@ -9,8 +9,11 @@ use serde::Deserialize;
 use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
-    achievements::award_achievement, controllers::challenges::suggest_changes::CommentDiff,
-    error::Error, models::account::Account, tera_utils::auto_input::AutoInput,
+    achievements::{award_achievement, vote_achievements::award_vote_achievements},
+    controllers::challenges::suggest_changes::CommentDiff,
+    error::Error,
+    models::account::Account,
+    tera_utils::auto_input::AutoInput,
 };
 
 pub(super) struct RawChallengeReaction {
@@ -264,6 +267,10 @@ async fn process_diff(
     };
 
     if status != DiffStatus::Active {
+        for reaction in reactions {
+            award_vote_achievements(pool, reaction.author_id).await?;
+        }
+
         query!(
             "
                 UPDATE challenge_change_suggestions

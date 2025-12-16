@@ -43,6 +43,10 @@ pub enum AchievementType {
     ImproveJudge,
     ImproveExample,
     Vote,
+    AcceptedVote5,
+    AcceptedVote25,
+    AcceptedVote125,
+
     ChangeSuggestionInvalidates1,
     // ChangeSuggestionInvalidate12,
     // UpvoteSuggestionThatInvalidates3,
@@ -119,6 +123,9 @@ impl AchievementType {
             AchievementType::ImproveJudge => "Lawyer",
             AchievementType::ChangeSuggestionInvalidates1 => "Cheese Enthusiast",
             AchievementType::Vote => "Thumbs",
+            AchievementType::AcceptedVote5 => "Five Thumbs",
+            AchievementType::AcceptedVote25 => "Twenty-five Thumbs",
+            AchievementType::AcceptedVote125 => "One Hundred and Twenty Five Thumbs",
         }
     }
 
@@ -148,7 +155,10 @@ impl AchievementType {
             | AchievementType::ImproveJudge
             | AchievementType::ImproveDescription
             | AchievementType::ChangeSuggestionInvalidates1
-            | AchievementType::Vote => AchievementCategory::ChangeSuggestions,
+            | AchievementType::Vote
+            | AchievementType::AcceptedVote5
+            | AchievementType::AcceptedVote25
+            | AchievementType::AcceptedVote125 => AchievementCategory::ChangeSuggestions,
             _ => AchievementCategory::PointRelated,
         }
     }
@@ -173,6 +183,9 @@ impl AchievementType {
             | Self::Rust1000Point => Some(1000),
             Self::CodeGolf2000Point | Self::RestrictedSource2000Point => Some(2000),
             Self::FirstDaySolve | Self::LastDaySolve => Some(24),
+            Self::AcceptedVote5 => Some(5),
+            Self::AcceptedVote25 => Some(25),
+            Self::AcceptedVote125 => Some(125),
 
             AchievementType::JavaScript3500Point => Some(3500),
             _ => None,
@@ -225,6 +238,15 @@ impl AchievementType {
                 "Submit a change suggestion that invalidates a solution"
             }
             AchievementType::Vote => "Vote up or down on a change suggestion",
+            AchievementType::AcceptedVote5 => {
+                "Vote 5 times on change suggestions that end up accepted or rejected"
+            }
+            AchievementType::AcceptedVote25 => {
+                "Vote 25 times on change suggestions that end up accepted or rejected"
+            }
+            AchievementType::AcceptedVote125 => {
+                "Vote 125 times on change suggestions that end up accepted or rejected"
+            }
         }
     }
 

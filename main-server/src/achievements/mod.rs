@@ -1,6 +1,7 @@
 mod misc;
 mod points_based;
 mod solve_related;
+pub mod vote_achievements;
 
 use common::AchievementType;
 use misc::award_misc_achievements;
