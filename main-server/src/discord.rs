@@ -22,11 +22,23 @@ use crate::{
 
 #[allow(clippy::enum_variant_names)]
 pub enum DiscordEvent {
-    NewGolfer { user_id: i32 },
-    NewChallenge { challenge_id: i32 },
-    PointsImproved { challenge_id: i32, solution_id: i32 },
-    EndedChallenge { challenge_id: i32 },
-    AlmostEndedChallenge { challenge_id: i32 },
+    NewGolfer {
+        user_id: i32,
+        referrer: Option<String>,
+    },
+    NewChallenge {
+        challenge_id: i32,
+    },
+    PointsImproved {
+        challenge_id: i32,
+        solution_id: i32,
+    },
+    EndedChallenge {
+        challenge_id: i32,
+    },
+    AlmostEndedChallenge {
+        challenge_id: i32,
+    },
 }
 
 #[derive(Clone)]
@@ -54,7 +66,9 @@ async fn listen_for_events(
 ) {
     while let Some(ev) = receiver.recv().await {
         match ev {
-            DiscordEvent::NewGolfer { user_id } => post_new_golfer(&pool, user_id).await,
+            DiscordEvent::NewGolfer { user_id, referrer } => {
+                post_new_golfer(&pool, user_id, referrer).await
+            }
             DiscordEvent::NewChallenge { challenge_id } => {
                 post_new_challenge(&pool, challenge_id).await;
 
@@ -246,7 +260,7 @@ async fn post_new_challenge(pool: &PgPool, challenge_id: i32) {
     };
 }
 
-async fn post_new_golfer(pool: &PgPool, user_id: i32) {
+async fn post_new_golfer(pool: &PgPool, user_id: i32, referrer: Option<String>) {
     /*
     We sleep a moment for a race condition where this runs before the transaction to add the user completes
     */
@@ -258,6 +272,8 @@ async fn post_new_golfer(pool: &PgPool, user_id: i32) {
         );
         return;
     };
+
+    let description = referrer.map(|i| format!("Referrer: {i}"));
     match post_discord_webhook(
         DiscordWebhookChannel::NewGolfer,
         WebHookRequest {
@@ -267,7 +283,7 @@ async fn post_new_golfer(pool: &PgPool, user_id: i32) {
             tts: None,
             embeds: Some(vec![Embed {
                 title: Some(&format!("New Golfer: {}", account.username)),
-                description: None,
+                description: description.as_deref(),
                 url: Some(&format!("https://byte-heist.com/user/{}", account.id)),
                 color: Some(0xff00),
             }]),

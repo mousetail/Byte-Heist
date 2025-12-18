@@ -108,6 +108,8 @@ pub async fn github_callback(
         return Err(Error::Oauth(crate::error::OauthError::CsrfValidation));
     }
 
+    let referrer: Option<String> = session.get("referrer").await.unwrap_or(None);
+
     let token_res = client
         .exchange_code(code)
         .request_async(&http_client)
@@ -143,8 +145,11 @@ pub async fn github_callback(
             );
         }
 
-        update_or_insert_user(&pool, &user_info, bot, &token_res, &session).await?;
-        Err(Error::Redirect(crate::error::RedirectType::TemporaryGet, Cow::Borrowed("/")))
+        update_or_insert_user(&pool, &user_info, bot, &token_res, &session, referrer).await?;
+        Err(Error::Redirect(
+            crate::error::RedirectType::TemporaryGet,
+            Cow::Borrowed("/"),
+        ))
     } else {
         // let data = response.bytes().await.unwrap();
         Err(Error::ServerError)
@@ -167,6 +172,7 @@ async fn update_or_insert_user(
     bot: DiscordEventSender,
     token: &StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
     session: &Session,
+    referrer: Option<String>,
 ) -> Result<(), Error> {
     let sql = "SELECT id, account FROM account_oauth_codes WHERE id_on_provider=$1";
 
@@ -199,6 +205,7 @@ async fn update_or_insert_user(
             &mut *transaction,
             &github_user.login,
             &github_user.avatar_url,
+            referrer.as_deref(),
         )
         .await
         .map_err(Error::Database)?;
@@ -220,6 +227,7 @@ async fn update_or_insert_user(
 
         bot.send(crate::discord::DiscordEvent::NewGolfer {
             user_id: new_user_id,
+            referrer,
         })
         .await
         .unwrap();
@@ -284,11 +292,13 @@ async fn create_account<'c>(
     pool: impl Executor<'c, Database = Postgres>,
     username: &str,
     avatar: &str,
+    referrer: Option<&str>,
 ) -> Result<i32, sqlx::Error> {
     sqlx::query_scalar!(
-        "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id",
+        "INSERT INTO accounts(username, avatar, referrer) VALUES ($1, $2, $3) RETURNING id",
         username,
-        avatar
+        avatar,
+        referrer.map(|i| &i[..128])
     )
     .fetch_one(pool)
     .await
