@@ -29,7 +29,7 @@ Ideally, you'd bundle as many dependencies as possible. For example, if your lan
 
 ## Step 3: Creating an entry in `langs.rs`
 
-In [langs.rs](https://github.com/mousetail/Byte-Heist/blob/master/common/src/langs.rs), add an entry for your language. There are two types of languages:
+In [langs.rs](https://github.com/Byte-Heist/Byte-Heist/blob/master/common/src/langs.rs), add an entry for your language. There are two types of languages:
 
 - A compiled language specifies a `compile_command: &[]` to compile the source code, then a `run_command: &[]` to run it. 
 - A interpreted language only specified a `run_command: &[]`.
@@ -65,7 +65,7 @@ but you can inspect what it would access in normal circumstances by running it l
 
 Now you can run `strace [lang executable]` and get a huge amount of output on every system call. Often it's helpful to use `strace [lang executable] 2> output.trace` to get a file for easier inspection. `strace` also supports various flags to filter what syscalls it traces. The calls most likely to cause issues are `openat`, the `exec*` family, `read`, etc. 
 
-For each of these files, cross reference between the mounts in [run.rs](https://github.com/mousetail/Byte-Heist/blob/a5f0d324e3a71d2e454c885763b9799a885d0afd/lang-runner/src/run.rs#L172). At the time of writing we mount `/lib`, `/lib64`, and `/usr/lib`, but it's best to check `run.rs` to get the most up do date list. Now filter these:
+For each of these files, cross reference between the mounts in [run.rs](https://github.com/Byte-Heist/Byte-Heist/blob/a5f0d324e3a71d2e454c885763b9799a885d0afd/lang-runner/src/run.rs#L172). At the time of writing we mount `/lib`, `/lib64`, and `/usr/lib`, but it's best to check `run.rs` to get the most up do date list. Now filter these:
 
 - If it's in a default mounted folder, should not be an issue
 - If it's referencing something that should be in the ASDF install folder, it could not be looking for it in the right place. You may need to set the correct environment variables or pass command line options to

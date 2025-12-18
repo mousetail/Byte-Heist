@@ -26,7 +26,7 @@ async fn get_stargazers(
     github_access_token: &str,
 ) -> Result<Vec<GithubStarsResponse>, AwardMiscAchievementsError> {
     let response = client
-        .get("https://api.github.com/repos/mousetail/byte-heist/stargazers")
+        .get("https://api.github.com/repos/Byte-Heist/byte-heist/stargazers")
         .header("Accept", "Application/vnd.github.star+json")
         .header("Authorization", format!("Bearer {github_access_token}"))
         .header("X-GitHub-Api-Version", "2022-11-28")
@@ -51,7 +51,7 @@ async fn get_contributors(
     github_access_token: &str,
 ) -> Result<Vec<GithubContributorsResponse>, AwardMiscAchievementsError> {
     let response = client
-        .get("https://api.github.com/repos/mousetail/byte-heist/contributors")
+        .get("https://api.github.com/repos/Byte-Heist/byte-heist/contributors")
         .header("Accept", "Application/vnd.github+json")
         .header("Authorization", format!("Bearer {github_access_token}"))
         .header("X-GitHub-Api-Version", "2022-11-28")

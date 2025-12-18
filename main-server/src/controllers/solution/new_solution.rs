@@ -240,7 +240,7 @@ async fn new_solution_inner(
     // is submitted. This should eventually be fixed in the frontend, but for now
     // we just replace "\r\n" with "\n" when calculating the score to make it match
     // the byte counter in the editor.
-    // Related: https://github.com/mousetail/Byte-Heist/issues/34
+    // Related: https://github.com/Byte-Heist/Byte-Heist/issues/34
     let new_points = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
 
     let (status, solution_id) =
