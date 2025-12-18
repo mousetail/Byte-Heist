@@ -14,8 +14,8 @@ pub async fn referrer_layer(
                 .body(Body::from("Failure loading session"))
                 .expect("Failure building response");
         };
-        if current_value.is_none() {
-            if let Err(e) = session
+        if current_value.is_none()
+            && let Err(e) = session
                 .insert("referrer", String::from_utf8_lossy(referrer.as_bytes()))
                 .await
             {
@@ -25,7 +25,6 @@ pub async fn referrer_layer(
                     .body(Body::from("Failure saving session"))
                     .expect("Failure building response");
             };
-        }
     }
 
     next.run(request).await
