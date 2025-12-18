@@ -1,0 +1,125 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                challenges.id,\n                name,\n                category as \"category!: ChallengeCategory\",\n                scores.score,\n                difficulty as \"difficulty!: ChallengeDifficulty\",\n                CAST(description AS varchar(120)) as \"description!\",\n                post_mortem_date,\n                COALESCE((challenges.post_mortem_date IS NOT NULL AND challenges.post_mortem_date < now()), false) as \"is_post_mortem!\",\n                COALESCE(submission_counts.count, 0) as \"submission_count!\",\n                COALESCE(user_submissions.has_submitted, false) as \"user_has_submitted!\",\n                (SELECT count(*) FROM challenge_votes WHERE challenge=challenges.id and is_upvote) as up_votes,\n                (SELECT count(*) FROM challenge_votes WHERE challenge=challenges.id and not is_upvote) as down_votes\n            FROM challenges\n            LEFT JOIN scores ON scores.author = $2 AND scores.challenge = challenges.id AND scores.language = $3\n            LEFT JOIN (\n                SELECT challenge, COUNT(*) as count \n                FROM solutions \n                GROUP BY challenge\n            ) submission_counts ON submission_counts.challenge = challenges.id\n            LEFT JOIN (\n                SELECT challenge, true as has_submitted\n                FROM solutions \n                WHERE author = $2\n                GROUP BY challenge\n            ) user_submissions ON user_submissions.challenge = challenges.id\n            WHERE status=($1) AND category != 'private'\n            ORDER BY challenges.go_live_date DESC,\n                up_votes DESC,\n                down_votes ASC,\n                created_at DESC\n            LIMIT $4\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "category!: ChallengeCategory",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "score",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "difficulty!: ChallengeDifficulty",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_difficulty",
+            "kind": {
+              "Enum": [
+                "easy",
+                "medium",
+                "hard"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "description!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "post_mortem_date",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "is_post_mortem!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "submission_count!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "user_has_submitted!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "up_votes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 11,
+        "name": "down_votes",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "challenge_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "beta",
+                "public",
+                "private"
+              ]
+            }
+          }
+        },
+        "Int4",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      null,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "4c00e69e04476a18459009bcbe6f41b5d4da1d76b652f657d2d65d87000bc2d6"
+}

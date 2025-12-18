@@ -30,6 +30,16 @@ pub enum ChallengeCategory {
     Private,
 }
 
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[serde(rename_all = "kebab-case")]
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "challenge_difficulty", rename_all = "kebab-case")]
+pub enum ChallengeDifficulty {
+    Easy,
+    Medium,
+    Hard,
+}
+
 #[derive(sqlx::FromRow, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct NewChallenge {
     pub description: String,
@@ -187,6 +197,7 @@ pub struct HomePageChallenge {
     id: i32,
     name: String,
     category: ChallengeCategory,
+    difficulty: ChallengeDifficulty,
     score: Option<i32>,
     description: String,
     post_mortem_date: Option<OffsetDateTime>,
@@ -212,6 +223,7 @@ impl HomePageChallenge {
                 name,
                 category as "category!: ChallengeCategory",
                 scores.score,
+                difficulty as "difficulty!: ChallengeDifficulty",
                 CAST(description AS varchar(120)) as "description!",
                 post_mortem_date,
                 COALESCE((challenges.post_mortem_date IS NOT NULL AND challenges.post_mortem_date < now()), false) as "is_post_mortem!",
