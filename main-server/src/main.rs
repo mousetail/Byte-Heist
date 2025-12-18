@@ -4,13 +4,14 @@ mod controllers;
 mod discord;
 mod error;
 mod models;
+mod referrer;
 mod strip_trailing_slashes;
 mod tera_utils;
 mod test_case_formatting;
 mod test_solution;
 
 use axum::{
-    Extension, Router,
+    Extension, Router, middleware,
     routing::{get, post},
 };
 use background_tasks::{
@@ -18,6 +19,7 @@ use background_tasks::{
     solution_invalidation::solution_invalidation_task,
 };
 use macros::OutputWrapperFactory;
+use referrer::referrer_layer;
 use tera_utils::TeraHtmlRenderer;
 use tower_sessions::session_store::ExpiredDeletion;
 
@@ -216,14 +218,15 @@ async fn main() -> anyhow::Result<()> {
         .nest_service("/static", ServeDir::new("static"))
         .fallback(get(route_factory.handler("", strip_trailing_slashes)))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
+        .layer(middleware::from_fn(referrer_layer))
         .layer(Extension(pool))
         .layer(Extension(discord_bot))
         .layer(session_layer);
 
     let listener = tokio::net::TcpListener::bind(&format!(
         "{}:{}",
-        env::var("BYTE_HEIST_HOST").expect("Expcted BYTE_HEIST_HOST var to be set"),
-        env::var("BYTE_HEIST_PORT").expect("Excpected BYTE_HEIST_PORT var to be set")
+        env::var("BYTE_HEIST_HOST").expect("Expected BYTE_HEIST_HOST var to be set"),
+        env::var("BYTE_HEIST_PORT").expect("Expected BYTE_HEIST_PORT var to be set")
     ))
     .await
     .unwrap();
