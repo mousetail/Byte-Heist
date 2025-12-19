@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                solutions.id as id,\n                solutions.author as author_id,\n                accounts.username as author_name,\n                accounts.avatar as author_avatar,\n                points,\n                rank() OVER (ORDER BY solutions.points ASC) as \"rank!\",\n                solutions.is_post_mortem\n            FROM solutions\n                LEFT JOIN accounts ON solutions.author = accounts.id\n            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true\n            ORDER BY solutions.points ASC, last_improved_date ASC\n            ",
+  "query": "\n            SELECT\n                solutions.id as id,\n                solutions.author as author_id,\n                accounts.username as author_name,\n                accounts.avatar as author_avatar,\n                points,\n                rank() OVER (ORDER BY solutions.points ASC) as \"rank!\",\n                solutions.is_post_mortem,\n                scores.score as \"score:i32\"\n            FROM solutions\n                LEFT JOIN accounts ON solutions.author = accounts.id\n                LEFT JOIN scores ON scores.id=solutions.id\n            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true\n            ORDER BY solutions.points ASC, last_improved_date ASC\n            ",
   "describe": {
     "columns": [
       {
@@ -37,6 +37,11 @@
         "ordinal": 6,
         "name": "is_post_mortem",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "score:i32",
+        "type_info": "Int4"
       }
     ],
     "parameters": {
@@ -52,8 +57,9 @@
       false,
       false,
       null,
-      false
+      false,
+      true
     ]
   },
-  "hash": "3f3cae89fbc4a183706c980f1ca06662d657e65b0a375c0e2f9d84580d620e5c"
+  "hash": "d2311cfe39f5a1051c37f83c6a25a892af65374f2872b620a76c40df9aca065b"
 }

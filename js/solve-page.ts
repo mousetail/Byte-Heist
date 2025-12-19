@@ -18,11 +18,16 @@ type Toast = {
   new_scores: ScoreInfo;
 };
 
+let last_score: number | undefined;
+
 function displayToast(
   toast: Toast | undefined,
   status_code: number,
-  account_id: number | undefined
+  account_id: number | undefined,
+  challenge: Challenge
 ) {
+  last_score ??= toast?.old_scores?.score;
+
   let category: "success" | "warning" | "info" | "error" = "success";
   let title: string;
   let description: string;
@@ -48,6 +53,12 @@ function displayToast(
     category = "info";
     title = "Passed";
     description = "Solution passed but is worse than previous best score";
+  } else if (challenge.status != "public") {
+    title = `${toast.new_scores.points} bytes (#${toast.new_scores.rank})`;
+    description = `No score awarded for beta/private challenge`;
+  } else if (challenge.is_post_mortem) {
+    title = `${toast.new_scores.points} bytes (#${toast.new_scores.rank})`;
+    description = "No score awarded for ended challenge";
   } else if (!toast.old_scores) {
     title = `${toast.new_scores.points} bytes (#${toast.new_scores.rank})`;
     description = `Earned ${toast.new_scores.score} score (#${toast.new_scores.rank} rank, ${toast.new_scores.points} points)`;
@@ -55,19 +66,21 @@ function displayToast(
     title = `Saved ${
       toast.old_scores.points - toast.new_scores.points
     } bytes (Rank #${toast.old_scores.rank} -> #${toast.new_scores.rank})`;
-    description = `+${
-      toast.new_scores.score - toast.old_scores.score
-    } score (#${toast.new_scores.rank}, ${toast.new_scores.points} points)`;
+    description = `+${toast.new_scores.score - last_score} score (#${
+      toast.new_scores.rank
+    }, ${toast.new_scores.points} points)`;
   } else if (toast.new_scores.points < toast.old_scores.points) {
     title = `Saved ${toast.old_scores.points - toast.new_scores.points} bytes`;
-    description = `+${
-      toast.new_scores.score - toast.old_scores.score
-    } score (#${toast.new_scores.rank}, ${toast.new_scores.points} points)`;
+    description = `+${toast.new_scores.score - last_score} score (#${
+      toast.new_scores.rank
+    }, ${toast.new_scores.points} points)`;
   } else {
     category = "info";
     title = "Score matched";
     description = "Score equal to your previous best score";
   }
+
+  last_score ??= toast?.new_scores?.score;
 
   document.dispatchEvent(
     new CustomEvent("basecoat:toast", {
@@ -124,16 +137,17 @@ async function submitNewSolution(
     }
     errorDiv.classList.add("hidden");
 
-    const { tests, leaderboard, toast, account_id } =
+    const { tests, leaderboard, toast, account_id, challenge } =
       (await response.json()) as {
         tests: ResultDisplay;
         leaderboard: LeaderboardEntry[];
         toast?: Toast | undefined;
         account_id?: number | undefined;
+        challenge: Challenge;
       };
     updateLeaderboard(leaderboard);
 
-    displayToast(toast, response.status, account_id);
+    displayToast(toast, response.status, account_id, challenge);
 
     if (tests.passed && response.status === 201) {
       setOriginalText(content);
@@ -208,6 +222,20 @@ type LeaderboardEntry = {
   author_name: string;
   author_id: number;
   points: number;
+};
+
+type Challenge = {
+  id: number;
+  description: string;
+  judge: string;
+  name: string;
+  example_code: string;
+  category: "code-golf" | "restricted-source";
+  status: "public" | "private" | "beta" | "draft";
+  author: number;
+  is_post_mortem: boolean;
+  author_name: string;
+  author_avatar: string;
 };
 
 function updateLeaderboard(ranking: LeaderboardEntry[]) {
