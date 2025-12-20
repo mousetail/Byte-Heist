@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                INSERT INTO challenges (name, judge, description, example_code, author, status, category)\n                values ($1, $2, $3, $4, $5, $6::challenge_status, $7::challenge_category)\n                RETURNING id",
+  "query": "\n                INSERT INTO challenges (name, judge, description, example_code, author, status, category, unit)\n                values ($1, $2, $3, $4, $5, $6::challenge_status, $7::challenge_category, $8)\n                RETURNING id",
   "describe": {
     "columns": [
       {
@@ -36,16 +36,18 @@
               "Enum": [
                 "code-golf",
                 "restricted-source",
-                "private"
+                "private",
+                "code-challenge"
               ]
             }
           }
-        }
+        },
+        "Varchar"
       ]
     },
     "nullable": [
       false
     ]
   },
-  "hash": "87ede923f1bca379b666ff4e47e710a48d7c0e0cfbc0ad539c86a2235d64fafc"
+  "hash": "02d67e9febdc6c185b8a91d1117172714c9cb7f38fae0824496c330047d8211f"
 }

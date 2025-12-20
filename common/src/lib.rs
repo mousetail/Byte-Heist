@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 pub struct JudgeResult {
     pub pass: bool,
     pub test_cases: Vec<TestCase>,
+    pub points: Option<i32>,
 }
 
 #[derive(Clone, Copy)]

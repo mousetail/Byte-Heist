@@ -18,6 +18,10 @@
             {% endif %}>{{- object.description -}}</textarea>
   {{ validation::validation(name="description") }}
 </div>
+<div class="grid gap-3">
+  <label for="challenge-unit">Unit:</label>
+  <input id="challenge-unit" value="{{- object.unit -}}" name="unit">
+</div>
 <div>
   {{ validation::validation(name="category") }}
   {{ radio::radio(name="category", value="code-golf", selected=object.category, label="Code Golf") }}
@@ -35,6 +39,15 @@
   <ol>
     <li>Have a legitimate, non-cheating example code entered</li>
     <li>Present the test cases in the standard format</li>
+  </ol>
+  {{ radio::radio(name="category", value="code-challenge", selected=object.category, label="Code Challenge") }}
+  <p>Restricted challenges should:</p>
+  <ol>
+    <li>Use a custom scoring function</li>
+    <li>You can use negative numbers if you want higher to be better</li>
+    <li>
+      Ideally distance from the highest score to the lowest would be at most about 100 points for the leaderboard ranking to work the best
+    </li>
   </ol>
   {{ radio::radio(name="category", value="private", selected=object.category, label="Private") }}
   <p>

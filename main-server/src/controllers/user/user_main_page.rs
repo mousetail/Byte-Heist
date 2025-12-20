@@ -17,6 +17,7 @@ pub struct UserPageLeaderboardEntry {
     points: i32,
     challenge_id: i32,
     challenge_name: String,
+    challenge_unit: String,
 }
 
 #[derive(Serialize)]
@@ -226,7 +227,7 @@ pub async fn get_user(
 
     let solutions = query_as!(
         UserPageLeaderboardEntry,
-        "SELECT solutions.language, solutions.points, solutions.challenge as challenge_id, challenges.name as challenge_name
+        "SELECT solutions.language, solutions.points, solutions.challenge as challenge_id, challenges.name as challenge_name, challenges.unit as challenge_unit
         FROM solutions
         LEFT JOIN challenges ON challenges.id = solutions.challenge
         WHERE solutions.author=$1

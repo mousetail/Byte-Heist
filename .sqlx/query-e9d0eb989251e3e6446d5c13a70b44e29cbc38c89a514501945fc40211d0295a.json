@@ -14,7 +14,8 @@
               "Enum": [
                 "code-golf",
                 "restricted-source",
-                "private"
+                "private",
+                "code-challenge"
               ]
             }
           }

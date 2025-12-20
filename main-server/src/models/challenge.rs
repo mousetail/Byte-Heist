@@ -28,6 +28,7 @@ pub enum ChallengeCategory {
     CodeGolf,
     RestrictedSource,
     Private,
+    CodeChallenge,
 }
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
@@ -48,6 +49,7 @@ pub struct NewChallenge {
     pub example_code: String,
     pub category: ChallengeCategory,
     pub status: ChallengeStatus,
+    pub unit: String,
 }
 
 impl NewChallenge {
@@ -141,6 +143,7 @@ impl Default for NewChallenge {
             example_code: String::new(),
             category: ChallengeCategory::RestrictedSource,
             status: ChallengeStatus::Draft,
+            unit: "bytes".to_string(),
         }
     }
 }
@@ -283,6 +286,7 @@ impl GetById for ChallengeWithAuthorInfo {
             challenges.category,
             challenges.status,
             challenges.post_mortem_date,
+            challenges.unit,
             (challenges.post_mortem_date IS NOT NULL
                 AND challenges.post_mortem_date < now()) as is_post_mortem,
             accounts.username as author_name,

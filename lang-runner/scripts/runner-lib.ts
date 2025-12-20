@@ -44,9 +44,11 @@ export class TestCase {
 
 export class FinalVerdict {
   pass: boolean;
+  points: number | undefined;
 
-  constructor(pass: boolean) {
+  constructor(pass: boolean, points?: number | undefined) {
     this.pass = pass;
+    this.points = points;
   }
 }
 
@@ -300,11 +302,11 @@ export class Context {
     return testCase;
   }
 
-  noFailures(): FinalVerdict {
+  noFailures(points?: number | undefined): FinalVerdict {
     if (this.testCases.every((i) => i.pass !== "Fail")) {
-      return new FinalVerdict(true);
+      return new FinalVerdict(true, points);
     } else {
-      return new FinalVerdict(false);
+      return new FinalVerdict(false, points);
     }
   }
 }

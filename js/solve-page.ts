@@ -54,14 +54,14 @@ function displayToast(
     title = "Passed";
     description = "Solution passed but is worse than previous best score";
   } else if (challenge.status != "public") {
-    title = `${toast.new_scores.points} bytes (#${toast.new_scores.rank})`;
+    title = `${toast.new_scores.points} ${challenge.unit} (#${toast.new_scores.rank})`;
     description = `No score awarded for beta/private challenge`;
   } else if (challenge.is_post_mortem) {
-    title = `${toast.new_scores.points} bytes (#${toast.new_scores.rank})`;
+    title = `${toast.new_scores.points} ${challenge.unit} (#${toast.new_scores.rank})`;
     description = "No score awarded for ended challenge";
   } else if (!toast.old_scores) {
-    title = `${toast.new_scores.points} bytes (#${toast.new_scores.rank})`;
-    description = `Earned ${toast.new_scores.score} score (#${toast.new_scores.rank} rank, ${toast.new_scores.points} points)`;
+    title = `${toast.new_scores.points} ${challenge.unit} (#${toast.new_scores.rank})`;
+    description = `Earned ${toast.new_scores.score} score (#${toast.new_scores.rank} rank, ${toast.new_scores.points} ${challenge.unit})`;
   } else if (toast.new_scores.rank < toast.old_scores.rank) {
     title = `Saved ${
       toast.old_scores.points - toast.new_scores.points
@@ -70,10 +70,12 @@ function displayToast(
       toast.new_scores.rank
     }, ${toast.new_scores.points} points)`;
   } else if (toast.new_scores.points < toast.old_scores.points) {
-    title = `Saved ${toast.old_scores.points - toast.new_scores.points} bytes`;
+    title = `Saved ${toast.old_scores.points - toast.new_scores.points} ${
+      challenge.unit
+    }`;
     description = `+${toast.new_scores.score - last_score} score (#${
       toast.new_scores.rank
-    }, ${toast.new_scores.points} points)`;
+    }, ${toast.new_scores.points} ${challenge.unit})`;
   } else {
     category = "info";
     title = "Score matched";
@@ -236,6 +238,7 @@ type Challenge = {
   is_post_mortem: boolean;
   author_name: string;
   author_avatar: string;
+  unit: string;
 };
 
 function updateLeaderboard(ranking: LeaderboardEntry[]) {

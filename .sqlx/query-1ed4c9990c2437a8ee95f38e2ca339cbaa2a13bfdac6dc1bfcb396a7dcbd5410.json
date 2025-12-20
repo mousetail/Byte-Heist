@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT solutions.language, solutions.points, solutions.challenge as challenge_id, challenges.name as challenge_name\n        FROM solutions\n        LEFT JOIN challenges ON challenges.id = solutions.challenge\n        WHERE solutions.author=$1\n        AND solutions.valid=true\n        AND challenges.status in ('public', 'beta')",
+  "query": "SELECT solutions.language, solutions.points, solutions.challenge as challenge_id, challenges.name as challenge_name, challenges.unit as challenge_unit\n        FROM solutions\n        LEFT JOIN challenges ON challenges.id = solutions.challenge\n        WHERE solutions.author=$1\n        AND solutions.valid=true\n        AND challenges.status in ('public', 'beta')",
   "describe": {
     "columns": [
       {
@@ -22,6 +22,11 @@
         "ordinal": 3,
         "name": "challenge_name",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "challenge_unit",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -33,8 +38,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "f09cc443465852f67e475942e0939ae13a64f5c516d09fc2d1b8dc935b6e8e02"
+  "hash": "1ed4c9990c2437a8ee95f38e2ca339cbaa2a13bfdac6dc1bfcb396a7dcbd5410"
 }

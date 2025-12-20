@@ -180,8 +180,8 @@ pub async fn new_challenge(
         (_, None) => {
             let row = sqlx::query_scalar!(
                 r#"
-                INSERT INTO challenges (name, judge, description, example_code, author, status, category)
-                values ($1, $2, $3, $4, $5, $6::challenge_status, $7::challenge_category)
+                INSERT INTO challenges (name, judge, description, example_code, author, status, category, unit)
+                values ($1, $2, $3, $4, $5, $6::challenge_status, $7::challenge_category, $8)
                 RETURNING id"#,
                 challenge.name,
                 challenge.judge,
@@ -190,6 +190,7 @@ pub async fn new_challenge(
                 account.id,
                 challenge.status as ChallengeStatus,
                 challenge.category as ChallengeCategory,
+                challenge.unit
             )
             .fetch_one(&pool)
             .await
@@ -249,15 +250,17 @@ pub async fn new_challenge(
                                 WHEN $6::challenge_category='code-golf' THEN now() + INTERVAL '6 months'
                                 ELSE NULL
                             END
-                        )
+                        ),
+                        unit=$7
 
-                    WHERE id=$7",
+                    WHERE id=$8",
                     challenge.name,
                     challenge.judge,
                     challenge.description,
                     challenge.example_code,
                     challenge.status as ChallengeStatus,
                     challenge.category as ChallengeCategory,
+                    challenge.unit,
                     id
                 )
                 .execute(&pool)

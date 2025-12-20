@@ -18,6 +18,7 @@ const TIMEOUT: u64 = 3;
 #[derive(Deserialize, Debug)]
 struct FinalVerdict {
     pass: bool,
+    points: Option<i32>,
 }
 
 #[derive(Serialize)]
@@ -94,6 +95,7 @@ pub async fn run_lang_with_judge(
             let mut judge_result = JudgeResult {
                 pass: false,
                 test_cases: vec![],
+                points: None,
             };
 
             while let Some(line) = lines.next_line().await? {
@@ -123,7 +125,9 @@ pub async fn run_lang_with_judge(
                         }
                     }
                     JudgeResponse::FinalVerdict(final_verdict) => {
-                        judge_result.pass = final_verdict.pass
+                        println!("final_verdict: {final_verdict:?}");
+                        judge_result.pass = final_verdict.pass;
+                        judge_result.points = final_verdict.points;
                     }
                 }
             }
@@ -139,6 +143,7 @@ pub async fn run_lang_with_judge(
     let judge_result = output.unwrap_or(Ok(JudgeResult {
         pass: false,
         test_cases: vec![],
+        points: None,
     }))?;
 
     let mut stderr = command
