@@ -132,6 +132,7 @@ pub enum RankingMode {
     #[default]
     Top,
     Me,
+    All,
 }
 
 #[derive(Serialize)]
@@ -195,6 +196,7 @@ impl LeaderboardEntry {
                 }
                 leaderboard[start..end].to_vec()
             }
+            RankingMode::All => leaderboard,
         }
     }
 
