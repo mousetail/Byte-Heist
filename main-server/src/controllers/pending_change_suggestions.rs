@@ -40,6 +40,7 @@ impl RawPendingChangeSuggestion {
                 INNER JOIN accounts ON challenge_comments.author=accounts.id
                 WHERE
                     challenge_change_suggestions.status='active'
+                    AND (challenges.category != 'private' OR challenges.author=$1)
                     AND (
                         $1::integer IS NULL
                         OR NOT EXISTS(
@@ -107,7 +108,7 @@ pub async fn get_unread_change_suggestions_for_user(
             FROM challenge_change_suggestions
             INNER JOIN challenges ON challenges.id=challenge_change_suggestions.challenge
             WHERE challenge_change_suggestions.status='active'
-            AND challenges.category != 'private'
+            AND (challenges.category != 'private' OR challenges.author=$1)
             AND NOT EXISTS(
                 SELECT FROM challenge_comment_votes
                     WHERE challenge_comment_votes.comment = challenge_change_suggestions.comment
