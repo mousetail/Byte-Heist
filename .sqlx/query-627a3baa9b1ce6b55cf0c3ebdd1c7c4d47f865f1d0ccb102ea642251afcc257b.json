@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO achievements(user_id, achievement, achieved, awarded_at, progress, total)\n                VALUES ($1, $2, false, null, 1, $3)\n                ON CONFLICT(user_id, achievement) DO UPDATE SET\n                    achieved=achievements.progress + 1 >= $3,\n                    progress = LEAST(achievements.progress + 1, $3),\n                    awarded_at=COALESCE(achievements.awarded_at, case when achievements.progress + 1 >= $3 then now() else null end)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "627a3baa9b1ce6b55cf0c3ebdd1c7c4d47f865f1d0ccb102ea642251afcc257b"
+}

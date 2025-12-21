@@ -11,7 +11,7 @@ pub async fn award_vote_achievements(pool: &PgPool, account_id: i32) -> Result<(
         query!(
             r#"
                 INSERT INTO achievements(user_id, achievement, achieved, awarded_at, progress, total)
-                VALUES ($1, $2, false, null, 0, $3)
+                VALUES ($1, $2, false, null, 1, $3)
                 ON CONFLICT(user_id, achievement) DO UPDATE SET
                     achieved=achievements.progress + 1 >= $3,
                     progress = LEAST(achievements.progress + 1, $3),
