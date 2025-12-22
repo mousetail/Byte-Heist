@@ -42,6 +42,8 @@ enum JudgeResponse {
     FinalVerdict(FinalVerdict),
 }
 
+const MAX_CODE_SIZE: usize = 1024 * 10;
+
 pub async fn run_lang_with_judge(
     language: &str,
     version: &str,
@@ -104,6 +106,42 @@ pub async fn run_lang_with_judge(
                 })?;
                 match data {
                     JudgeResponse::RunRequest(run_request) => {
+                        if run_request.code.len() > MAX_CODE_SIZE {
+                            stdin
+                                .write_all(
+                                    &serde_json::to_vec(
+                                        &crate::error::RunProcessError::CodeTooLarge,
+                                    )
+                                    .map_err(|e| {
+                                        RunLangError::RunLang(
+                                            crate::error::RunProcessError::SerializationFailed(e),
+                                        )
+                                    })?,
+                                )
+                                .await?;
+                            continue;
+                        }
+
+                        if run_request
+                            .input
+                            .as_deref()
+                            .is_some_and(|i| i.len() > MAX_CODE_SIZE)
+                        {
+                            stdin
+                                .write_all(
+                                    &serde_json::to_vec(
+                                        &crate::error::RunProcessError::InputTooLarge,
+                                    )
+                                    .map_err(|e| {
+                                        RunLangError::RunLang(
+                                            crate::error::RunProcessError::SerializationFailed(e),
+                                        )
+                                    })?,
+                                )
+                                .await?;
+                            continue;
+                        }
+
                         let result = context
                             .run(&run_request.code, run_request.input.as_deref(), &mut sender)
                             .await

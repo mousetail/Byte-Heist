@@ -99,9 +99,9 @@ export class StringResult {
   }
 
   public assert(cb: (k: string) => TestCase): TestCase {
-    const vestCase = cb(this.text);
-    this.context.testCases.push(vestCase);
-    return vestCase;
+    const testCase = cb(this.text);
+    this.context.testCases.push(testCase);
+    return testCase;
   }
 }
 

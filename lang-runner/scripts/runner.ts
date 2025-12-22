@@ -47,6 +47,14 @@ const { code, judge }: Input = JSON.parse(Deno.args[0]);
     program: string,
     input?: string | undefined
   ): Promise<RunCompiledCodeResult> => {
+    if (program.length > 10 * 1024) {
+      throw new Error("Expected code to have at most 10 * 1024 characters");
+    }
+
+    if (input && input.length > 10 * 1024) {
+      throw new Error("Expected input to be at most 10 * 1024 characters");
+    }
+
     await Deno.stdout.write(
       textEncoder.encode(JSON.stringify({ code: program, input }) + "\n")
     );
@@ -54,6 +62,14 @@ const { code, judge }: Input = JSON.parse(Deno.args[0]);
     const result = await lines.next();
     if (result.done) {
       throw new Error(`Pipe closed after running lang`);
+    }
+
+    if (result.value === "CodeTooLarge") {
+      throw new Error("Expected code to have at most 10 * 1024 bytes");
+    }
+
+    if (result.value === "InputTooLarge") {
+      throw new Error("Expected input to have at most 10 * 1024 bytes");
     }
 
     return result.value as RunCompiledCodeResult;
