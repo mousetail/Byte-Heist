@@ -11,7 +11,6 @@
 use std::{
     collections::HashMap,
     ffi::CStr,
-    io::Write,
     os::fd::AsRawFd,
     pin::Pin,
     task::{Context, Poll},
@@ -27,7 +26,10 @@ use nix::{
     unistd::Pid,
 };
 
-use crate::limited_async_pipe::{LimitedAsyncPipe, LimitedAsyncPipeOutput};
+use crate::{
+    limited_async_reader::{LimitedAsyncPipeReader, LimitedAsyncPipeReaderOutput},
+    limited_async_writer::LimitedAsyncPipeWriter,
+};
 
 const MAX_BUFF_SIZE: usize = 1024 * 100;
 
@@ -168,12 +170,13 @@ impl Drop for AsyncChild {
 pub struct ChildOutput {
     pub result: SignalOrStatus,
     pub outputs:
-        HashMap<i32, tokio::task::JoinHandle<Result<LimitedAsyncPipeOutput, std::io::Error>>>,
+        HashMap<i32, tokio::task::JoinHandle<Result<LimitedAsyncPipeReaderOutput, std::io::Error>>>,
 }
 
 pub struct OutputChild {
     process: AsyncChild,
-    pipes: HashMap<i32, tokio::task::JoinHandle<Result<LimitedAsyncPipeOutput, std::io::Error>>>,
+    pipes:
+        HashMap<i32, tokio::task::JoinHandle<Result<LimitedAsyncPipeReaderOutput, std::io::Error>>>,
 }
 
 impl Future for OutputChild {
@@ -236,9 +239,10 @@ impl<'a> AsyncProcessWithCustomPipes<'a> {
         let mut writers_to_be_dropped = Vec::with_capacity(self.process_output.len());
 
         for (fd, data) in self.process_input {
-            let (reader, mut writer) = std::io::pipe()?;
+            let (reader, writer) = std::io::pipe()?;
             file_actions.add_dup2(reader.as_raw_fd(), fd)?;
-            writer.write_all(data)?;
+
+            tokio::spawn(LimitedAsyncPipeWriter::new(writer, data.to_vec())?);
             readers_to_be_dropped.push(reader);
         }
 
@@ -250,7 +254,7 @@ impl<'a> AsyncProcessWithCustomPipes<'a> {
             file_actions.add_dup2(writer.as_raw_fd(), fd)?;
             readers.insert(
                 fd,
-                tokio::spawn(LimitedAsyncPipe::new(reader, MAX_BUFF_SIZE)?),
+                tokio::spawn(LimitedAsyncPipeReader::new(reader, MAX_BUFF_SIZE)?),
             );
 
             writers_to_be_dropped.push(writer);
