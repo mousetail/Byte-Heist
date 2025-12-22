@@ -184,6 +184,8 @@ pub async fn run_lang_with_judge(
         points: None,
     }))?;
 
+    command.kill().await?;
+
     let mut stderr = command
         .stderr
         .take()
@@ -191,8 +193,6 @@ pub async fn run_lang_with_judge(
 
     let mut error = String::new();
     stderr.read_to_string(&mut error).await?;
-
-    command.kill().await?;
 
     Ok(RunLangOutput {
         tests: judge_result,
