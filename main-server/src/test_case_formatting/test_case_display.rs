@@ -1,18 +1,15 @@
 use std::borrow::Cow;
 
-use common::{ResultDisplay, TestCase, TestPassState};
+use common::{
+    ResultDisplay, TestCase, TestPassState,
+    diff_tools::{Columns, Field, FieldKind},
+};
 use serde::Serialize;
 
-use crate::test_case_formatting::{
-    Field, FieldKind,
-    display_modes::{
-        diff_display_mode::render_diff_display_mode,
-        filter_display_mode::render_filter_display_mode,
-        test_case_display_mode::render_test_case_display_mode,
-    },
+use crate::test_case_formatting::display_modes::{
+    diff_display_mode::render_diff_display_mode, filter_display_mode::render_filter_display_mode,
+    test_case_display_mode::render_test_case_display_mode,
 };
-
-use super::Columns;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]

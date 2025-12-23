@@ -3,7 +3,10 @@ mod suggest_changes;
 mod view_challenge;
 
 use axum::{Extension, extract::Path, http::StatusCode};
-use common::urls::get_url_for_challenge;
+use common::{
+    sql_enums::{ChallengeCategory, ChallengeStatus},
+    urls::get_url_for_challenge,
+};
 use macros::CustomResponseMetadata;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -19,8 +22,8 @@ use crate::{
         GetById,
         account::Account,
         challenge::{
-            ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo, ChallengeWithTests,
-            HomePageChallenge, NewChallenge, NewOrExistingChallenge,
+            ChallengeWithAuthorInfo, ChallengeWithTests, HomePageChallenge, NewChallenge,
+            NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
     },

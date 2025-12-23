@@ -1,6 +1,4 @@
-use crate::test_case_formatting::{
-    Columns, Field, FieldKind, filter_iterator_but_keep_context::FilterIteratorButKeepContext,
-};
+use common::diff_tools::{Columns, Field, FieldKind, FilterIteratorButKeepContext};
 
 pub fn render_filter_display_mode(
     output: String,

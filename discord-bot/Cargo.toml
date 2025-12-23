@@ -8,7 +8,13 @@ sqlx = { version = "0.8.2", features = ["postgres", "runtime-tokio", "time"] }
 tokio = { version = "1.40.0", features = ["rt-multi-thread", "signal"] }
 serenity = "0.12"
 slug = "0.1.6"
-common = { path = "../common" }
+common = { path = "../common", features = ["sqlx", "diff"] }
+reqwest = { version = "0.12", features = [
+    "json",
+    "rustls-tls",
+    "http2",
+], default-features = false }
+serde = { version = "1.0.210", features = ["derive"] }
 
 [lints.clippy]
 print_stdout = "deny"

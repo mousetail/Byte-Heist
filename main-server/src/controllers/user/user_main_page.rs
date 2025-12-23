@@ -1,8 +1,7 @@
 use std::borrow::Cow;
 
-use crate::models::challenge::ChallengeCategory;
 use axum::{Extension, extract::Path};
-use common::slug::Slug;
+use common::{slug::Slug, sql_enums::ChallengeCategory};
 use serde::Serialize;
 use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
 

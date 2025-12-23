@@ -1,3 +1,5 @@
+use crate::sql_enums::ChallengeCategory;
+
 use std::fmt::Write;
 use std::{
     fs::read_to_string,
@@ -16,11 +18,6 @@ pub enum AchievementCategory {
     SolveRelated,
     ChangeSuggestions,
     Miscellaneous,
-}
-
-pub enum ChallengeCategory {
-    CodeGolf,
-    RestrictedSource,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, VariantArray, IntoStaticStr, EnumString, Debug)]
@@ -330,6 +327,7 @@ impl AchievementType {
                     ChallengeCategory::RestrictedSource => {
                         ("../../templates/icons/heartbeat.svg", "red")
                     }
+                    _ => ("../../templates/icons/heartbeat.svg", "blue"),
                 })
             })
             .zip(self.get_associated_number())

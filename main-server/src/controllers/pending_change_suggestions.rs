@@ -1,9 +1,6 @@
-use crate::{
-    error::Error,
-    models::account::Account,
-    test_case_formatting::{Columns, get_diff_elements},
-};
+use crate::{error::Error, models::account::Account};
 use axum::Extension;
+use common::diff_tools::{Columns, get_diff_elements};
 use serde::Serialize;
 use sqlx::{PgPool, query_as, query_scalar};
 

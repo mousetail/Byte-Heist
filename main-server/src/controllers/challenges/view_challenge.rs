@@ -1,16 +1,18 @@
 use std::{borrow::Cow, collections::HashSet};
 
 use axum::{Extension, extract::Path};
+use common::diff_tools::{Columns, get_diff_elements};
 use macros::CustomResponseMetadata;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
     controllers::challenges::{reactions::RawChallengeReaction, suggest_changes::handle_diff},
+    discord::DiscordEventSender,
     error::Error,
     models::{account::Account, challenge::NewOrExistingChallenge},
     tera_utils::auto_input::AutoInput,
-    test_case_formatting::{Columns, OutputDisplay, get_diff_elements},
+    test_case_formatting::OutputDisplay,
 };
 
 use super::{
@@ -311,6 +313,7 @@ impl NewComment {
 pub async fn post_comment(
     Path((id, slug)): Path<(i32, String)>,
     account: Account,
+    Extension(discord): Extension<DiscordEventSender>,
     Extension(pool): Extension<PgPool>,
     AutoInput(data): AutoInput<NewComment>,
 ) -> Result<CustomResponseMetadata<OutputDisplay>, Error> {
@@ -361,7 +364,7 @@ pub async fn post_comment(
         .map_err(Error::Database)?;
 
     if let Some(task) = task {
-        task.apply(&pool, result, account).await?;
+        task.apply(&pool, result, discord).await?;
     }
 
     Err(Error::Redirect(

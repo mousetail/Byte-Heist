@@ -1,9 +1,8 @@
+use common::sql_enums::ChallengeCategory;
 use serde::Serialize;
-use sqlx::{query_as, types::time::OffsetDateTime, PgPool};
+use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
 
 use crate::error::Error;
-
-use super::challenge::ChallengeCategory;
 
 #[derive(Serialize)]
 pub struct GlobalLeaderboardEntry {

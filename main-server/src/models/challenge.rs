@@ -1,45 +1,12 @@
 use std::collections::HashMap;
 
+use common::sql_enums::{ChallengeCategory, ChallengeDifficulty, ChallengeStatus};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, query_as, types::time::OffsetDateTime};
 
 use crate::{error::Error, test_case_formatting::OutputDisplay};
 
 use super::{GetById, account::Account};
-
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-#[derive(sqlx::Type)]
-#[sqlx(type_name = "challenge_status", rename_all = "kebab-case")]
-#[derive(Default)]
-pub enum ChallengeStatus {
-    #[default]
-    Draft,
-    Private,
-    Beta,
-    Public,
-}
-
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-#[derive(sqlx::Type)]
-#[sqlx(type_name = "challenge_category", rename_all = "kebab-case")]
-pub enum ChallengeCategory {
-    CodeGolf,
-    RestrictedSource,
-    Private,
-    CodeChallenge,
-}
-
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-#[derive(sqlx::Type)]
-#[sqlx(type_name = "challenge_difficulty", rename_all = "kebab-case")]
-pub enum ChallengeDifficulty {
-    Easy,
-    Medium,
-    Hard,
-}
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct NewChallenge {

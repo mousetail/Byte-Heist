@@ -6,9 +6,8 @@ use sqlx::{PgPool, query, query_as, query_scalar};
 
 use crate::{
     achievements::award_achievement,
-    background_tasks::solution_invalidation::queue_solution_retesting,
-    discord::post_change_suggestion, error::Error, models::account::Account,
-    test_case_formatting::OutputDisplay, test_solution::test_solution,
+    background_tasks::solution_invalidation::queue_solution_retesting, discord::DiscordEventSender,
+    error::Error, test_case_formatting::OutputDisplay, test_solution::test_solution,
 };
 
 struct ChallengeFieldsNeededForValidation {
@@ -190,7 +189,7 @@ impl<'a> InsertDiffTask<'a> {
         self,
         pool: &PgPool,
         comment_id: i32,
-        author: Account,
+        sender: DiscordEventSender,
     ) -> Result<(), Error> {
         let InsertDiffTask {
             diff,
@@ -198,28 +197,14 @@ impl<'a> InsertDiffTask<'a> {
             previous_value,
         } = self;
 
-        let replacement_value = diff.replacement_value.clone();
-
         insert_diff(pool, comment_id, challenge_id, previous_value.clone(), diff)
             .await
             .map_err(Error::Database)?;
 
-        let pool = pool.clone();
-
-        tokio::spawn(async move {
-            if let Err(e) = post_change_suggestion(
-                &pool,
-                author,
-                previous_value,
-                replacement_value,
-                challenge_id,
-                comment_id,
-            )
+        sender
+            .send(crate::discord::DiscordEvent::ChangeSuggestionSubmitted { comment_id })
             .await
-            {
-                eprintln!("Failed to send discord webhook message: {e:?}")
-            }
-        });
+            .map_err(|_| Error::ServerError)?;
 
         Ok(())
     }

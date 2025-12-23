@@ -1,4 +1,4 @@
-use crate::test_case_formatting::{Columns, Field, FieldKind, get_diff_elements};
+use common::diff_tools::{Columns, Field, FieldKind, get_diff_elements};
 
 pub fn render_diff_display_mode(
     output: String,

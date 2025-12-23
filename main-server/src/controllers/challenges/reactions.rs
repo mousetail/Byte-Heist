@@ -11,6 +11,7 @@ use sqlx::{PgPool, query, query_as, query_scalar};
 use crate::{
     achievements::{award_achievement, vote_achievements::award_vote_achievements},
     controllers::challenges::suggest_changes::CommentDiff,
+    discord::DiscordEventSender,
     error::Error,
     models::account::Account,
     tera_utils::auto_input::AutoInput,
@@ -183,6 +184,7 @@ impl NewReaction {
 pub async fn post_reaction(
     Path((id, slug)): Path<(i32, String)>,
     account: Account,
+    Extension(discord): Extension<DiscordEventSender>,
     Extension(pool): Extension<PgPool>,
     AutoInput(reaction): AutoInput<NewReaction>,
 ) -> Result<(), Error> {
@@ -190,6 +192,10 @@ pub async fn post_reaction(
         .submit(account.id, &pool, id)
         .await
         .map_err(Error::Database)?;
+    discord
+        .send(crate::discord::DiscordEvent::ChangeSuggestionVotedOn { comment_id: id })
+        .await
+        .map_err(|_| Error::ServerError)?;
 
     Err(Error::Redirect(
         crate::error::RedirectType::TemporaryGet,

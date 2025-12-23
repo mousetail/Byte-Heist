@@ -1,23 +1,22 @@
-use std::{env::VarError, time::Duration};
+use std::time::Duration;
 
-use common::{AchievementType, urls::get_url_for_challenge};
+use common::{AchievementType, sql_enums::ChallengeStatus, urls::get_url_for_challenge};
 use discord_bot::{
     Bot, ScoreImproved,
+    change_suggestions::post_change_suggestion,
     new_challenge::{BestScore, ChallengePostAllSolutionsEvent, PostAllNewScoresReason},
+    webhooks::{DiscordWebhookChannel, Embed, WebHookRequest, post_discord_webhook},
 };
-use reqwest::StatusCode;
-use serde::Serialize;
-use sqlx::{PgPool, query_as};
+use sqlx::PgPool;
 
 use crate::{
     achievements::award_achievement,
     models::{
         GetById,
         account::Account,
-        challenge::{ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo},
+        challenge::ChallengeWithAuthorInfo,
         solutions::{LeaderboardEntry, SolutionWithLanguage},
     },
-    test_case_formatting::inline_diff,
 };
 
 #[allow(clippy::enum_variant_names)]
@@ -38,6 +37,13 @@ pub enum DiscordEvent {
     },
     AlmostEndedChallenge {
         challenge_id: i32,
+    },
+    ChangeSuggestionSubmitted {
+        comment_id: i32,
+    },
+    ChangeSuggestionVotedOn {
+        #[allow(unused)]
+        comment_id: i32,
     },
 }
 
@@ -106,78 +112,18 @@ async fn listen_for_events(
                     bot.on_almost_ended_challenge(challenge_id).await
                 }
             }
+            DiscordEvent::ChangeSuggestionSubmitted { comment_id } => {
+                if let Err(e) = post_change_suggestion(&pool, comment_id).await {
+                    eprintln!("Database error: {e:?}");
+                }
+            }
+            DiscordEvent::ChangeSuggestionVotedOn { comment_id: _ } => {
+                // if let Err(e) = edit_change_suggestion(&pool, comment_id).await {
+                //     eprintln!("Database error: {e:?}");
+                // }
+            }
         }
     }
-}
-
-#[derive(Serialize)]
-pub struct WebHookRequest<'a> {
-    pub content: Option<&'a str>,
-    pub username: Option<&'a str>,
-    pub avatar_url: Option<&'a str>,
-    pub tts: Option<bool>,
-    pub embeds: Option<Vec<Embed<'a>>>,
-}
-
-#[derive(Serialize)]
-pub struct Embed<'a> {
-    pub title: Option<&'a str>,
-    pub description: Option<&'a str>,
-    pub url: Option<&'a str>,
-    pub color: Option<i32>,
-}
-
-pub enum DiscordWebhookChannel {
-    NewGolfer,
-    NewChallenge,
-    ChangeRequest,
-}
-
-impl DiscordWebhookChannel {
-    fn get_env_var_name(self) -> &'static str {
-        match self {
-            DiscordWebhookChannel::NewGolfer => "DISCORD_NEW_GOLFER_WEBHOOK_URL",
-            DiscordWebhookChannel::NewChallenge => "DISCORD_NEW_CHALLENGE_WEBHOOK_URL",
-            DiscordWebhookChannel::ChangeRequest => "DISCORD_CHANGE_REQUEST_WEBHOOK_URL",
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum DiscordError {
-    EnvVarNotValidUnicode,
-    ClientBuild,
-    Request,
-    BadStatusCode(#[allow(unused)] StatusCode),
-}
-
-async fn post_discord_webhook(
-    channel: DiscordWebhookChannel,
-    request: WebHookRequest<'_>,
-) -> Result<(), DiscordError> {
-    let webhook_url = match std::env::var(channel.get_env_var_name()) {
-        Ok(value) => value,
-        Err(VarError::NotPresent) => return Ok(()),
-        Err(VarError::NotUnicode(_)) => return Err(DiscordError::EnvVarNotValidUnicode),
-    };
-
-    let client = reqwest::ClientBuilder::new()
-        .build()
-        .map_err(|_| DiscordError::ClientBuild)?;
-    let response = client
-        .post(webhook_url)
-        .json(&request)
-        .send()
-        .await
-        .map_err(|_| DiscordError::Request)?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        eprintln!("{}", response.text().await.unwrap());
-        return Err(DiscordError::BadStatusCode(status));
-    }
-
-    Ok(())
 }
 
 async fn post_best_scores_for_challenge(
@@ -445,71 +391,4 @@ async fn post_updated_score(pool: &PgPool, challenge_id: i32, solution_id: i32, 
         })
         .await;
     }
-}
-
-pub async fn post_change_suggestion(
-    pool: &PgPool,
-    author: Account,
-    previous_value: String,
-    new_value: String,
-    challenge_id: i32,
-    comment_id: i32,
-) -> Result<(), sqlx::Error> {
-    struct ChallengeInfo {
-        name: String,
-        status: Option<ChallengeStatus>,
-        category: Option<ChallengeCategory>,
-    }
-
-    let challenge_info = query_as!(
-        ChallengeInfo,
-        r#"SELECT name, status as "status:ChallengeStatus", category as "category:ChallengeCategory" FROM challenges WHERE id=$1"#,
-        challenge_id
-    )
-    .fetch_one(pool)
-    .await?;
-
-    if matches!(
-        challenge_info.status,
-        Some(ChallengeStatus::Draft | ChallengeStatus::Private)
-    ) || matches!(challenge_info.category, Some(ChallengeCategory::Private))
-    {
-        return Ok(());
-    }
-
-    match post_discord_webhook(
-        DiscordWebhookChannel::ChangeRequest,
-        WebHookRequest {
-            content: None,
-            username: Some(&author.username),
-            avatar_url: Some(&author.avatar),
-            tts: None,
-            embeds: Some(vec![Embed {
-                title: Some(&format!("Edit Suggested: {}", challenge_info.name)),
-                description: Some(&inline_diff(
-                    &previous_value.replace("`", "`\u{200B}"),
-                    &new_value.replace("`", "`\u{200B}"),
-                )),
-                url: Some(&format!(
-                    "{}#comment-{}",
-                    get_url_for_challenge(
-                        challenge_id,
-                        Some(&challenge_info.name),
-                        common::urls::ChallengePage::View
-                    ),
-                    comment_id
-                )),
-                color: Some(255),
-            }]),
-        },
-    )
-    .await
-    {
-        Ok(()) => (),
-        Err(e) => {
-            eprintln!("{e:?}");
-        }
-    };
-
-    Ok(())
 }

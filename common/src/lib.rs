@@ -1,6 +1,9 @@
 pub mod achievements;
+#[cfg(feature = "diff")]
+pub mod diff_tools;
 pub mod langs;
 pub mod slug;
+pub mod sql_enums;
 pub mod urls;
 
 use std::time::Duration;

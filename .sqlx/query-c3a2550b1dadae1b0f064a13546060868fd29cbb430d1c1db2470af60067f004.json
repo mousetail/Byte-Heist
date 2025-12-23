@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT\n                    challenge_change_suggestions.old_value,\n                    challenge_change_suggestions.new_value,\n                    challenges.id as challenge_id,\n                    challenges.name as challenge_name,\n                    challenges.status as \"challenge_status!:ChallengeStatus\",\n                    challenges.category as \"challenge_category!:ChallengeCategory\",\n                    accounts.id as author_id,\n                    accounts.username as author_username,\n                    accounts.avatar as author_avatar\n                FROM challenge_change_suggestions\n                INNER JOIN challenge_comments AS comments ON comments.id=challenge_change_suggestions.comment\n                INNER JOIN accounts ON accounts.id=comments.author\n                INNER JOIN challenges ON challenges.id=comments.challenge\n                WHERE comments.id=$1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "old_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "new_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "challenge_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "challenge_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "challenge_status!:ChallengeStatus",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "beta",
+                "public",
+                "private"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "challenge_category!:ChallengeCategory",
+        "type_info": {
+          "Custom": {
+            "name": "challenge_category",
+            "kind": {
+              "Enum": [
+                "code-golf",
+                "restricted-source",
+                "private",
+                "code-challenge"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "author_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "author_username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "author_avatar",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c3a2550b1dadae1b0f064a13546060868fd29cbb430d1c1db2470af60067f004"
+}

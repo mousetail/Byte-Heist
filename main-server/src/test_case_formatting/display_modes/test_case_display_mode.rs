@@ -1,8 +1,5 @@
+use common::diff_tools::{Columns, Field, FieldKind, FilterIteratorButKeepContext};
 use itertools::Itertools;
-
-use crate::test_case_formatting::{
-    Columns, Field, FieldKind, filter_iterator_but_keep_context::FilterIteratorButKeepContext,
-};
 
 pub fn render_test_case_display_mode(
     output: String,
@@ -40,7 +37,7 @@ pub fn render_test_case_display_mode(
                     span: 1,
                     row_span: 1,
                     content: input.to_owned(),
-                    kind: crate::test_case_formatting::FieldKind::Identical,
+                    kind: FieldKind::Identical,
                 },
                 Field {
                     column: 1,

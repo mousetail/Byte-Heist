@@ -1,38 +1,9 @@
-mod diff_tools;
 mod display_modes;
-mod filter_iterator_but_keep_context;
-mod raw_itemwise_diff;
 mod test_case_display;
 
 use common::{RunLangOutput, Timers};
-pub use diff_tools::{get_diff_elements, inline_diff};
 use serde::Serialize;
 use test_case_display::TestCaseDisplay;
-
-#[derive(Serialize, PartialEq, Eq, Clone)]
-pub struct Columns {
-    column_titles: Vec<Option<&'static str>>,
-    fields: Vec<Field>,
-    height: usize,
-}
-
-#[derive(Serialize, PartialEq, Eq, Clone)]
-struct Field {
-    column: usize,
-    span: usize,
-    row_span: usize,
-    content: String,
-    kind: FieldKind,
-}
-
-#[derive(Serialize, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
-enum FieldKind {
-    Insert,
-    Delete,
-    Identical,
-    Meta,
-}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]

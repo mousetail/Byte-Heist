@@ -1,13 +1,13 @@
+mod filter_iterator_but_keep_context;
+mod raw_itemwise_diff;
+
 use std::sync::LazyLock;
 
+pub use filter_iterator_but_keep_context::FilterIteratorButKeepContext;
 use itertools::Itertools;
+use raw_itemwise_diff::{DoubleDiffKind, RawDoubleDiffElement, RawItemwiseDiff};
+use serde::Serialize;
 use similar::{ChangeTag, TextDiff, TextDiffConfig};
-
-use crate::test_case_formatting::filter_iterator_but_keep_context::FilterIteratorButKeepContext;
-use crate::test_case_formatting::raw_itemwise_diff::{RawDoubleDiffElement, RawItemwiseDiff};
-use crate::test_case_formatting::{Field, FieldKind};
-
-use super::Columns;
 
 pub fn get_diff_elements(left: &str, right: &str, sep: &str, start_column: usize) -> Columns {
     let iterator = FilterIteratorButKeepContext::new(
@@ -20,7 +20,7 @@ pub fn get_diff_elements(left: &str, right: &str, sep: &str, start_column: usize
     let mut height = 0;
 
     let fields = iterator.flat_map(|item| match item.kind {
-        super::raw_itemwise_diff::DoubleDiffKind::Identical(item) => {
+        DoubleDiffKind::Identical(item) => {
             height += 1;
             Box::new(
                 [
@@ -42,7 +42,7 @@ pub fn get_diff_elements(left: &str, right: &str, sep: &str, start_column: usize
                 .into_iter(),
             ) as Box<dyn Iterator<Item = Field>>
         }
-        super::raw_itemwise_diff::DoubleDiffKind::Different(left, right) => {
+        DoubleDiffKind::Different(left, right) => {
             height += left.len().max(right.len());
 
             Box::new(left.into_iter().zip_longest(right).flat_map(|pair| {
@@ -70,7 +70,7 @@ pub fn get_diff_elements(left: &str, right: &str, sep: &str, start_column: usize
                     })
             }))
         }
-        super::raw_itemwise_diff::DoubleDiffKind::Skipped(number) => {
+        DoubleDiffKind::Skipped(number) => {
             height += 1;
             Box::new(
                 [Field {
@@ -125,3 +125,28 @@ pub fn inline_diff(old: &str, new: &str) -> String {
 }
 
 pub(super) static DIFF_CONFIG: LazyLock<TextDiffConfig> = LazyLock::new(TextDiff::configure);
+
+#[derive(Serialize, PartialEq, Eq, Clone)]
+pub struct Field {
+    pub column: usize,
+    pub span: usize,
+    pub row_span: usize,
+    pub content: String,
+    pub kind: FieldKind,
+}
+
+#[derive(Serialize, PartialEq, Eq, Clone, Copy)]
+#[serde(rename_all = "kebab-case")]
+pub enum FieldKind {
+    Insert,
+    Delete,
+    Identical,
+    Meta,
+}
+
+#[derive(Serialize, PartialEq, Eq, Clone)]
+pub struct Columns {
+    pub column_titles: Vec<Option<&'static str>>,
+    pub fields: Vec<Field>,
+    pub height: usize,
+}

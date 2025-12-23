@@ -1,8 +1,10 @@
 mod almost_ended_challenge;
+pub mod change_suggestions;
 #[deny(clippy::print_stdout)]
 mod checks;
 pub mod new_challenge;
 mod queries;
+pub mod webhooks;
 
 use almost_ended_challenge::on_almost_ended_challenge;
 use checks::{get_last_best_score_fields, should_edit_message};

@@ -1,11 +1,9 @@
-use axum::{extract::Path, Extension};
+use axum::{Extension, extract::Path};
+use common::sql_enums::ChallengeCategory;
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::{
-    error::Error,
-    models::{challenge::ChallengeCategory, global_leaderboard::GlobalLeaderboardEntry},
-};
+use crate::{error::Error, models::global_leaderboard::GlobalLeaderboardEntry};
 
 #[derive(Serialize)]
 pub struct GlobalLeaderboardOutput {

@@ -479,9 +479,12 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "itertools",
  "phf",
  "serde",
+ "similar",
  "slug",
+ "sqlx",
  "strum",
 ]
 
@@ -741,6 +744,8 @@ name = "discord-bot"
 version = "0.1.0"
 dependencies = [
  "common",
+ "reqwest 0.12.24",
+ "serde",
  "serenity",
  "slug",
  "sqlx",
@@ -1758,7 +1763,6 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "similar",
  "sqlx",
  "strum",
  "syntect",
