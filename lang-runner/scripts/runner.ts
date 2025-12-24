@@ -22,9 +22,13 @@ type Input = {
   code: string;
   lang: Lang;
   judge: string;
+  max_code_size: number;
+  max_input_size: number;
 };
 
-const { code, judge }: Input = JSON.parse(Deno.args[0]);
+const { code, judge, max_code_size, max_input_size }: Input = JSON.parse(
+  Deno.args[0]
+);
 
 (async () => {
   const lines = readLines(Deno.stdin.readable);
@@ -47,12 +51,16 @@ const { code, judge }: Input = JSON.parse(Deno.args[0]);
     program: string,
     input?: string | undefined
   ): Promise<RunCompiledCodeResult> => {
-    if (program.length > 10 * 1024) {
-      throw new Error("Expected code to have at most 10 * 1024 characters");
+    if (program.length > max_code_size) {
+      throw new Error(
+        `Expected code to have at most ${max_code_size} characters`
+      );
     }
 
-    if (input && input.length > 10 * 1024) {
-      throw new Error("Expected input to be at most 10 * 1024 characters");
+    if (input && input.length > max_input_size) {
+      throw new Error(
+        `Expected input to be at most ${max_input_size} characters`
+      );
     }
 
     await Deno.stdout.write(
@@ -65,11 +73,11 @@ const { code, judge }: Input = JSON.parse(Deno.args[0]);
     }
 
     if (result.value === "CodeTooLarge") {
-      throw new Error("Expected code to have at most 10 * 1024 bytes");
+      throw new Error(`Expected code to have at most ${max_code_size} bytes`);
     }
 
     if (result.value === "InputTooLarge") {
-      throw new Error("Expected input to have at most 10 * 1024 bytes");
+      throw new Error(`Expected input to have at most ${max_input_size} bytes`);
     }
 
     return result.value as RunCompiledCodeResult;

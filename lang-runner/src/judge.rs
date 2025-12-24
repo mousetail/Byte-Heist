@@ -14,6 +14,7 @@ use crate::{error::RunLangError, run::RunLangContext, stopwatch::start_stopwatch
 
 const MAX_TEST_CASES: usize = 50;
 const TIMEOUT: u64 = 3;
+const MAX_CODE_SIZE: usize = 64 * 1024;
 
 #[derive(Deserialize, Debug)]
 struct FinalVerdict {
@@ -26,6 +27,8 @@ struct RunnerInput<'a> {
     lang: &'a str,
     code: &'a str,
     judge: &'a str,
+    max_code_size: usize,
+    max_input_size: usize,
 }
 
 #[derive(Deserialize, Debug)]
@@ -42,8 +45,6 @@ enum JudgeResponse {
     FinalVerdict(FinalVerdict),
 }
 
-const MAX_CODE_SIZE: usize = 1024 * 10;
-
 pub async fn run_lang_with_judge(
     language: &str,
     version: &str,
@@ -58,6 +59,8 @@ pub async fn run_lang_with_judge(
         lang: language,
         code,
         judge,
+        max_code_size: MAX_CODE_SIZE,
+        max_input_size: MAX_CODE_SIZE,
     })
     .map_err(|e| RunLangError::RunLang(crate::error::RunProcessError::SerializationFailed(e)))?;
 

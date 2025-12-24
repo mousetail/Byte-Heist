@@ -31,7 +31,7 @@ use crate::{
     limited_async_writer::LimitedAsyncPipeWriter,
 };
 
-const MAX_BUFF_SIZE: usize = 1024 * 100;
+const MAX_BUFF_SIZE: usize = 256 * 1024;
 
 /// A future that waits for a child process with a given PID to complete
 struct AsyncChild {
