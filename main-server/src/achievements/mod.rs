@@ -4,17 +4,16 @@ mod solve_related;
 pub mod vote_achievements;
 
 use common::AchievementType;
-use misc::award_misc_achievements;
+use misc::{AwardMiscAchievementsError, award_misc_achievements};
 use points_based::award_point_based_cheevos;
 use solve_related::award_solve_related;
 use sqlx::{PgPool, query, query_scalar};
 
-pub async fn award_achievements(pool: &PgPool) -> Result<(), sqlx::Error> {
+pub async fn award_achievements(pool: &PgPool) -> Result<(), AwardMiscAchievementsError> {
     award_point_based_cheevos(pool).await?;
     award_misc_achievements(pool)
         .await
-        .inspect_err(|e| eprintln!("Failed to award github achievement: {e:?}"))
-        .unwrap();
+        .inspect_err(|e| eprintln!("Failed to award github achievement: {e:?}"))?;
     award_solve_related(pool).await?;
     Ok(())
 }
