@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE solutions SET validated_at=now(), valid=true, fail_reason=null, runtime=$1, points=COALESCE($2,points) WHERE id=$3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e74bede65c6a4bd3e0a999816ce77c94128679034688f542d54009c54a7e4319"
+}

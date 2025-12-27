@@ -126,7 +126,7 @@ async fn solution_invalidation_task_inner(pool: &PgPool) -> Result<(), sqlx::Err
                 solutions_timed_out += 1;
             } else if result.tests.pass {
                 query!(
-                    "UPDATE solutions SET validated_at=now(), valid=true, fail_reason=null, runtime=$1, points=COALESCE(points,$2) WHERE id=$3",
+                    "UPDATE solutions SET validated_at=now(), valid=true, fail_reason=null, runtime=$1, points=COALESCE($2,points) WHERE id=$3",
                     result.runtime,
                     result.tests.points,
                     solution.id
