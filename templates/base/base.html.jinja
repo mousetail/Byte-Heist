@@ -45,7 +45,7 @@
     <header class="sticky top-0 z-50 bg-byte-green-950 text-byte-green-700 py-4 px-4 sm:px-6 md:px-8 lg:px-28 shadow-lg transition-colors duration-300">
       <div class="max-w-8xl mx-auto flex justify-between items-center">
         <div class="flex items-center">
-          <a href="/"
+          <a href="{%- if account -%}/heists{%- else -%}/{%- endif -%}"
              class="flex items-center gap-2 text-byte-green-700 hover:text-white transition-all duration-200">
             {# <img src="/static/favicon.svg" width="30" alt="Byte Heist" /> #}
             <span class="font-kode font-bold text-lg sm:text-xl">ByteHeist</span>
