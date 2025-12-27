@@ -13,6 +13,7 @@ pub struct OutputDisplay {
     timed_out: bool,
     judge_error: Option<String>,
     timers: Timers,
+    points: Option<i32>,
 }
 
 impl From<RunLangOutput> for OutputDisplay {
@@ -36,6 +37,7 @@ impl From<RunLangOutput> for OutputDisplay {
             timed_out: value.timed_out,
             judge_error: (!value.stderr.is_empty()).then_some(value.stderr),
             timers: value.timers,
+            points: value.tests.points,
         }
     }
 }

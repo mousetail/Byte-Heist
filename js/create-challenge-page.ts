@@ -114,7 +114,7 @@ const handleResponse = (
   );
 
   if (Object.hasOwn(data, "tests") && data.tests) {
-    renderResultDisplay(data.tests, container);
+    renderResultDisplay(data.tests, container, "units");
   } else {
     container.replaceChildren();
   }

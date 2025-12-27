@@ -6,17 +6,7 @@ import {
   lengthInBytes,
   onByteCountChange,
 } from "./code_editing/code_editor";
-
-type ScoreInfo = {
-  rank: number;
-  points: number;
-  score: number;
-};
-
-type Toast = {
-  old_scores: ScoreInfo | undefined;
-  new_scores: ScoreInfo;
-};
+import { Challenge, LeaderboardEntry, Toast } from "./types.ts";
 
 let last_score: number | undefined;
 
@@ -158,7 +148,7 @@ async function submitNewSolution(
       "div.result-display-wrapper"
     ) as HTMLDivElement;
 
-    renderResultDisplay(tests, testsContainer);
+    renderResultDisplay(tests, testsContainer, challenge.unit);
   } finally {
     submitButton.disabled = false;
   }
@@ -217,29 +207,6 @@ function setupLeaderboardForm(form: HTMLFormElement) {
     });
   });
 }
-
-type LeaderboardEntry = {
-  rank: number;
-  author_avatar: string;
-  author_name: string;
-  author_id: number;
-  points: number;
-};
-
-type Challenge = {
-  id: number;
-  description: string;
-  judge: string;
-  name: string;
-  example_code: string;
-  category: "code-golf" | "restricted-source";
-  status: "public" | "private" | "beta" | "draft";
-  author: number;
-  is_post_mortem: boolean;
-  author_name: string;
-  author_avatar: string;
-  unit: string;
-};
 
 function updateLeaderboard(ranking: LeaderboardEntry[]) {
   const leaderboard = document.querySelector(".leaderboard table tbody");

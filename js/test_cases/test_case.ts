@@ -1,11 +1,12 @@
-import { stat } from "node:fs";
 import { addShowHideListenersToTextCase } from "./test_case_show_hide";
+import { Challenge } from "../types.ts";
 
 export type ResultDisplay = {
   judgeError: null | string;
   passed: boolean;
   tests: Test[];
   timedOut: boolean;
+  points: number | undefined;
 };
 
 type Test = {
@@ -33,11 +34,13 @@ function getOrCreateElement(
   parent: HTMLDivElement,
   className: string
 ): HTMLDivElement {
-  let elementsWithClass = parent.querySelector<HTMLDivElement>("." + className);
+  const elementsWithClass = parent.querySelector<HTMLDivElement>(
+    "." + className
+  );
   if (elementsWithClass) {
     return elementsWithClass;
   } else {
-    let elem = document.createElement("div");
+    const elem = document.createElement("div");
     parent.appendChild(elem);
     elem.classList.add(className);
     return elem;
@@ -46,24 +49,29 @@ function getOrCreateElement(
 
 export function renderResultDisplay(
   display: ResultDisplay,
-  parent: HTMLDivElement
+  parent: HTMLDivElement,
+  unit: string
 ) {
   const resultPassStateDiv = getOrCreateElement(parent, "result-pass-state");
   const timeOutWarningDiv = getOrCreateElement(parent, "time-out-warning");
   const judgeErrorsDiv = getOrCreateElement(parent, "judge-errors");
   if (!judgeErrorsDiv.querySelector("pre")) {
-    let pre = document.createElement("pre");
+    const pre = document.createElement("pre");
     judgeErrorsDiv.appendChild(pre);
   }
   const testCasesDiv = getOrCreateElement(parent, "test-cases");
 
-  resultPassStateDiv.textContent = display.passed ? "Pass" : "Fail";
+  resultPassStateDiv.textContent =
+    (display.passed ? "Pass" : "Fail") +
+    (display.points ? ` (${display.points} ${unit})` : "");
 
   timeOutWarningDiv.classList.toggle("hidden", !display.timedOut);
 
   judgeErrorsDiv.classList.toggle("hidden", display.judgeError === null);
   if (display.judgeError !== null) {
     judgeErrorsDiv.querySelector("pre").textContent = display.judgeError;
+  } else {
+    judgeErrorsDiv.querySelector("pre").textContent = "";
   }
 
   testCasesDiv.replaceChildren(...display.tests.map(renderTestCase));

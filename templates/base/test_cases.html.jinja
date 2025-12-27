@@ -16,6 +16,7 @@
       {% else %}
         Fail
       {% endif %}
+      {% if cases.points %}{{ cases.points }} points{% endif %}
     </div>
     <div class="time-out-warning warning
                 {% if not cases or not cases.timedOut %}hidden{% endif %}">Code timed out after 3 seconds</div>

@@ -85,7 +85,7 @@ const setupEditButtons = () => {
           button.parentElement.insertAdjacentElement("afterend", testCasesBox);
         }
 
-        renderResultDisplay(data, testCasesBox);
+        renderResultDisplay(data, testCasesBox, "units");
         button.disabled = false;
       }
 
