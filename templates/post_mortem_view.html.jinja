@@ -53,7 +53,10 @@
           </dd>
         </dl>
       </div>
-      {% if solution.code %}<pre class="code-pre code-pre-short">{{ solution.code }}</pre>{% endif %}
+      {% if solution.code %}
+        {% set syntax = object.language | language_syntax %}
+        {{- solution.code | syntax_highlight(lang=syntax) -}}
+      {% endif %}
     </div>
   {% endfor %}
 {% endblock content %}

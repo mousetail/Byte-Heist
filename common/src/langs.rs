@@ -22,6 +22,7 @@ pub struct Lang {
     pub extra_runtime: Timers,
     pub color: &'static str,
     pub placeholder_text: &'static str,
+    pub syntax_name: &'static str,
 }
 
 pub const DEFAULT_LANG: Lang = Lang {
@@ -43,6 +44,7 @@ pub const DEFAULT_LANG: Lang = Lang {
     },
     color: "transparent",
     placeholder_text: "",
+    syntax_name: "txt",
 };
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
@@ -55,6 +57,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "nodejs.svg",
         color: "#f1e05a",
         placeholder_text: include_str!("./placeholders/nodejs"),
+        syntax_name: "js",
         ..DEFAULT_LANG
     },
     "deno" => Lang {
@@ -70,6 +73,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "deno.svg",
         color: "white",
         placeholder_text: include_str!("./placeholders/nodejs"),
+        syntax_name: "js",
         ..DEFAULT_LANG
     },
     "python" => Lang {
@@ -82,6 +86,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "python.svg",
         color:  "#3572A5",
         placeholder_text: include_str!("./placeholders/python"),
+        syntax_name: "py",
         ..DEFAULT_LANG
     },
     "rust" => Lang {
@@ -108,6 +113,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
             //("/usr/lib/gcc/x86_64-linux-gnu/14/", "/usr/lib/gcc/x86_64-linux-gnu/14/")
         ],
         placeholder_text: include_str!("./placeholders/rust"),
+        syntax_name: "rs",
         ..DEFAULT_LANG
     },
     "vyxal" => Lang {
@@ -168,6 +174,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         extra_mounts: &[
             ("/usr/include", "/usr/include")
         ],
+        syntax_name: "c",
         ..DEFAULT_LANG
     },
     "kotlin" => Lang {

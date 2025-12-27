@@ -95,6 +95,10 @@ pub fn get_tera() -> Result<&'static Tera, GetTerraError> {
                 "language_display_name",
                 MappingStringToStringFilter { f: get_lang_name },
             );
+            tera.register_filter(
+                "language_syntax",
+                MappingStringToStringFilter { f: get_lang_syntax },
+            );
             tera
         })
     });
@@ -114,6 +118,14 @@ fn get_lang_name(e: &str) -> String {
         .get(e)
         .map(|e| e.display_name)
         .unwrap_or(e)
+        .to_string()
+}
+
+fn get_lang_syntax(e: &str) -> String {
+    LANGS
+        .get(e)
+        .map(|e| e.syntax_name)
+        .unwrap_or("text")
         .to_string()
 }
 
