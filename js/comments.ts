@@ -1,9 +1,7 @@
 import { EditorView } from "codemirror";
-import {
-  createDefaultEditor,
-  defaultPlugins,
-} from "./code_editing/code_editor";
+import { createDefaultEditor } from "./code_editing/code_editor";
 import { ResultDisplay, renderResultDisplay } from "./test_cases/test_case";
+import { defaultPlugins } from "./code_editing/code_mirror_default_plugins.ts";
 
 const setupVotingButton = (button: HTMLButtonElement) => {
   const is_upvote = button.value === "true";
