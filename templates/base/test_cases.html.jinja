@@ -11,6 +11,8 @@
   <div class="result-display-wrapper">
     <div class="result-pass-state">
       {% if not cases %}
+      {% elif cases.timedOut %}
+        Timeout
       {% elif cases.passed %}
         Pass
       {% else %}

@@ -3,11 +3,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-use common::{JudgeResult, RunLangOutput, TestCase, Timers, langs::LANGS};
+use common::{JudgeResult, RunLangOutput, TestCase, TimerType, Timers, langs::LANGS};
 use serde::{Deserialize, Serialize};
 use tokio::{
     io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader},
-    process::Command,
+    process::{ChildStdin, Command},
+    sync::mpsc::Sender,
 };
 
 use crate::{error::RunLangError, run::RunLangContext, stopwatch::start_stopwatch};
@@ -43,6 +44,76 @@ enum JudgeResponse {
     RunRequest(RunRequest),
     TestCase(TestCase),
     FinalVerdict(FinalVerdict),
+}
+
+async fn handle_judge_command(
+    data: JudgeResponse,
+    judge_result_ref: &mut JudgeResult,
+    sender: &mut Sender<TimerType>,
+    stdin: &mut ChildStdin,
+    context: &mut RunLangContext,
+) -> Result<(), RunLangError> {
+    match data {
+        JudgeResponse::RunRequest(run_request) => {
+            if run_request.code.len() > MAX_CODE_SIZE {
+                stdin
+                    .write_all(
+                        &serde_json::to_vec(&crate::error::RunProcessError::CodeTooLarge).map_err(
+                            |e| {
+                                RunLangError::RunLang(
+                                    crate::error::RunProcessError::SerializationFailed(e),
+                                )
+                            },
+                        )?,
+                    )
+                    .await?;
+                return Ok(());
+            }
+
+            if run_request
+                .input
+                .as_deref()
+                .is_some_and(|i| i.len() > MAX_CODE_SIZE)
+            {
+                stdin
+                    .write_all(
+                        &serde_json::to_vec(&crate::error::RunProcessError::InputTooLarge)
+                            .map_err(|e| {
+                                RunLangError::RunLang(
+                                    crate::error::RunProcessError::SerializationFailed(e),
+                                )
+                            })?,
+                    )
+                    .await?;
+                return Ok(());
+            }
+
+            let result = context
+                .run(&run_request.code, run_request.input.as_deref(), sender)
+                .await
+                .map_err(RunLangError::RunLang)?;
+
+            stdin
+                .write_all(&serde_json::to_vec(&result).map_err(|e| {
+                    RunLangError::RunLang(crate::error::RunProcessError::SerializationFailed(e))
+                })?)
+                .await?;
+        }
+        JudgeResponse::TestCase(test_case) => {
+            judge_result_ref.test_cases.push(test_case);
+
+            if judge_result_ref.test_cases.len() > MAX_TEST_CASES {
+                Err(RunLangError::MaxTestCasesExceeded)?;
+            }
+        }
+        JudgeResponse::FinalVerdict(final_verdict) => {
+            println!("final_verdict: {final_verdict:?}");
+            judge_result_ref.pass = final_verdict.pass;
+            judge_result_ref.points = final_verdict.points;
+        }
+    }
+
+    Ok(())
 }
 
 pub async fn run_lang_with_judge(
@@ -89,7 +160,14 @@ pub async fn run_lang_with_judge(
     let start_time = Instant::now();
 
     let (mut sender, receiver) = tokio::sync::mpsc::channel(16);
-    let (output, timers) = start_stopwatch(
+
+    let mut judge_result = JudgeResult {
+        pass: false,
+        test_cases: vec![],
+        points: None,
+    };
+    let judge_result_ref = &mut judge_result;
+    let (out, timers) = start_stopwatch(
         Timers {
             judge: Duration::from_secs(1) + lang.extra_runtime.judge,
             run: Duration::from_secs(TIMEOUT) + lang.extra_runtime.run,
@@ -97,95 +175,30 @@ pub async fn run_lang_with_judge(
         },
         receiver,
         Box::pin(async move {
-            let mut judge_result = JudgeResult {
-                pass: false,
-                test_cases: vec![],
-                points: None,
-            };
-
             while let Some(line) = lines.next_line().await? {
                 let data: JudgeResponse = serde_json::from_str(&line).map_err(|e| {
                     RunLangError::RunLang(crate::error::RunProcessError::SerializationFailed(e))
                 })?;
-                match data {
-                    JudgeResponse::RunRequest(run_request) => {
-                        if run_request.code.len() > MAX_CODE_SIZE {
-                            stdin
-                                .write_all(
-                                    &serde_json::to_vec(
-                                        &crate::error::RunProcessError::CodeTooLarge,
-                                    )
-                                    .map_err(|e| {
-                                        RunLangError::RunLang(
-                                            crate::error::RunProcessError::SerializationFailed(e),
-                                        )
-                                    })?,
-                                )
-                                .await?;
-                            continue;
-                        }
-
-                        if run_request
-                            .input
-                            .as_deref()
-                            .is_some_and(|i| i.len() > MAX_CODE_SIZE)
-                        {
-                            stdin
-                                .write_all(
-                                    &serde_json::to_vec(
-                                        &crate::error::RunProcessError::InputTooLarge,
-                                    )
-                                    .map_err(|e| {
-                                        RunLangError::RunLang(
-                                            crate::error::RunProcessError::SerializationFailed(e),
-                                        )
-                                    })?,
-                                )
-                                .await?;
-                            continue;
-                        }
-
-                        let result = context
-                            .run(&run_request.code, run_request.input.as_deref(), &mut sender)
-                            .await
-                            .map_err(RunLangError::RunLang)?;
-
-                        stdin
-                            .write_all(&serde_json::to_vec(&result).map_err(|e| {
-                                RunLangError::RunLang(
-                                    crate::error::RunProcessError::SerializationFailed(e),
-                                )
-                            })?)
-                            .await?;
-                    }
-                    JudgeResponse::TestCase(test_case) => {
-                        judge_result.test_cases.push(test_case);
-
-                        if judge_result.test_cases.len() > MAX_TEST_CASES {
-                            Err(RunLangError::MaxTestCasesExceeded)?;
-                        }
-                    }
-                    JudgeResponse::FinalVerdict(final_verdict) => {
-                        println!("final_verdict: {final_verdict:?}");
-                        judge_result.pass = final_verdict.pass;
-                        judge_result.points = final_verdict.points;
-                    }
-                }
+                handle_judge_command(
+                    data,
+                    judge_result_ref,
+                    &mut sender,
+                    &mut stdin,
+                    &mut context,
+                )
+                .await?;
             }
 
-            Ok::<JudgeResult, RunLangError>(judge_result)
+            Ok::<(), RunLangError>(())
         }),
     )
     .await;
 
     let end_time = Instant::now();
-
-    let timed_out = output.is_none();
-    let judge_result = output.unwrap_or(Ok(JudgeResult {
-        pass: false,
-        test_cases: vec![],
-        points: None,
-    }))?;
+    let timed_out = out.is_none();
+    if timed_out {
+        judge_result.pass = false;
+    }
 
     command.kill().await?;
 

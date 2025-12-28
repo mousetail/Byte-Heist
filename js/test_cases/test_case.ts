@@ -62,7 +62,7 @@ export function renderResultDisplay(
   const testCasesDiv = getOrCreateElement(parent, "test-cases");
 
   resultPassStateDiv.textContent =
-    (display.passed ? "Pass" : "Fail") +
+    (display.timedOut ? "Timeout" : display.passed ? "Pass" : "Fail") +
     (display.points ? ` (${display.points} ${unit})` : "");
 
   timeOutWarningDiv.classList.toggle("hidden", !display.timedOut);
