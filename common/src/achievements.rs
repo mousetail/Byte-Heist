@@ -344,7 +344,7 @@ impl AchievementType {
 
             let symbol = format!(
                 "<symbol id=\"{self:?}-root\" {}</symbol>",
-                &content[4..content.len() - 6]
+                content[4..content.len() - 6]
                     .replace(" xmlns=\"http://www.w3.org/2000/svg\"", "")
                     .replace("id=\"", &format!("id=\"{self:?}"))
                     .replace("href=\"#", &format!("href=\"#{self:?}"))

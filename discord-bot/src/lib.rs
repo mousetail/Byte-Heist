@@ -72,7 +72,7 @@ fn format_message(
         .author(
             CreateEmbedAuthor::new(&author.username)
                 .icon_url(&author.avatar)
-                .url(format!("{public_url}/user/{}", &new_message.author)),
+                .url(format!("{public_url}/user/{}", new_message.author)),
         )
         .url(format!(
             "{}",
@@ -106,7 +106,7 @@ fn format_message(
 #[derive(Debug)]
 enum HandleMessageError {
     Sql(#[allow(unused)] sqlx::Error),
-    Disocrd(#[allow(unused)] serenity::Error),
+    Discord(#[allow(unused)] serenity::Error),
 }
 
 impl From<sqlx::Error> for HandleMessageError {
@@ -117,10 +117,11 @@ impl From<sqlx::Error> for HandleMessageError {
 
 impl From<serenity::Error> for HandleMessageError {
     fn from(value: serenity::Error) -> Self {
-        HandleMessageError::Disocrd(value)
+        HandleMessageError::Discord(value)
     }
 }
 
+#[allow(clippy::result_large_err)]
 async fn post_or_edit_message(
     message_id: Option<MessageId>,
     channel_id: ChannelId,
@@ -141,6 +142,7 @@ async fn post_or_edit_message(
     }
 }
 
+#[allow(clippy::result_large_err)]
 async fn handle_message(
     score_improved_event: ScoreImproved,
     pool: &PgPool,
