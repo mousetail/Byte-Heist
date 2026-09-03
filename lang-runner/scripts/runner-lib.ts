@@ -229,6 +229,7 @@ export class Context {
             Diff: {
               input: input,
               output: d,
+              sep: options.outputSeparator,
               expected: cases
                 .map((i) => (i.equal ? i.output : i.expected))
                 .join(options.outputSeparator),
